@@ -15,9 +15,10 @@ export
     plot, plot_triptic,
     #All the filters I created
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
-    TIDAGaussianRing,GeneralGaussianRing,
+    TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
+    stack,split,
     #filter function
-    imagefilter,
+    imagefilter, unpack,
     #Imaging stuff
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,
     #Feature extraction stuff
