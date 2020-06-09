@@ -1,6 +1,7 @@
-using VIDA
+using DivIDE
 using Test
 
-@testset "VIDA.jl" begin
-    # Write your tests here.
+@testset "DivIDE.jl" begin
+    # Write your own tests here.
+    
 end
