@@ -1,6 +1,6 @@
 using Distributed
 using ArgParse
-Distributed.@everywhere using DivIDE
+Distributed.@everywhere using VIDA
 using CSV
 using DataFrames
 using PyPlot
@@ -136,7 +136,7 @@ function make_initial_filter(filter_type)
       upper = [35.0, 15.0, 0.999, 0.999, π, 30.0, 30.0, 1e3]
       filter = TIDAGaussianRing(20.0, 5.0,
                                 0.5, 0.5,
-                                0.0, 0.0, 0.0) + 1.0*DivIDE.Constant()
+                                0.0, 0.0, 0.0) + 1.0*Constant()
       return (filter, lower, upper)
     elseif filter_type == "Gen"
       #parameter bounds, be aggressive with these. If they
@@ -146,7 +146,7 @@ function make_initial_filter(filter_type)
       filter = GeneralGaussianRing(20.0, 5.0,
                                    0.5, 0.0,
                                    0.5, 0.0,
-                                   0.0, 0.0) + 1.0*DivIDE.Constant()
+                                   0.0, 0.0) + 1.0*Constant()
       return (filter, lower, upper)
     elseif filter_type == "Slash"
       #parameter bounds, be aggressive with these. If they
@@ -155,7 +155,7 @@ function make_initial_filter(filter_type)
       upper = [35.0, 15.0, 0.999, π,  30.0, 30.0, 1e3]
       filter = SlashedGaussianRing(20.0, 5.0,
                                    0.5, 0.0,
-                                   0.0, 0.0) + 1.0*DivIDE.Constant()
+                                   0.0, 0.0) + 1.0*Constant()
       return (filter, lower, upper)
     elseif filter_type == "Ellip"
       #parameter bounds, be aggressive with these. If they
@@ -164,15 +164,15 @@ function make_initial_filter(filter_type)
       upper = [35.0, 15.0, 0.999, π,  30.0, 30.0, 1e3]
       filter = EllipticalGaussianRing(20.0, 5.0,
                                       0.5, 0.0,
-                                      0.0, 0.0) + 1.0*DivIDE.Constant()
+                                      0.0, 0.0) + 1.0*Constant()
       return (filter, lower, upper)
     elseif filter_type == "Circ"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
       lower = [10.0, 0.01, -30.0, -30.0, 1e-6]
       upper = [35.0, 15.0, 30.0, 30.0, 1e3]
-      filter = GaussianRing(20.0, 5.0,0.0, 0.0) + 1.0*DivIDE.Constant()
-      return (filter+1.0*DivIDE.Constant(), lower, upper)
+      filter = GaussianRing(20.0, 5.0,0.0, 0.0) + 1.0*Constant()
+      return (filter+1.0*Constant(), lower, upper)
     else
       error("$filter_type not found must be Circ, Ellip, Slash, TIDA, Gen")
     end
@@ -210,12 +210,12 @@ end
             error("$(div_type) not found! Must be KL or Bh")
         end
         println("Extracting $file using $d_type divergence")
-        image = DivIDE.load_ehtimfits(string(file))
-        cimage = DivIDE.clipimage(clip_percent,image)
-        div = DivIDE.make_div(cimage, d_type, breg)
+        image = VIDA.load_ehtimfits(string(file))
+        cimage = VIDA.clipimage(clip_percent,image)
+        div = VIDA.make_div(cimage, d_type, breg)
         θ,divmin,_,_ = bbextract(div, filter, lower, upper;
                                  TraceMode=:silent, MaxFuncEvals=2*10^4)
-        return DivIDE.unpack(θ),divmin
+        return VIDA.unpack(θ),divmin
     end
 end
 

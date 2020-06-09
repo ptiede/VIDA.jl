@@ -1,6 +1,5 @@
 using ArgParse
-include("../src/DivIDE.jl")
-using Main.DivIDE
+using VIDA
 using CSV
 using DataFrames
 using PyPlot
