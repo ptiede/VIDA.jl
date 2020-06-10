@@ -21,6 +21,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 [compat]
 ArgParse = "1.1"
 LaTeXStrings = "1.1"
+Parameters = "0.12"
 PyPlot = "2.9"
 julia = "1"
 
