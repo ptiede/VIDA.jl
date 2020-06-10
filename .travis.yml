@@ -13,6 +13,8 @@ os:
 arch:
   - x64
   - x86
+env:
+ - PYTHON=""
 cache:
   directories:
     - ~/.julia/artifacts
