@@ -32,7 +32,7 @@ function extract(rng::AbstractRNG, nstart::Int, divergence, θinit::T,
     df = DataFrame()
     key_names = fieldnames(typeof(θinit))
     for i in 1:length(key_names)
-        setproperty!(df, key_names[i], zeros(nstart))
+        insertcols!(df,i, Symbol(key_names[i])=>zeros(nstart), makeunique=true)
     end
     setproperty!(df, :ℓmax, zeros(nstart))
     setproperty!(df, :threadid, zeros(nstart))
@@ -81,7 +81,8 @@ function bbextract(divergence, θinit::T, lbounds, ubounds,
                         SearchRange=search_range,kwargs...)
 
     θinit2 = T(best_candidate(resbb))
-    return extract(divergence, θinit2, lbounds, ubounds)
+    return extract(divergence, θinit2, lbounds, ubounds,
+                    Fminbox(LBFGS()) )
 end
 
 
