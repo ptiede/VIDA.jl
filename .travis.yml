@@ -9,12 +9,18 @@ julia:
 os:
   - linux
   - osx
-  - windows
 arch:
   - x64
   - x86
+addons:
+  apt:
+    packages:
+      - python-matplotlib
+      - python3-matplotlib
 env:
- - PYTHON=""
+  matrix:
+    - PYTHON=python  # python 2.7
+    - PYTHON=python3 # python 3.5
 cache:
   directories:
     - ~/.julia/artifacts
