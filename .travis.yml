@@ -9,9 +9,6 @@ julia:
 os:
   - linux
   - osx
-arch:
-  - x64
-  - x86
 addons:
   apt:
     packages:
