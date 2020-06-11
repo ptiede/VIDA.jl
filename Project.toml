@@ -24,6 +24,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 [compat]
 ArgParse = "1.1"
 BlackBoxOptim = "0.5"
+Conda = "1.4"
 DataFrames = "0.21"
 DocStringExtensions = "0.8"
 FITSIO = "0.14"
