@@ -32,8 +32,10 @@ using LaTeXStrings
 using Optim
 using PhysicalConstants.CODATA2018: c_0, h, k_B
 using Parameters
-using PyPlot
+using Plots
+using Plots.PlotMeasures: mm
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
+using RecipesBase
 using SpecialFunctions:erf
 
 #Load the images
