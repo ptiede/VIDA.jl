@@ -16,7 +16,7 @@ export
     #All the filters I created
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    stack_filters,split_filters,
+    cat,split,
     #filter function
     imagefilter, unpack,
     #Imaging stuff

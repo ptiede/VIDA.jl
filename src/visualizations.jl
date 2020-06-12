@@ -35,7 +35,7 @@ end
 
 
 """
-$(SIGNATURES)
+ plot(image::EHTImage)
 
 where `image` is templated off of EHTImage struct.
 
@@ -86,7 +86,7 @@ end
 
 @userplot Triptic
 """
-    $(SIGNATURES)
+    triptic(image::EHTImage, θ::T) where {T<:AbstractFilter}
 A plot recipe for a triptic plot with the `image`, i.e. an EHT image and the filter `\theta`
 used for parameter estimate. The first two panels are the image and filter and
 the third are RA and DEC cross-sections of both the filter and image centered at the
@@ -332,6 +332,12 @@ center of light.
 
 end
 
+"""
+    plot(θ::AbstractFilter)
+    plot(θ::AbstractFilter; npix, fovx, fovy)
+Plots the filter `θ` using the usual EHT conventions.
+The default image will use 128x128 pixels with a 120x120 field of view.
+"""
 @recipe function f(θ::AbstractFilter; npix=128, fovx=120, fovy=120)
 
     tickfontsize --> 11

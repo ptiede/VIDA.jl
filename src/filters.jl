@@ -247,8 +247,8 @@ size(::Type{EllipticalGaussianRing}) = 6
     ex′,ey′ = rotate(ex,ey,θ.ξ)
     a = θ.r0/sqrt(1.0-θ.τ)
     b = θ.r0*sqrt(1.0-θ.τ)
-    distance = ellipse_distance(ex′,ey′,a, b)
-    return exp(-distance*distance/(2.0*θ.σ^2))
+    distance = ellipse_sqdist(ex′,ey′,a, b)
+    return exp(-distance/(2.0*θ.σ^2))
 end
 
 """
@@ -306,7 +306,7 @@ size(::Type{TIDAGaussianRing}) = 7
     ex′,ey′ = rotate(ex,ey,θ.ξ)
     a = θ.r0/sqrt(1.0-θ.τ)
     b = θ.r0*sqrt(1.0-θ.τ)
-    distance = ellipse_distance(ex′,ey′,a, b)
+    distance = ellipse_sqdist(ex′,ey′,a, b)
 
 
     #construct the slash
@@ -379,7 +379,7 @@ end
     ex′,ey′ = rotate(ex,ey,θ.ξτ)
     a = θ.r0/sqrt(1.0-θ.τ)
     b = θ.r0*sqrt(1.0-θ.τ)
-    distance = ellipse_distance(ex′,ey′,a, b)
+    distance = ellipse_sqdist(ex′,ey′,a, b)
 
     #construct the slash
     ex′,ey′ = rotate(ex,ey,θ.ξs)
@@ -402,16 +402,16 @@ end
 
 """
     $(SIGNATURES)
-Find the minimum distance between an ellipse centered at (0,0) with semi-major
+Find the minimum square distance between an ellipse centered at (0,0) with semi-major
 axis `a` and semi-minor axis `b` and the point (`x`, `y`).
 Uses an iterative method with accuracy `ϵ` which defaults to 1e-6.
-Credit:
+# Credit:
 Algorithm taken from
 https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823
 except written in Julia and using an adaptive termination condition for accuracy
 """
 #@fastmath
-@fastmath @inline function ellipse_distance(x,y, a, b, ϵ=1e-3)
+@fastmath @inline function ellipse_sqdist(x,y, a, b, ϵ=1e-6)
     #For simplicity we will only look at the positive quadrant
     px = abs(x)
     py = abs(y)
@@ -574,21 +574,20 @@ Stacks filters together so you can easily combine multiple filters.
 It does this by calling the :+ and :* method. Every filter added will
 include an additional parameter that controls the relative weight of each filter.
 """
-function stack_filters(θ...)
-    (f1,rest) = Iterators.peel([θ...])
-    return f1+mapreduce(x->1.0*x, + ,rest)
+function Base.cat(θ::T, θ1...) where {T<:AbstractFilter}
+    return θ+mapreduce(x->1.0*x, + , θ1)
 end
 
 """
     $(SIGNATURES)
 Splits the filter into an array with its subcomponents so you can easily access them.
 """
-function split_filters(θ::AbstractFilter)
+function Base.split(θ::AbstractFilter)
     return [θ]
 end
 
-function split_filters(θ::AddFilter)
-    return [split_filters(θ.θ1)..., split_filters(θ.θ2)...]
+function Base.split(θ::AddFilter)
+    return [split(θ.θ1)..., split(θ.θ2)...]
 end
 
 

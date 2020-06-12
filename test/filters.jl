@@ -79,9 +79,9 @@ end
     θ1 = GaussianRing(r0,σ,x0,y0)
     θ2 = AsymGaussian(σ,τ,ξτ,x0,y0)
     θ = θ1+1.0*θ2
-    θs = stack_filters(θ1,θ2)
+    θs = cat(θ1,θ2)
     @test θ == θs
-    θarr = split_filters(θ)
+    θarr = split(θ)
     @test θ1 == θarr[1]
     @test θ2 == θarr[2].θ
     @test unpack(θ) == unpack(θs)
