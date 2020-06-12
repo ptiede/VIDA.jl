@@ -2,7 +2,6 @@ using ArgParse
 using VIDA
 using CSV
 using DataFrames
-using PyPlot
 using Optim
 using Random
 
@@ -10,7 +9,7 @@ using Random
 function parse_commandline()
     s = ArgParseSettings()
 
-    @add_arg_table s begin
+    @add_arg_table! s begin
         "arg1"
             help = "file list of fits images to read"
             arg_type = String
@@ -64,7 +63,7 @@ function main()
 
     #Read in a file and create list of images to filter
     #the last line is the termination of the file
-    files = string.(split(read(fitsfiles,String),"\n"))
+    files = string.(Base.split(read(fitsfiles,String),"\n"))
 
     #check if the last entry of files is an empty string
     if files[end] == ""
@@ -97,7 +96,7 @@ function main_sub(fitsfiles, nstart, out_name,
     nfiles = length(fitsfiles)
     #we want the keynames to match the model parameters
     key_names = fieldnames(typeof(filter))
-    for i in 1:length(key_names)-1
+    for i in 1:length(key_names)
         setproperty!(df, key_names[i], zeros(2*nfiles))
     end
     #fill the data frame with some likely pertinent information
@@ -117,8 +116,8 @@ function main_sub(fitsfiles, nstart, out_name,
         image = clipimage(clip_percent,image,:relative)
 
         #Create the measure and fitting function using a closure
-        bh = make_bh(image, 1e6)
-        kl = make_kl(image, 1e6)
+        bh = make_div(image, :Bh)
+        kl = make_div(image, :KL)
 
         #Extract! and fill the dataframe
         results = extract(rng, nstart, bh, filter, lower, upper,
@@ -131,9 +130,9 @@ function main_sub(fitsfiles, nstart, out_name,
         if plotbool
             pname = replace(f, ".fits"=>"_bh_triptic.png")
             θfit = TIDAGaussianRing(results[1,1:length(key_names)])
-            fig = plot_triptic(image, θfit)
-            fig.savefig(pname)
-            PyPlot.close_figs()
+            triptic(image, θfit)
+            savefig(pname)
+            closeall()
         end
 
 
@@ -147,9 +146,9 @@ function main_sub(fitsfiles, nstart, out_name,
         if plotbool
             pname = replace(f, ".fits"=>"_kl_triptic.png")
             θfit = TIDAGaussianRing(results[1,1:length(key_names)])
-            fig = plot_triptic(image, θfit)
-            fig.savefig(pname)
-            PyPlot.close_figs()
+            triptic(image, θfit)
+            savefig(pname)
+            closeall()
         end
     end
     df[!,:ℓmax] /=  breg #divide out breg to give real max
