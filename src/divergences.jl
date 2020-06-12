@@ -43,11 +43,11 @@ function make_bh(image::T, lreg=1.0) where {T<:EHTImage}
     @assert intensity_norm > 0 "make_bh: Something is wrong with the image. The image flux is zero"
     #Normalize the image to make it a probability dist
     norm_im = image.img/abs(intensity_norm*dx*dy)
-    function (θ::AbstractFilter)
+    @fastmath function (θ::AbstractFilter)
         filter_norm = zero(eltype(norm_im))
         bsum = zero(eltype(norm_im))
         for i in 1:image.nx
-            for j in 1:image.ny
+            @simd for j in 1:image.ny
                 x = xstart + image.psize_x*(i-1)
                 y = ystart + image.psize_y*(j-1)
                 filter_value = imagefilter(x,y,θ)+1e-50

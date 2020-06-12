@@ -48,7 +48,7 @@ function imagefilter(x,y, θ::AbstractFilter) end
 struct Constant <: AbstractFilter end
 Constant(p) = Constant()
 size(::Type{Constant}) = 0
-function imagefilter(x,y,θ::Constant)
+@inline function imagefilter(x,y,θ::Constant)
     return 1.0
 end
 
@@ -435,7 +435,7 @@ end
 #Finds the closest point on the ellipse. This is an internal function
 #used for ellipse_distance.
 #@fastmath
-@inline function dist_ellipse_unit(px, py, tx, ty, a, b)
+@fastmath @inline function dist_ellipse_unit(px, py, tx, ty, a, b)
     x′ = a*tx
     y′ = b*ty
 

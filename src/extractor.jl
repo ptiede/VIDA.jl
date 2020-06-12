@@ -72,24 +72,20 @@ function bbextract(divergence, θinit::T, lbounds, ubounds,
                    args...; kwargs...) where {T<:AbstractFilter}
     @assert length(lbounds)==length(ubounds) "lbounds and ubounds must have the same length"
     search_range = [ (lbounds[i],ubounds[i])  for i in 1:length(lbounds)]
-
     #Create function to optimize
     ndim = length(lbounds)
     f(p) = divergence(T(p))
     resbb =  bboptimize(f, args...; NumDimensions=ndim,
                         MaxFuncEvals=20000, TraceMode=:silent,
                         SearchRange=search_range,kwargs...)
-
     θinit2 = T(best_candidate(resbb))
-    return extract(divergence, θinit2, lbounds, ubounds,
-                    Fminbox(LBFGS()) )
+    return extract(divergence, θinit2, lbounds, ubounds)
 end
 
 
 function extract(divergence, θinit::T, lbounds, ubounds,
-                 method=Fminbox(LBFGS()),
-                 args...; kwargs...) where {T<:AbstractFilter}
-
+                 args...; method=Fminbox(NelderMead()),
+                 kwargs...) where {T<:AbstractFilter}
     #Construct the function that takes in vector of params
     f(p) = divergence(T(p))
     #unpack the starting location
