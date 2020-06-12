@@ -45,13 +45,15 @@ Let's dive into what each piece means
 ```
  - For the parameters that it takes please use the julia ? mode.
 
- If you want to add your own filter you just need to define a new Filter type and then add a imagefilter method for that type of Filter. For example if you want to add a symmetric Gaussian filter you would just add
+ If you want to add your own filter you just need to define a new Filter type a size method, and a imagefilter method for that type of Filter. For example if you want to add a symmetric Gaussian filter you would just add
  ```julia
 struct SymGaussian <: AbstractFilter
     σ::Float64 #standard deviation of the Gaussian
     x0::Float64 #x location of mean
     y0::Float64 #y location of mean
 end
+
+size(::Type{SymGaussian}) = 3
 
 function imagefilter(x,y,θ::SymGaussian)
    z2 = ((x-θ.x0)^2 + (x-θ.y0)^2)/(2.0*θ.^2)
@@ -68,6 +70,13 @@ You know what is even cooler? You can add filters together, and multiply then by
 
 plot(θ)
 ```
+The plotting is done through the recipes macros in Plots.jl. So it should 
+just work! In addition to the plot function there is a new recipe called
+`triptic(img,θ)` that will produce a comparisson between the filter and
+the true image. This can be useful when comparing the best filter to the 
+image.
+
+
 Additionally any other function that dispatches on the filter type should just work! One thing to note is that the weight between the two filters is relative. Namely, total intensity will always be normalized, so the above code says that θ2 has 5 times the relative flux compared to the first.
 
 
@@ -139,12 +148,11 @@ A simpler example is
 
   #To plot and compare results
   filtermax = TIDAGaussianRing(results[1:7]) #because has 7 params
-  plot_triptic(image, filtermax)
+  triptic(image, filtermax)
   
   #Similarly using bbextract which tends to converge to the true answer in 
   #one go
   filtermax,bh_max,converged,itr = bbextract(bh,filter,lower,upper)
-
 ```
 
 ### Distributed computing

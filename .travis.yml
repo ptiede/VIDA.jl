@@ -9,8 +9,6 @@ julia:
 os:
   - linux
   - osx
-env:
-  - PYTHON=[] # python 3.5
 cache:
   directories:
     - ~/.julia/artifacts
