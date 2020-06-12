@@ -11,19 +11,20 @@ as for the other various args, and kwargs that can be passed.
 `lbounds` and `ubounds` will actually be evaluated, namely they must be included in the mode
 they form the closed hypercube of parameter space.
 
+This is also the threaded version of the code. If you want to just run a single
+case don't pass nstart.
+
 Also most of the filters aren't autodiffable right now so be careful with the autodiff feature.
 """
 function extract(nstart::Int, divergence, θinit::T, lbounds, ubounds,
-                 method=Fminbox(LBFGS()),
                  args...; kwargs...) where {T<:AbstractFilter}
   return extract(GLOBAL_RNG, nstart, divergence, θinit, lbounds, ubounds,
-                 method, args...; kwargs...)
+                 args...; kwargs...)
 end
 
 
 function extract(rng::AbstractRNG, nstart::Int, divergence, θinit::T,
                  lbounds, ubounds,
-                 method=Fminbox(LBFGS()),
                  args...; kwargs...) where {T<:AbstractFilter}
     pinit = unpack(θinit)
     start_states = rand(rng, length(pinit), nstart)
@@ -48,7 +49,7 @@ function extract(rng::AbstractRNG, nstart::Int, divergence, θinit::T,
         θinit = T(p)
         θ, ℓmax, converged, iterations = extract(divergence, θinit,
                              lbounds, ubounds,
-                             method, args..., kwargs...)
+                             args..., kwargs...)
         df[i,1:length(p)] = unpack(θ)
         df[i,length(p)+1] = ℓmax
         df[i,length(p)+2] = Threads.threadid()
@@ -79,12 +80,17 @@ function bbextract(divergence, θinit::T, lbounds, ubounds,
                         MaxFuncEvals=20000, TraceMode=:silent,
                         SearchRange=search_range,kwargs...)
     θinit2 = T(best_candidate(resbb))
-    return extract(divergence, θinit2, lbounds, ubounds)
+    return extract(divergence, θinit2, lbounds, ubounds; method=Fminbox(GradientDescent()))
 end
 
-
+"""
+    $(SIGNATURES)
+This is the single threaded version of extract. By default we use simulated
+annealing for the maximization, since other than the BlackBoxOptim drivers
+it tends to find the global max unlike some of the local methods.
+"""
 function extract(divergence, θinit::T, lbounds, ubounds,
-                 args...; method=Fminbox(NelderMead()),
+                 args...; method=SAMIN(), niterations=10^6,
                  kwargs...) where {T<:AbstractFilter}
     #Construct the function that takes in vector of params
     f(p) = divergence(T(p))
@@ -92,7 +98,7 @@ function extract(divergence, θinit::T, lbounds, ubounds,
     pinit = unpack(θinit)
     try
         results =  optimize(f, lbounds, ubounds, pinit,
-                            method,
+                            method, Optim.Options(;iterations=niterations),
                             args...; kwargs...)
         θ = T(Optim.minimizer(results))
         ℓmax = Optim.minimum(results)
