@@ -3,7 +3,6 @@ using ArgParse
 Distributed.@everywhere using VIDA
 using CSV
 using DataFrames
-using PyPlot
 using Optim
 using Random
 using SharedArrays
@@ -24,9 +23,6 @@ function parse_commandline()
         "--out"
             help = "name of output files with extractions"
             default = "fit_summaries.txt"
-        "--plot"
-            help = "Switch that turns on plotting triptics as fitting"
-            action = :store_true
         "--restart"
             help = "Tells the sampler to read in the old files and restart the run."
             action = :store_true
@@ -67,9 +63,7 @@ function main()
     parsed_args = parse_commandline()
     #Assign the arguments to specific variables
     fitsfiles = parsed_args["arg1"]
-    nstart = parsed_args["ninits"]
     out_name = parsed_args["out"]
-    plotbool = parsed_args["plot"]
     clip_percent = parsed_args["c"]
     startindx = parsed_args["istart"]
     endindx = parsed_args["iend"]
@@ -88,9 +82,7 @@ function main()
     println("Using $(Threads.nthreads()) threads")
     println("Using options: ")
     println("list of files: $fitsfiles, ")
-    println("nstart: $nstart, ")
     println("output name: $out_name, ")
-    println("plotting: $plotbool")
     println("Clipping $(clip_percent*100) percent")
     println("likelihood multiplication $breg")
     println("random seed $seed")
@@ -120,10 +112,10 @@ function main()
 
 
     #Now run on the files for real
-    main_sub(files, nstart, out_name,
+    main_sub(files, out_name,
              div_type,filter_type,
              clip_percent, breg, seed,
-             plotbool, restart)
+             restart)
     println("Done! Check $out_name for summary")
     return 0
 end
@@ -219,10 +211,10 @@ end
     end
 end
 
-function main_sub(fitsfiles, nstart, out_name,
+function main_sub(fitsfiles, out_name,
                   div_type, filter_type,
                   clip_percent, breg, seed,
-                  plotbool, restart)
+                  restart)
 
     #"Define the filter I want to use and the var bounds"
     model,lower,upper = make_initial_filter(filter_type)

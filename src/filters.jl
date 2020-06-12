@@ -137,9 +137,7 @@ size(::Type{GaussianRing}) = 4
 
 @fastmath @inline function imagefilter(x, y, θ::GaussianRing)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
-    u = θ.r0/θ.σ
-    invnorm = 1#2*π*θ.σ*(θ.σ*exp(-u^2/2.0) + θ.r0*sqrt(π/2)*(1+erf(sqrt(2)*u)))
-    return exp( -(r - θ.r0)^2/(2*θ.σ^2))/invnorm
+    return exp( -(r - θ.r0)^2/(2*θ.σ^2))
 end
 
 
@@ -179,19 +177,18 @@ function SlashedGaussianRing(p)
         @assert length(p)==6 "SlashedGaussianRing: Filter requires 6 parameters"
         SlashedGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
+size(::Type{SlashedGaussianRing}) = 6
 #Filter function
 @fastmath @inline function imagefilter(x,y, θ::SlashedGaussianRing)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
 
     #rotate the image so slash is on the x axis
-    xrot,yrot = rotate(x,y,θ.ξ)
+    xrot,yrot = rotate(x-θ.x0,y-θ.y0,θ.ξ)
     #construct the slash
     ϕ = atan(yrot,xrot)
     n = 1-θ.s*cos(ϕ/2)
 
-    u = θ.r0/θ.σ
-    invnorm = 1#(2π-4*θ.s)*θ.σ*(θ.σ*exp(-u^2/2.0) + θ.r0*sqrt(π/2)*(1+erf(sqrt(2)*u)))
-    return n*exp(-θ.s*(r-θ.r0)^2/(2*θ.σ^2))/invnorm
+    return n*exp(-(r-θ.r0)^2/(2*θ.σ^2))
 end
 
 
@@ -237,11 +234,12 @@ numerically using an algorithm adapted from
         new(float(r0),float(σ),float(τ),float(ξ),float(x0),float(y0))
     end
 end
-
 function EllipticalGaussianRing(p)
     @assert length(p)==6 "EllipticalGaussianRing: Filter requires 6 parameters"
     EllipticalGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
+
+size(::Type{EllipticalGaussianRing}) = 6
 
 @fastmath @inline function imagefilter(x,y,θ::EllipticalGaussianRing)
     ex = x-θ.x0
@@ -298,7 +296,9 @@ function TIDAGaussianRing(p)
     @assert length(p)==7 "TIDAGaussianRing: Filter requires 7 parameters"
     TIDAGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
+
 size(::Type{TIDAGaussianRing}) = 7
+
 #Filter function for the TIDAGaussianRing
 @fastmath @inline function imagefilter(x,y,θ::TIDAGaussianRing)
     ex = x-θ.x0
@@ -368,9 +368,11 @@ function GeneralGaussianRing(p)
     @assert length(p)==8 "GeneralGaussianRing: Filter requires 8 parameters"
     GeneralGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8])
 end
+
 function size(::Type{GeneralGaussianRing})
     return 8
 end
+
 @fastmath @inline function imagefilter(x,y,θ::GeneralGaussianRing)
     ex = x-θ.x0
     ey = y-θ.y0
@@ -505,6 +507,7 @@ function AddFilter{T1,T2}(p) where {T1<:AbstractFilter,T2<:AbstractFilter}
     θ2 = T2(p2)
     AddFilter{T1,T2}(θ1,θ2)
 end
+
 function size(::Type{AddFilter{T1,T2}}) where {T1<:AbstractFilter, T2<:AbstractFilter}
     return size(T1) + size(T2)
 end
@@ -571,7 +574,7 @@ Stacks filters together so you can easily combine multiple filters.
 It does this by calling the :+ and :* method. Every filter added will
 include an additional parameter that controls the relative weight of each filter.
 """
-function stack(θ...)
+function stack_filters(θ...)
     (f1,rest) = Iterators.peel([θ...])
     return f1+mapreduce(x->1.0*x, + ,rest)
 end
@@ -580,12 +583,12 @@ end
     $(SIGNATURES)
 Splits the filter into an array with its subcomponents so you can easily access them.
 """
-function split(θ::AbstractFilter)
+function split_filters(θ::AbstractFilter)
     return [θ]
 end
 
-function split(θ::AddFilter)
-    return [split(θ.θ1)..., split(θ.θ2)...]
+function split_filters(θ::AddFilter)
+    return [split_filters(θ.θ1)..., split_filters(θ.θ2)...]
 end
 
 
