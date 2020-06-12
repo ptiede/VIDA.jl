@@ -1,4 +1,4 @@
-#__precompile__()
+__precompile__()
 """
     VIDA
 Is a image feature extraction tool for use with EHT images of black holes.
