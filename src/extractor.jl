@@ -80,7 +80,9 @@ function bbextract(divergence, θinit::T, lbounds, ubounds,
                         MaxFuncEvals=20000, TraceMode=:silent,
                         SearchRange=search_range,kwargs...)
     θinit2 = T(best_candidate(resbb))
-    return extract(divergence, θinit2, lbounds, ubounds; method=Fminbox(GradientDescent()))
+    #return extract(divergence, θinit2, lbounds, ubounds; method=Fminbox(ConjugateGradient()),
+    #        niterations=1000)
+    return (θinit2, best_fitness(resbb), false, 20000)
 end
 
 """
