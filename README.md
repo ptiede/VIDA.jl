@@ -90,7 +90,7 @@ which creates a closure that depends on the filter passed to it. For example to 
 ```julia
 bh(θ::AbstractFilter)
 ```
-and `bm` will use multiple dispatch to figure out which filter function to use.
+and `bh` will use multiple dispatch to figure out which filter function to use.
 
 
 ### Extract `extract` and `bbextract`
@@ -107,7 +107,7 @@ We have provided a minimal example of how to run the filter in examples using co
 A simpler example is
 ```julia
   using VIDA
-  #load the image and plot it using PyPlot
+  #load the image and plot it
   image = load_ehtimfits("examples/data/elliptical_gaussian_rot-0.00.fits")
   plot(image)
 
@@ -121,11 +121,7 @@ A simpler example is
                             0.0   #DEC (y) locatin of ring center in μas
                            )
   #Plot the filter
-  plot(filter,
-       160 #number of pixels
-       (-80,80), #RA limits
-       (-80,80) #DEC limits
-      )
+  plot(filter)
 
   #make the measure you can choose from :KL or :Bh currently.
   bh = make_div(image, :Bh)
