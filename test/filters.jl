@@ -1,5 +1,5 @@
 using Test,VIDA
-
+using LinearAlgebra
 include("common.jl")
 
 @testset "FilterAsymGaussian" begin
@@ -12,6 +12,18 @@ include("common.jl")
 
     @test imagefilter(x0,y0,θ) == 1.0
     @test length(fieldnames(AsymGaussian)) == VIDA.size(AsymGaussian)
+    img = VIDA.make_ehtimage(θ, npix, xlim, ylim)
+    @test isapprox(flux(img), 1.0, atol=ϵ)
+    xcent,ycent = centroid(img)
+    @test isapprox(xcent, x0; rtol=ϵ)
+    @test isapprox(ycent, y0; rtol=ϵ)
+    img_inert = VIDA.inertia(img, true)
+    σx2 = σ^2/(1-τ)
+    σy2 = σ^2*(1-τ)
+    ed = eigen(Symmetric(img_inert))
+    @test isapprox(σx2, maximum(eigvals(ed)); rtol=ϵ)
+    @test isapprox(σy2, minimum(eigvals(ed)); rtol=ϵ)
+
 end
 
 @testset "FilterGaussianRing" begin

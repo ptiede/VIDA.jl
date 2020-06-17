@@ -56,7 +56,7 @@ function extract(rng::AbstractRNG, nstart::Int, divergence, θinit::T,
         df[i,length(p)+3] = converged
         df[i,length(p)+4] = iterations
     end
-    return sort!(df,length(pinit)+1)
+    return sort!(df, length(pinit)+1)
 end
 
 """
@@ -84,7 +84,7 @@ function bbextract(divergence, θinit::T, lbounds, ubounds,
     #        niterations=1000)
     #return (θinit2, best_fitness(resbb), false, 20000)
     return extract(divergence, θinit2, lbounds, ubounds;
-                   method=Fminbox(LBFGS()), niterations=10000)
+                   method=Fminbox(NelderMead()), niterations=10)
 
 end
 

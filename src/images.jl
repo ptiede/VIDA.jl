@@ -172,6 +172,82 @@ function load_ehtimfits(fits_name::String)
     return EHTImage(nx, ny, psize_x, psize_y, source, ra, dec, c_0.val/freq, mjd, image)
 end
 
+"""
+    $(SIGNATURES)
+Finds the centroid or center of light of the `img` in μas.
+"""
+function centroid(img::EHTImage)
+    dx = abs(img.psize_x)
+    dy = abs(img.psize_y)
+    fovx = dx*img.nx
+    fovy = dx*img.ny
+    xstart = (fovx-dx)/2.0
+    ystart = (-fovy+dy)/2.0
+    inorm = zero(eltype(img.img))
+    xcent = zero(eltype(img.img))
+    ycent = zero(eltype(img.img))
+    @inbounds for i in 1:img.nx
+        @inbounds for j in 1:img.ny
+            x = xstart - dx*(i-1)
+            y = ystart + dy*(j-1)
+            xcent += x*img.img[j,i]
+            ycent += y*img.img[j,i]
+            inorm += img.img[j,i]
+        end
+    end
+    return xcent/inorm,ycent/inorm
+end
+
+"""
+    $(SIGNATURES)
+Find the image moment of inertia or **second moment**
+
+### Notes
+If `center=true` then we find the central second moment, or the second
+cumulant of the image.
+"""
+function inertia(img::EHTImage, center=false)
+    moments = Matrix{eltype(img.img)}(undef,2,2)
+    dx = abs(img.psize_x)
+    dy = abs(img.psize_y)
+    fovx = dx*img.nx
+    fovy = dx*img.ny
+    xstart = (fovx-dx)/2.0
+    ystart = (-fovy+dy)/2.0
+    inorm = zero(eltype(img.img))
+    xx = zero(eltype(img.img))
+    xy = zero(eltype(img.img))
+    yy = zero(eltype(img.img))
+    @inbounds for i in 1:img.nx
+        @inbounds for j in 1:img.ny
+            x = xstart - dx*(i-1)
+            y = ystart + dy*(j-1)
+            xx += x*x*img.img[j,i]
+            yy += y*y*img.img[j,i]
+            xy += x*y*img.img[j,i]
+            inorm += img.img[j,i]
+        end
+    end
+    if center
+        xcent,ycent = centroid(img)
+        xx = xx - xcent*xcent
+        yy = yy - ycent*ycent
+        xy = xy - xcent*ycent
+    end
+    moments[1,1] = xx/inorm
+    moments[2,2] = yy/inorm
+    moments[1,2] = moments[2,1] = xy/inorm
+    return moments
+end
+
+"""
+    $(SIGNATURES)
+Finds the image flux of an EHTImage `img`
+"""
+function flux(img::EHTImage)
+    return sum(img.img)
+end
+
 function center_of_light(xitr,yitr,img)
     xcl = zero(eltype(img))
     ycl = zero(eltype(img))

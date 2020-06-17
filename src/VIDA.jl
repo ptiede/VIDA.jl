@@ -21,6 +21,7 @@ export
     imagefilter, unpack,
     #Imaging stuff
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,
+    flux, centroid, inertia,
     #Feature extraction stuff
     extract, bbextract
 
