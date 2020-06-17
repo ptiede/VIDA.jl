@@ -20,8 +20,16 @@ filter = GeneralGaussianRing(p::Array) <: AbstractFilter
 extract(measure,
           θ::AbstractFilter, #starting location of filter
           lower,  #lower bounds on parameters for filter
-          upper,   #upper bounds on the parameters for filter
+          upper;   #upper bounds on the parameters for filter
           method=Fminbox(LBFGS()) #optimization method
+         )
+#To use a more robust global optimizer use
+bbextract(measure,
+          θ::AbstractFilter, #starting location of filter
+          lower,  #lower bounds on parameters for filter
+          upper;   #upper bounds on the parameters for filter
+          MaxFuncEvals = 2*10^4, #Maximum number of measure evals
+          TraceMode = :compact # write progress
          )
 ```
 Let's dive into what each piece means
