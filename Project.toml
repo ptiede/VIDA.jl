@@ -34,6 +34,7 @@ LaTeXStrings = "1.1"
 Optim = "0.21"
 Parameters = "0.12"
 PhysicalConstants = "0.2"
+Plots = "1.4"
 SpecialFunctions = "0.10"
 julia = "1"
 
