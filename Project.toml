@@ -35,6 +35,7 @@ Optim = "0.21"
 Parameters = "0.12"
 PhysicalConstants = "0.2"
 Plots = "1.4"
+RecipesBase = "1.0"
 SpecialFunctions = "0.10"
 julia = "1"
 
