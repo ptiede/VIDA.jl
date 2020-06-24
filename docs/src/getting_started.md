@@ -1,22 +1,22 @@
 # Getting Started
-The best way to learn how to use VIDA is to look at some of the example notebooks provided.
+The best way to learn how to use LaVIDA is to look at some of the example notebooks provided.
 
 ## Installation
-`VIDA` isn't yet registered. To install the pkg type
+`LaVIDA` isn't yet registered. To install the pkg type
 ```julia
-using Pkg; Pkg.add(PackageSpec(url="https://github.com/ptiede/VIDA.jl.git"))
+using Pkg; Pkg.add(PackageSpec(url="https://github.com/ptiede/LaVIDA.jl.git"))
 ```
-Or go to the repl and simply type `]add https://github.com/ptiede/VIDA.jl.git`.
+Or go to the repl and simply type `]add https://github.com/ptiede/LaVIDA.jl.git`.
 
 Some additional dependencies that enable full functionality can be added with
 ```julia
 Pkg.add.(["Optim","PyPlot","FITSIO","ArgParse"])
 ```
 
-## Idea behind VIDA
-`VIDA` is based on the idea of intrepreting the image as a probility distribution. Namely since any image is integrable, the space of images is in one-to-one correspondence with a probability distribution, especially since the total flux of the image is already known a priori.
+## Idea behind LaVIDA
+`LaVIDA` is based on the idea of intrepreting the image as a probility distribution. Namely since any image is integrable, the space of images is in one-to-one correspondence with a probability distribution, especially since the total flux of the image is already known a priori.
 
-Therefore, our idea is very close to variational inference, hence the name *Variational Image Domain Analysis*. Namely, where we view the image as a distribution and we aim to find a approximation of the distribution given some parameteric family ``f_\theta(x,y)``, which for our purproses we will typically call a *filter*. 
+Therefore, our idea is very close to variational inference, hence the name *(the) Variational Image Domain Analysis*. Namely, where we view the image as a distribution and we aim to find a approximation of the distribution given some parameteric family ``f_\theta(x,y)``, which for our purproses we will typically call a *filter*. 
 
 The choice of filter, depends on the problem of interest, namely what features we are interested in. Typically for the EHT where our images tend to be rings, we are interested in
 
@@ -26,10 +26,10 @@ The choice of filter, depends on the problem of interest, namely what features w
  - Flux asymmetry s
  - Position angle ξ
 
-`VIDA` then defines a series of filters parameterize these features.
+`LaVIDA` then defines a series of filters parameterize these features.
 
 ### Filters
-Currently we have 5 filters defined, although they all belong to the same family. For an example on how to see the process for defining your own filter please see the [readme](https://github.com/ptiede/VIDA.jl/blob/master/README.md).
+Currently we have 5 filters defined, although they all belong to the same family. For an example on how to see the process for defining your own filter please see the [readme](https://github.com/ptiede/LaVIDA.jl/blob/master/README.md).
 
 The filters implemented are:
 
@@ -44,7 +44,7 @@ The filters implemented are:
 ### Divergences
 In order to extract features we first need a cost function that penalized our parameterized distributions ``f_\theta(x,y)``. Since we are considering the image as a probability distribution, one cost function would be the distance or **divergence** between two distributions. A probability divergence is just a functional that takes in two probability distributions p,q and is minimized iff ``p\equiv q``.
 
-Currently we have two divergences implemented in `VIDA`
+Currently we have two divergences implemented in `LaVIDA`
  - Bhattacharyya divergence (Bh)
 
 ```math

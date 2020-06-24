@@ -1,6 +1,6 @@
 using Distributed
 using ArgParse
-Distributed.@everywhere using VIDA
+Distributed.@everywhere using LaVIDA
 using CSV
 using DataFrames
 using Optim
@@ -202,12 +202,12 @@ end
             error("$(div_type) not found! Must be KL or Bh")
         end
         println("Extracting $file using $d_type divergence")
-        image = VIDA.load_ehtimfits(string(file))
-        cimage = VIDA.clipimage(clip_percent,image)
-        div = VIDA.make_div(cimage, d_type, breg)
+        image = load_ehtimfits(string(file))
+        cimage = LaVIDA.clipimage(clip_percent,image)
+        div = LaVIDA.make_div(cimage, d_type, breg)
         θ,divmin,_,_ = bbextract(div, filter, lower, upper;
                                  TraceMode=:silent, MaxFuncEvals=2*10^4)
-        return VIDA.unpack(θ),divmin
+        return LaVIDA.unpack(θ),divmin
     end
 end
 
