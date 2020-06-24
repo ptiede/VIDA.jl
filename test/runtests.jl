@@ -1,7 +1,7 @@
-using LaVIDA
+using VIDA
 using Test
 
-@testset "LaVIDA.jl" begin
+@testset "VIDA.jl" begin
     # Write your own tests here.
     tests = [
         "filters",

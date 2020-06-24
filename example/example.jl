@@ -1,5 +1,5 @@
 using ArgParse
-using LaVIDA
+using VIDA
 using CSV
 using DataFrames
 using Optim

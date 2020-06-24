@@ -1,4 +1,4 @@
-using Test,LaVIDA
+using Test,VIDA
 using LinearAlgebra
 include("common.jl")
 
@@ -11,13 +11,13 @@ include("common.jl")
     @test unpack(θ1) == unpack(θ2)
 
     @test imagefilter(x0,y0,θ) == 1.0
-    @test length(fieldnames(AsymGaussian)) == LaVIDA.size(AsymGaussian)
-    img = LaVIDA.make_ehtimage(θ, npix, xlim, ylim)
+    @test length(fieldnames(AsymGaussian)) == VIDA.size(AsymGaussian)
+    img = VIDA.make_ehtimage(θ, npix, xlim, ylim)
     @test isapprox(flux(img), 1.0, atol=ϵ)
     xcent,ycent = centroid(img)
     @test isapprox(xcent, x0; rtol=ϵ)
     @test isapprox(ycent, y0; rtol=ϵ)
-    img_inert = LaVIDA.inertia(img, true)
+    img_inert = VIDA.inertia(img, true)
     σx2 = σ^2/(1-τ)
     σy2 = σ^2*(1-τ)
     ed = eigen(Symmetric(img_inert))
@@ -35,7 +35,7 @@ end
     @test unpack(θ1) == unpack(θ2)
 
     @test imagefilter(r0+x0,y0,θ) == 1.0
-    @test length(fieldnames(GaussianRing)) == LaVIDA.size(GaussianRing)
+    @test length(fieldnames(GaussianRing)) == VIDA.size(GaussianRing)
 end
 
 @testset "FilterSlashedGaussianRing" begin
@@ -45,9 +45,9 @@ end
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    xrot,yrot = LaVIDA.rotate(r0,0, π-ξs)
+    xrot,yrot = VIDA.rotate(r0,0, π-ξs)
     @test imagefilter(xrot+x0,yrot+y0, θ) == 1.0
-    @test length(fieldnames(SlashedGaussianRing)) == LaVIDA.size(SlashedGaussianRing)
+    @test length(fieldnames(SlashedGaussianRing)) == VIDA.size(SlashedGaussianRing)
 end
 
 
@@ -58,9 +58,9 @@ end
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    xrot,yrot = LaVIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
+    xrot,yrot = VIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
     @test imagefilter(xrot+x0,yrot+y0, θ) == 1.0
-    @test length(fieldnames(EllipticalGaussianRing)) == LaVIDA.size(EllipticalGaussianRing)
+    @test length(fieldnames(EllipticalGaussianRing)) == VIDA.size(EllipticalGaussianRing)
 end
 
 
@@ -71,9 +71,9 @@ end
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    xrot,yrot = LaVIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
+    xrot,yrot = VIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
     @test imagefilter(xrot+x0,yrot+y0, θ) == 1.0
-    @test length(fieldnames(TIDAGaussianRing)) == LaVIDA.size(TIDAGaussianRing)
+    @test length(fieldnames(TIDAGaussianRing)) == VIDA.size(TIDAGaussianRing)
 end
 
 @testset "FilterGeneralGaussianRing" begin
@@ -83,8 +83,8 @@ end
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    @test (sum(LaVIDA.filter_image(θ,npix,xlim,ylim)[3]) - 193.31484083354985) < ϵ
-    @test length(fieldnames(GeneralGaussianRing)) == LaVIDA.size(GeneralGaussianRing)
+    @test (sum(VIDA.filter_image(θ,npix,xlim,ylim)[3]) - 193.31484083354985) < ϵ
+    @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
 @testset "FilterAddMul" begin

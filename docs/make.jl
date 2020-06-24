@@ -1,14 +1,14 @@
-using LaVIDA
+using VIDA
 using Documenter
 
 makedocs(;
-    modules=[LaVIDA],
+    modules=[VIDA],
     authors="Paul <ptiede91@gmail.com> and contributors",
-    repo="https://github.com/ptiede/LaVIDA.jl/blob/{commit}{path}#L{line}",
-    sitename="LaVIDA.jl",
+    repo="https://github.com/ptiede/VIDA.jl/blob/{commit}{path}#L{line}",
+    sitename="VIDA.jl",
     format=Documenter.HTML(;
         prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://ptiede.github.io/LaVIDA.jl",
+        canonical="https://ptiede.github.io/VIDA.jl",
         assets=String[],
     ),
     pages=[
@@ -19,5 +19,5 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/ptiede/LaVIDA.jl",
+    repo="github.com/ptiede/VIDA.jl",
 )

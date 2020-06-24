@@ -1,10 +1,10 @@
-# LaVIDA
+# VIDA
 
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ptiede.github.io/LaVIDA.jl/dev)
-[![Build Status](https://travis-ci.com/ptiede/LaVIDA.jl.svg?branch=master)](https://travis-ci.com/ptiede/LaVIDA.jl)
-[![Coverage](https://codecov.io/gh/ptiede/LaVIDA.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ptiede/LaVIDA.jl)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ptiede.github.io/VIDA.jl/dev)
+[![Build Status](https://travis-ci.com/ptiede/VIDA.jl.svg?branch=master)](https://travis-ci.com/ptiede/VIDA.jl)
+[![Coverage](https://codecov.io/gh/ptiede/VIDA.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ptiede/VIDA.jl)
 
-LaVIDA.jl or the *Variational Image Domain Analysis* provides a interface to extracting features from fits images created for the EHT, using the notion of probabilty divergences similar to variational inference, hence the name. The currently implemented divergences are the Bhattacharyya distance/divergence as well as the Kullback-Leiber divergence. These are used to extract ring-like features from image reconstructions of black holes such as from M87. A paper applying this to various images ring-like images is in preparation.
+VIDA.jl or the *Variational Image Domain Analysis* provides a interface to extracting features from fits images created for the EHT, using the notion of probabilty divergences similar to variational inference, hence the name. The currently implemented divergences are the Bhattacharyya distance/divergence as well as the Kullback-Leiber divergence. These are used to extract ring-like features from image reconstructions of black holes such as from M87. A paper applying this to various images ring-like images is in preparation.
 
 ## Interface
 The inteface is based off of using probability divergences to extract features from images. The main functions a user needs to be aware of are:
@@ -114,7 +114,7 @@ If you use Optim.jl we found our solution got stuck in local minima even if usin
 We have provided a minimal example of how to run the filter in examples using command line arguments.
 A simpler example is
 ```julia
-  using LaVIDA
+  using VIDA
   #load the image and plot it
   image = load_ehtimfits("examples/data/elliptical_gaussian_rot-0.00.fits")
   plot(image)
@@ -160,4 +160,4 @@ A simpler example is
 ```
 
 ### Distributed computing
-In the examples folder we have a complete script that shows how to use LaVIDA on a cluster to extract image features from multiple images at the same time. It uses argparse to read in command line options and a file that contains a list of paths of images to run LaVIDA on. 
+In the examples folder we have a complete script that shows how to use VIDA on a cluster to extract image features from multiple images at the same time. It uses argparse to read in command line options and a file that contains a list of paths of images to run VIDA on. 
