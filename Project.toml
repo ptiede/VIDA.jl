@@ -1,7 +1,7 @@
 name = "LaVIDA"
 uuid = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
 authors = ["Paul Tiede <ptiede91@gmail.com>"]
-version = "0.2.0"
+version = "0.1.0"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
