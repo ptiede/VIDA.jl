@@ -1,6 +1,6 @@
 using Distributed
 using ArgParse
-Distributed.@everywhere using VIDA
+Distributed.@everywhere using LaVIDA
 using CSV
 using DataFrames
 using Optim
