@@ -135,7 +135,10 @@ A simpler example is
 
   #make the measure you can choose from :KL or :Bh currently.
   bh = make_div(image, :Bh)
-
+  
+  #To call the function bh
+  bh(filter)
+          
   #parameter bounds
   lower = [5.0 0.1, 1e-3, -0.99, -π, -50, -50]
   upper = [40.0 30.0, 0.99, 0.99, π, 50, 50]
@@ -143,21 +146,6 @@ A simpler example is
   #filtermax is the filter that maximizes the bm,
   #bm_max is its max value
   #converved & itr are some run info to see if the optimizer said it reached convergence
-  filtermax,bh_max,converged,itr = extract(bh,filter,lower,upper)
-  
-  #This is usually wrong so lets instead run 6 of them!
-  #Note this is multithreaded so the n jobs will be split amoung the available threads
-  nstart = 10
-  #results in this case are saved in a data frame for easy access.
-  # The first element is the best fit, i.e. the highest ℓmax
-  results = extract(nstart, bh, filter, lower, upper)
-
-  #To plot and compare results
-  filtermax = TIDAGaussianRing(results[1:7]) #because has 7 params
-  triptic(image, filtermax)
-  
-  #Similarly using bbextract which tends to converge to the true answer in 
-  #one go
   filtermax,bh_max,converged,itr = bbextract(bh,filter,lower,upper)
 ```
 
