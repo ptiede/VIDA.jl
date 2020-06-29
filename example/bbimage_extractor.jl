@@ -16,10 +16,10 @@ function parse_commandline()
             help = "file list of fits images to read"
             arg_type = String
             required = true
-        "--ninits", "-n"
-            help = "number of initial starting locations"
-            arg_type = Int
-            default = 10
+        "--stride"
+             help = "Checkpointing stride, i.e. number of steps."
+             arg_type = Int
+             default = 200
         "--out"
             help = "name of output files with extractions"
             default = "fit_summaries.txt"
@@ -40,8 +40,10 @@ function parse_commandline()
             default = "Bh"
         "--filter"
             help = "Filter to use for the image extraction.\nOptions are, Gen, TIDA, Slash, Ellip, Circ"
+            action = :append_arg
+            nargs = '*'
             arg_type = String
-            default = "TIDA"
+            required=true
         "--seed"
             help = "Random seed for initial positions in extract"
             arg_type = Int
@@ -70,6 +72,7 @@ function main()
     breg = parsed_args["b"]
     seed = parsed_args["seed"]
     div_type = parsed_args["div"]
+    stride = parsed_args["stride"]
     if (parsed_args["div"]=="KL")
       div_type = "KL"
     elseif (parsed_args["div"]=="Bh")
@@ -77,7 +80,8 @@ function main()
     else
       error("$div_type not found! Must be Bh or KL")
     end
-    filter_type = parsed_args["filter"]
+    filter_type = vcat(parsed_args["filter"]...)
+    println("Filter type $filter_type")
     restart = parsed_args["restart"]
     println("Using $(Threads.nthreads()) threads")
     println("Using options: ")
@@ -87,6 +91,7 @@ function main()
     println("likelihood multiplication $breg")
     println("random seed $seed")
     println("divergence type $div_type")
+    println("Checkpoint stride $stride")
 
     #Read in a file and create list of images to filter
     #the last line is the termination of the file
@@ -115,7 +120,7 @@ function main()
     main_sub(files, out_name,
              div_type,filter_type,
              clip_percent, breg, seed,
-             restart)
+             restart, stride)
     println("Done! Check $out_name for summary")
     return 0
 end
@@ -124,71 +129,76 @@ function make_initial_filter(filter_type)
     if filter_type == "TIDA"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
-      lower = [10.0, 0.01, 1e-3, -0.999, -π, -30.0, -30.0, 1e-6]
-      upper = [35.0, 15.0, 0.999, 0.999, π, 30.0, 30.0, 1e3]
+      lower = [5.0, 0.01, 1e-3, -0.999, -π, -50.0, -50.0]
+      upper = [35.0, 20.0, 0.999, 0.999, π, 50.0, 50.0]
       filter = TIDAGaussianRing(20.0, 5.0,
                                 0.5, 0.5,
-                                0.0, 0.0, 0.0) + 1.0*Constant()
+                                0.0, 0.0, 0.0)
       return (filter, lower, upper)
     elseif filter_type == "Gen"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
-      lower = [10.0, 0.01, 1e-3, 0.0, 1e-3,-π, -30.0, -30.0, 1e-6]
-      upper = [35.0, 15.0, 0.999, π,  0.99, π, 30.0, 30.0, 1e3]
+      lower = [5.0, 0.01, 1e-3, 0.0, 1e-3,-π, -50.0, -50.0]
+      upper = [35.0, 20.0, 0.999, π,  0.99, π, 50.0, 50.0]
       filter = GeneralGaussianRing(20.0, 5.0,
                                    0.5, 0.0,
                                    0.5, 0.0,
-                                   0.0, 0.0) + 1.0*Constant()
+                                   0.0, 0.0)
       return (filter, lower, upper)
     elseif filter_type == "Slash"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
-      lower = [10.0, 0.01, 1e-3, -π, -30.0, -30.0, 1e-6]
-      upper = [35.0, 15.0, 0.999, π,  30.0, 30.0, 1e3]
+      lower = [5.0, 0.01, 1e-3, -π, -50.0, -50.0]
+      upper = [35.0, 20.0, 0.999, π,  50.0, 50.0]
       filter = SlashedGaussianRing(20.0, 5.0,
                                    0.5, 0.0,
-                                   0.0, 0.0) + 1.0*Constant()
+                                   0.0, 0.0)
       return (filter, lower, upper)
     elseif filter_type == "Ellip"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
-      lower = [10.0, 0.01, 1e-3, 0.0, -30.0, -30.0, 1e-6]
-      upper = [35.0, 15.0, 0.999, π,  30.0, 30.0, 1e3]
+      lower = [5.0, 0.01, 1e-3, 0.0, -50.0, -50.0]
+      upper = [35.0, 20.0, 0.999, π,  50.0, 50.0]
       filter = EllipticalGaussianRing(20.0, 5.0,
                                       0.5, 0.0,
-                                      0.0, 0.0) + 1.0*Constant()
+                                      0.0, 0.0)
       return (filter, lower, upper)
     elseif filter_type == "Circ"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
-      lower = [10.0, 0.01, -30.0, -30.0, 1e-6]
-      upper = [35.0, 15.0, 30.0, 30.0, 1e3]
-      filter = GaussianRing(20.0, 5.0,0.0, 0.0) + 1.0*Constant()
-      return (filter+1.0*Constant(), lower, upper)
+      lower = [5.0, 0.01, -40.0, -50.0]
+      upper = [35.0, 20.0, 50.0, 50.0]
+      filter = GaussianRing(20.0, 5.0,0.0, 0.0)
+      return (filter, lower, upper)
+    elseif filter_type == "AsymG"
+        lower = [0.5, 0.001, 0.0, -60.0,-60.0]
+        upper = [35.0, 0.999, π, 60.0, 60.0 ]
+        filter = AsymGaussian(5.0,0.001, 0.001, 0.0,0.0)
+        return (filter, lower, upper)
     else
       error("$filter_type not found must be Circ, Ellip, Slash, TIDA, Gen")
     end
 end
 
-function create_initial_df!(start_indx, fitsfiles, filter, restart)
+function create_initial_df!(start_indx, fitsfiles, filter, restart, out_name)
+    start_indx = 1
+    df = DataFrame()
+    nfiles = length(fitsfiles)
     if !restart
-      start_indx = 1
-      df = DataFrame()
-      nfiles = length(fitsfiles)
       #we want the keynames to match the model parameters
       key_names = fieldnames(typeof(filter))
       for i in 1:length(key_names)
-          setproperty!(df, key_names[i], zeros(nfiles))
+        insertcols!(df, ncol(df)+1, Symbol(key_names[i]) => zeros(nfiles); makeunique=true)
       end
       #fill the data frame with some likely pertinent information
       setproperty!(df, :divmin, zeros(nfiles))
       setproperty!(df, :fitsfiles,  fitsfiles)
     else
-      df = CSV.read(out_name, delim=";")
-      start_indx = findfirst(isequal(0.0), df[!,:r0])
+      df = CSV.read(out_name, delim=";") |> DataFrame
+      start_indx = findfirst(isequal(0.0), df[:,1])
       println("Restarting run for $out_name at index $start_indx")
     end
-    return df
+    return df, start_indx
 end
 
 @everywhere function fit_func(filter,lower, upper, div_type, clip_percent, breg)
@@ -206,7 +216,7 @@ end
         cimage = VIDA.clipimage(clip_percent,image)
         div = VIDA.make_div(cimage, d_type, breg)
         θ,divmin,_,_ = bbextract(div, filter, lower, upper;
-                                 TraceMode=:silent, MaxFuncEvals=2*10^4)
+                                 TraceMode=:silent, MaxFuncEvals=50*10^3)
         return VIDA.unpack(θ),divmin
     end
 end
@@ -214,10 +224,25 @@ end
 function main_sub(fitsfiles, out_name,
                   div_type, filter_type,
                   clip_percent, breg, seed,
-                  restart)
+                  restart, stride)
 
     #"Define the filter I want to use and the var bounds"
-    model,lower,upper = make_initial_filter(filter_type)
+    matom = make_initial_filter.(filter_type)
+    model = 1.0*matom[1][1]
+    lower = [matom[1][2]...,1e-6]
+    upper = [matom[1][3]...,1e2]
+    if length(matom) > 1
+      for i in 2:length(matom)
+        model = model + 1.0*matom[i][1]
+        lower = [lower..., matom[i][2]..., 1e-6]
+        upper = [upper..., matom[i][3]..., 1e2]
+      end
+    end
+    model = model + 1.0*Constant()
+    lower = [lower..., 1e-6]
+    upper = [upper..., 1]
+    @assert length(lower) == length(upper) "Bounds must have equal size"
+    @assert length(unpack(model)) == length(lower) "Number of filter params $(length(unpack(model))) != $(length(lower))"
     @everywhere model = $(model)
     @everywhere lower = $(lower)
     @everywhere upper = $(upper)
@@ -228,18 +253,22 @@ function main_sub(fitsfiles, out_name,
     #Set up the data frame to hold the optimizer output that
     #will be saved
     start_indx = 1
-    df = create_initial_df!(start_indx,fitsfiles, model, restart)
-
+    df,start_indx = create_initial_df!(start_indx,fitsfiles, model, restart, out_name)
+    #CSV.write(out_name, df, delim=';')
     rng = MersenneTwister(seed) #set the rng
     #Now fit the files!
     @everywhere fit = fit_func(model,lower,upper, div_type, clip_percent, breg)
-    results = pmap(fit, fitsfiles)
-    println(first.(results))
-    df[:,1:length(lower)] = hcat(first.(results)...)'
-    df[:,length(lower)+1] = last.(results)
-    df[:,end] = fitsfiles
-    #save the file
-    CSV.write(out_name, df, delim=';')
+    indexpart = Iterators.partition(start_indx:length(fitsfiles), stride)
+    for ii in indexpart
+      results = pmap(fit, fitsfiles[ii])
+      println(ii)
+      df[ii,1:length(lower)] = hcat(first.(results)...)'
+      df[ii,length(lower)+1] = last.(results)
+      df[ii,end] = fitsfiles[ii]
+      #save the file
+      println("Checkpointing $(ii)")
+      CSV.write(out_name, df, delim=';')
+    end
 
     return df
 end
