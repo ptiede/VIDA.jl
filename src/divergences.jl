@@ -47,10 +47,10 @@ function make_bh(image::T, lreg=1.0) where {T<:EHTImage}
         filter_norm = zero(eltype(norm_im))
         bsum = zero(eltype(norm_im))
         for i in 1:image.nx
-            @simd for j in 1:image.ny
+            for j in 1:image.ny
                 x = xstart + image.psize_x*(i-1)
                 y = ystart + image.psize_y*(j-1)
-                filter_value = imagefilter(x,y,θ)+1e-50
+                filter_value = θ(x,y)+1e-50
                 @inbounds bsum += sqrt(filter_value*norm_im[j,i])
                 filter_norm += filter_value
             end
@@ -91,7 +91,7 @@ function make_kl(image::T, lreg=1.0) where {T<:EHTImage}
             @inbounds for j in 1:image.ny
                 x = xstart + image.psize_x*(i-1)
                 y = ystart + image.psize_y*(j-1)
-                filter_value = imagefilter(x,y,θ)+1e-12
+                filter_value = θ(x,y)+1e-12
                 klsum += filter_value*log(filter_value/(norm_im[j,i]+1e-12))
                 filter_norm += filter_value
             end

@@ -10,7 +10,7 @@ include("common.jl")
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
 
-    @test imagefilter(x0,y0,θ) == 1.0
+    @test θ(x0,y0) == 1.0
     @test length(fieldnames(AsymGaussian)) == VIDA.size(AsymGaussian)
     img = VIDA.make_ehtimage(θ, npix, xlim, ylim)
     @test isapprox(flux(img), 1.0, atol=ϵ)
@@ -34,7 +34,7 @@ end
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
 
-    @test imagefilter(r0+x0,y0,θ) == 1.0
+    @test θ(r0+x0,y0) == 1.0
     @test length(fieldnames(GaussianRing)) == VIDA.size(GaussianRing)
 end
 
@@ -46,7 +46,7 @@ end
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
     xrot,yrot = VIDA.rotate(r0,0, π-ξs)
-    @test imagefilter(xrot+x0,yrot+y0, θ) == 1.0
+    @test θ(xrot+x0,yrot+y0) == 1.0
     @test length(fieldnames(SlashedGaussianRing)) == VIDA.size(SlashedGaussianRing)
 end
 
@@ -59,7 +59,7 @@ end
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
     xrot,yrot = VIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
-    @test imagefilter(xrot+x0,yrot+y0, θ) == 1.0
+    @test θ(xrot+x0,yrot+y0) == 1.0
     @test length(fieldnames(EllipticalGaussianRing)) == VIDA.size(EllipticalGaussianRing)
 end
 
@@ -72,7 +72,7 @@ end
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
     xrot,yrot = VIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
-    @test imagefilter(xrot+x0,yrot+y0, θ) == 1.0
+    @test θ(xrot+x0,yrot+y0) == 1.0
     @test length(fieldnames(TIDAGaussianRing)) == VIDA.size(TIDAGaussianRing)
 end
 
@@ -97,6 +97,6 @@ end
     @test θ1 == θarr[1]
     @test θ2 == θarr[2].θ
     @test unpack(θ) == unpack(θs)
-    @test imagefilter(x0,y0,θ1)+imagefilter(x0,y0,θ2) == imagefilter(x0,y0,θ)
-    @test imagefilter(x0,y0,θ1)+imagefilter(x0,y0,θ2) == imagefilter(x0,y0,θs)
+    @test θ1(x0,y0) + θ2(x0,y0) == θ(x0,y0)
+    @test θ1(x0,y0) + θ2(x0,y0) == θs(x0,y0)
 end

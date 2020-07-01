@@ -3,14 +3,13 @@
 """
     $(TYPEDEF)
 An absract type that will contain the filter information, such as the parameters.
-Specific instanstantiations will need to be defined for you to use this. This is
-mainly for the imagefilter function
+Specific instanstantiations will need to be defined for you to use this.
 
 ### Details
     This defined the highest function type. If you wish to implement your own filter you
     need to define a a couple of things
     1. The filter type <: AbstractFilter
-    2. an `imagefilter` function that defines the function
+    2. an functor of the type that computes the filter function
     3. an `size` function that defines the number of parameters of the filter.
 
 An example is given by:
@@ -18,14 +17,14 @@ An example is given by:
 #All of our composite type are defined using the Paramters.jl package to you
 can directly refer to the struct parameters when creating it, although this isn't
 actually used anywhere in the code.
-@with_kw struct Gaussian <: AbstractFilter
+@with_kw mutable struct Gaussian <: AbstractFilter
     σ::Float64
     x0::Float64
     y0::Float64
 end
 
 #Typically we inline and force the function to use fastmath
-@fastmath @inline function imagefilter(x,y,θ::Gaussian)
+@fastmath @inline function (θ::Gaussian)(x,y)
     return 1.0/(2π*σ^2)*exp(-0.5*( (x-x0)^2+(y-y0)^2 ) )
 end
 size(::Type{Gaussian}) = 3
@@ -33,24 +32,23 @@ size(::Type{Gaussian}) = 3
 """
 abstract type AbstractFilter end
 
+
+#Load the filters
 """
-    $(SIGNATURES)
-`x`, `y` are the image positions of the filter and `θ` is the filter type.
+    $(TYPEDEF)
+An constant filter.
 
 ### Details
-evaluates the image filter at the point `x`, `y` and returns its value, given the
-filter type `θ`.
+Defines an image that just has constant flux. This is very useful for soaking up
+low levels of flux in image reconstructions that can bias the results.
 
+Since images or normalized to unity, this means the `Constant` filter has no
+additional parameters.
 """
-function imagefilter(x,y, θ::AbstractFilter) end
-#Load the filters
-
 struct Constant <: AbstractFilter end
 Constant(p) = Constant()
 size(::Type{Constant}) = 0
-@inline function imagefilter(x,y,θ::Constant)
-    return 1.0
-end
+@inline (θ::Constant)(x,y) = 1
 
 """
     $(TYPEDEF)
@@ -70,7 +68,7 @@ how the asymmetry for the `EllipticalGaussianRing`.
 ### Fields
 $(FIELDS)
 """
-@with_kw struct AsymGaussian <: AbstractFilter
+@with_kw mutable struct AsymGaussian <: AbstractFilter
     """Gaussian size in μas"""
     σ::Float64
     """Gaussian asymmetry"""
@@ -91,8 +89,7 @@ function AsymGaussian(p)
     AsymGaussian(p[1],p[2],p[3],p[4],p[5])
 end
 
-#Typically we inline and force the function to use fastmath
-@fastmath @inline function imagefilter(x,y,θ::AsymGaussian)
+@fastmath @inline function (θ::AsymGaussian)(x,y)
     x′,y′ = rotate(x-θ.x0,y-θ.y0,θ.ξ)
     σx2 = θ.σ *θ.σ/(1.0-θ.τ)
     σy2 = θ.σ*θ.σ*(1.0-θ.τ)
@@ -113,7 +110,7 @@ to recover a location `x0`,`y0`, radius `r0` and thickness `σ` from some image.
 GaussianRing(r0=20.0,σ=5.0,x0=0.0,y0=-10.0)
 ```
 """
-@with_kw struct GaussianRing <: AbstractFilter
+@with_kw mutable struct GaussianRing <: AbstractFilter
     """Radius of Gaussian ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -135,7 +132,7 @@ end
 
 size(::Type{GaussianRing}) = 4
 
-@fastmath @inline function imagefilter(x, y, θ::GaussianRing)
+@fastmath @inline function (θ::GaussianRing)(x, y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
     return exp( -(r - θ.r0)^2/(2*θ.σ^2))
 end
@@ -152,7 +149,7 @@ mainting the azimuthal and smooth structure of the image.
     $(FIELDS)
 
 """
-@with_kw struct SlashedGaussianRing <: AbstractFilter
+@with_kw mutable struct SlashedGaussianRing <: AbstractFilter
     """Radius of the ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -179,7 +176,7 @@ function SlashedGaussianRing(p)
 end
 size(::Type{SlashedGaussianRing}) = 6
 #Filter function
-@fastmath @inline function imagefilter(x,y, θ::SlashedGaussianRing)
+@fastmath @inline function (θ::SlashedGaussianRing)(x,y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
 
     #rotate the image so slash is on the x axis
@@ -214,7 +211,7 @@ normalize analytically. In fact the distance from the ellipse is implemented
 numerically using an algorithm adapted from
 [git](https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823)
 """
-@with_kw struct EllipticalGaussianRing <: AbstractFilter
+@with_kw mutable struct EllipticalGaussianRing <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64 #geometric mean of the semi-major, a, and semi-minor axis, b, r0=√ab
     """Standard deviation of the width of the Gaussian ring"""
@@ -241,7 +238,7 @@ end
 
 size(::Type{EllipticalGaussianRing}) = 6
 
-@fastmath @inline function imagefilter(x,y,θ::EllipticalGaussianRing)
+@fastmath @inline function (θ::EllipticalGaussianRing)(x,y)
     ex = x-θ.x0
     ey = y-θ.y0
     ex′,ey′ = rotate(ex,ey,θ.ξ)
@@ -269,7 +266,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 $(FIELDS)
 
 """
-@with_kw struct TIDAGaussianRing <: AbstractFilter
+@with_kw mutable struct TIDAGaussianRing <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
@@ -300,7 +297,7 @@ end
 size(::Type{TIDAGaussianRing}) = 7
 
 #Filter function for the TIDAGaussianRing
-@fastmath @inline function imagefilter(x,y,θ::TIDAGaussianRing)
+@fastmath @inline function (θ::TIDAGaussianRing)(x,y)
     ex = x-θ.x0
     ey = y-θ.y0
     ex′,ey′ = rotate(ex,ey,θ.ξ)
@@ -339,7 +336,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 ### Fields
 $(FIELDS)
 """
-@with_kw struct GeneralGaussianRing <: AbstractFilter
+@with_kw mutable struct GeneralGaussianRing <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
@@ -373,7 +370,7 @@ function size(::Type{GeneralGaussianRing})
     return 8
 end
 
-@fastmath @inline function imagefilter(x,y,θ::GeneralGaussianRing)
+@fastmath @inline function (θ::GeneralGaussianRing)(x,y)
     ex = x-θ.x0
     ey = y-θ.y0
     ex′,ey′ = rotate(ex,ey,θ.ξτ)
@@ -517,8 +514,8 @@ function Base.fieldnames(::Type{AddFilter{T1,T2}}) where {T1<:AbstractFilter, T2
 end
 
 Base.:+(x1::T1,x2::T2) where {T1<:AbstractFilter,T2<:AbstractFilter} = AddFilter(x1,x2)
-function imagefilter(x,y,θ::AddFilter)
-    return imagefilter(x,y,θ.θ1) + imagefilter(x,y,θ.θ2)
+function (θ::AddFilter)(x,y)
+    return θ.θ1(x,y) + θ.θ2(x,y)
 end
 
 function unpack(θinit::AddFilter)
@@ -561,8 +558,8 @@ end
 
 Base.:*(a,x::T) where {T<:AbstractFilter} = MulFilter(a,x)
 Base.:*(x::T,a) where {T<:AbstractFilter} = MulFilter(a,x)
-function imagefilter(x,y,θ::MulFilter)
-    return θ.a*imagefilter(x,y,θ.θ)
+function (θ::MulFilter)(x,y)
+    return θ.a*θ.θ(x,y)
 end
 function unpack(θinit::MulFilter)
     return append!(unpack(θinit.θ), θinit.a)
@@ -620,7 +617,7 @@ function filter_image(θ::AbstractFilter,
     img = Matrix{Float64}(undef,npix,npix)
     for (i,x) in enumerate(xitr)
         for (j,y) in enumerate(yitr)
-            img[j,i] = imagefilter(x,y,θ)
+            img[j,i] = θ(x,y)
         end
     end
     return (xitr,yitr,img)

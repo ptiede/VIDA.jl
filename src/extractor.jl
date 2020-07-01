@@ -84,7 +84,7 @@ function bbextract(divergence, θinit::T, lbounds, ubounds,
     #        niterations=1000)
     #return (θinit2, best_fitness(resbb), false, 20000)
     return extract(divergence, θinit2, lbounds, ubounds;
-                   method=Fminbox(NelderMead()), niterations=10)
+                   method=Fminbox(LBFGS()))
 
 end
 
