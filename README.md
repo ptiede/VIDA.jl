@@ -63,9 +63,9 @@ struct SymGaussian <: AbstractFilter
     y0::Float64 #y location of mean
 end
 
-size(::Type{SymGaussian}) = 3
+Base.size(::Type{SymGaussian}) = 3
 
-function imagefilter(x,y,θ::SymGaussian)
+function (θ::SymGaussian)(x,y)
    z2 = ((x-θ.x0)^2 + (x-θ.y0)^2)/(2.0*θ.^2)
    return = 1.0/(2π*θ.σ^2)*exp(-z2)
 end
