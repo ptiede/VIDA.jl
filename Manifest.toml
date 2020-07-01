@@ -175,9 +175,9 @@ version = "0.8.2"
 
 [[Documenter]]
 deps = ["Base64", "Dates", "DocStringExtensions", "InteractiveUtils", "JSON", "LibGit2", "Logging", "Markdown", "REPL", "Test", "Unicode"]
-git-tree-sha1 = "395fa1554c69735802bba37d9e7d9586fd44326c"
+git-tree-sha1 = "f3464968c65fc78846dad1c038c474a2c39bbb23"
 uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-version = "0.24.11"
+version = "0.25.0"
 
 [[DocumenterTools]]
 deps = ["Base64", "DocStringExtensions", "Documenter", "FileWatching", "LibGit2", "Sass"]
@@ -253,9 +253,15 @@ version = "0.50.1"
 
 [[GeometryBasics]]
 deps = ["IterTools", "LinearAlgebra", "StaticArrays", "StructArrays", "Tables"]
+<<<<<<< HEAD
 git-tree-sha1 = "119f32f9c2b497b49cd3f7f513b358b82660294c"
 uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
 version = "0.2.15"
+=======
+git-tree-sha1 = "798dd3339842b9d44e6fb72c6a61fb4ab502c494"
+uuid = "5c1252a2-5f33-56bf-86c9-59e7332b4326"
+version = "0.2.14"
+>>>>>>> 40d712809eb5b43c48a928b327f0c34ad66de546
 
 [[GeometryTypes]]
 deps = ["ColorTypes", "FixedPointNumbers", "LinearAlgebra", "StaticArrays"]
@@ -474,9 +480,15 @@ version = "1.0.5"
 
 [[Plots]]
 deps = ["Base64", "Contour", "Dates", "FFMPEG", "FixedPointNumbers", "GR", "GeometryBasics", "GeometryTypes", "JSON", "LinearAlgebra", "Measures", "NaNMath", "PlotThemes", "PlotUtils", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "Requires", "Showoff", "SparseArrays", "Statistics", "StatsBase", "UUIDs"]
+<<<<<<< HEAD
 git-tree-sha1 = "93607d33efe081e63a8a6bbd55656644d1c62cf6"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 version = "1.5.1"
+=======
+git-tree-sha1 = "3e2b6251236ee83dea423f9f4403d2280a258756"
+uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+version = "1.5.0"
+>>>>>>> 40d712809eb5b43c48a928b327f0c34ad66de546
 
 [[PooledArrays]]
 deps = ["DataAPI"]
