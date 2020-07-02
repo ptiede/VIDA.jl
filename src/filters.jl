@@ -27,7 +27,7 @@ end
 @fastmath @inline function (θ::Gaussian)(x,y)
     return 1.0/(2π*σ^2)*exp(-0.5*( (x-x0)^2+(y-y0)^2 ) )
 end
-Base.size(::Type{Gaussian}) = 3
+size(::Type{Gaussian}) = 3
 ```
 """
 abstract type AbstractFilter end
@@ -47,7 +47,7 @@ additional parameters.
 """
 struct Constant <: AbstractFilter end
 Constant(p) = Constant()
-Base.size(::Type{Constant}) = 0
+size(::Type{Constant}) = 0
 @inline (θ::Constant)(x,y) = 1
 
 """
@@ -96,7 +96,7 @@ end
     d2 = x′*x′/σx2 + y′*y′/σy2
     return exp(-0.5*d2)
 end
-Base.size(::Type{AsymGaussian}) = 5
+size(::Type{AsymGaussian}) = 5
 
 
 """
@@ -130,7 +130,7 @@ function GaussianRing(p)
     GaussianRing(p[1],p[2],p[3],p[4])
 end
 
-Base.size(::Type{GaussianRing}) = 4
+size(::Type{GaussianRing}) = 4
 
 @fastmath @inline function (θ::GaussianRing)(x, y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
@@ -174,7 +174,7 @@ function SlashedGaussianRing(p)
         @assert length(p)==6 "SlashedGaussianRing: Filter requires 6 parameters"
         SlashedGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
-Base.size(::Type{SlashedGaussianRing}) = 6
+size(::Type{SlashedGaussianRing}) = 6
 #Filter function
 @fastmath @inline function (θ::SlashedGaussianRing)(x,y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
@@ -235,8 +235,7 @@ function EllipticalGaussianRing(p)
     @assert length(p)==6 "EllipticalGaussianRing: Filter requires 6 parameters"
     EllipticalGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
-
-Base.size(::Type{EllipticalGaussianRing}) = 6
+size(::Type{EllipticalGaussianRing}) = 6
 
 @fastmath @inline function (θ::EllipticalGaussianRing)(x,y)
     ex = x-θ.x0
@@ -294,7 +293,7 @@ function TIDAGaussianRing(p)
     TIDAGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
 
-Base.size(::Type{TIDAGaussianRing}) = 7
+size(::Type{TIDAGaussianRing}) = 7
 
 #Filter function for the TIDAGaussianRing
 @fastmath @inline function (θ::TIDAGaussianRing)(x,y)
@@ -366,7 +365,7 @@ function GeneralGaussianRing(p)
     GeneralGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8])
 end
 
-Base.size(::Type{GeneralGaussianRing}) = 8
+size(::Type{GeneralGaussianRing}) = 8
 
 @fastmath @inline function (θ::GeneralGaussianRing)(x,y)
     ex = x-θ.x0

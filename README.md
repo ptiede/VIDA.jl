@@ -15,18 +15,18 @@ The inteface is based off of using probability divergences to extract features f
 #load the image
 image = load_ehtimfits(file::String)
 #create the divergence we want (Bhattacharyya divergence)
-divergence = make_div(image::EHTImage, :Bh)
+bh = Bhattacharyya(image)
 #Create the filter we want to use to extract for example an slashed elliptical Gaussian
 filter = GeneralGaussianRing(p::Array) <: AbstractFilter
 #To extract the features we use the extract function
-extract(measure,
-          θ::AbstractFilter, #starting location of filter
+extract(bh,
+          θ<:AbstractFilter, #starting location of filter
           lower,  #lower bounds on parameters for filter
           upper;   #upper bounds on the parameters for filter
           method=Fminbox(LBFGS()) #optimization method
          )
 #To use a more robust global optimizer use
-bbextract(measure,
+bbextract(bh,
           θ::AbstractFilter, #starting location of filter
           lower,  #lower bounds on parameters for filter
           upper;   #upper bounds on the parameters for filter
@@ -93,10 +93,10 @@ Additionally any other function that dispatches on the filter type should just w
 ### Divergence
 In order to extract a feature you need to create a probability divergence function. Currently we have two divergences implemented [Bhattacharyya divergence (Bh)](https://en.wikipedia.org/wiki/Bhattacharyya_distance) and the [Kullback-Leiber divergence (KL)](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). In order to construct the divergence we first need to specify the `image` that we are trying to fit. To do this use the `make_div` function
 ```julia
-bh = make_div(image, :Bh) #make the Bh divergence
-kl = make_kl(image, :KL) #makes the KL divergence
+bh = Bhattacharyya(image) #make the Bh divergence
+kl = KullbackLeibler(image) #makes the KL divergence
 ```
-which creates a closure that depends on the filter passed to it. For example to compute the Bh divergence use:
+which creates a functor that depends on the image. The functor itself take a filter, e.g.,
 ```julia
 bh(θ::AbstractFilter)
 ```
@@ -134,7 +134,7 @@ A simpler example is
   plot(filter)
 
   #make the measure you can choose from :KL or :Bh currently.
-  bh = make_div(image, :Bh)
+  bh = Bhattacharyya(image)
   
   #To call the function bh
   bh(filter)

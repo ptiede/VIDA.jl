@@ -10,15 +10,13 @@ module VIDA
 
 export
     #make the divergences to use for optimization
-    make_div,
+    Bhattacharyya, KullbackLeibler,
     #plotting stuff I created
     plot, plot_triptic,
     #All the filters I created
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    cat,split,
-    #filter function
-    imagefilter, unpack,
+    cat,split,unpack,
     #Imaging stuff
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,
     flux, centroid, inertia,
