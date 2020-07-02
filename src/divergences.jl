@@ -21,13 +21,6 @@ Bh(f_\\theta||\\hat{I}) = -\\log\\int \\sqrt{f_\\theta(x,y)\\hat{I}(x,y)}dxdy,
 ```
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
-### Examples
-```julia
-#Create the divergence where img::EHTImage{T}
-bh = Bhattacharyya(img)
-
-bh(θ<:AbstractFilter)
-```
 """
 struct Bhattacharyya{T,S} <: AbstractDivergence
     """
@@ -41,7 +34,7 @@ function Bhattacharyya(img::T) where {T<:EHTImage}
 end
 
 """
-    $(SIGNATURES)
+    (bh::Bhattacharyya)(θ::S) where {S<: AbstractFilter}
 
 Fucntor that makes evaluations the Bhattacharyya divergence function based on the
 and intrinsic image, `image`.
@@ -72,18 +65,24 @@ end
 
 
 
+
 """
-    $(SIGNATURES)
+    $(TYPEDEF)
+Type for the Bhattacharyya divergence. It constructed from an `EHTImage` i.e. data.
+Additionally to evaluate the divergence we use a functor approach where if θ
+is your
+### Details
+This computes the Bhattacharyya divergence which is related to Hellinger distance between
+two distributions. In fact, they are both minimized at the same point. The Bhattacharyya
+divergence is defined as
 
-Closure that makes a Kullback-Leibler divergence based on the
-and intrinsic image, `image`. That is it compute
-            KL(filter||image)
+```math
+KL(f_\\theta||\\hat{I}) = -\\log\\int f_{\\theta}(x,y)\\log
+        \\left(\\frac{f_{\\theta}(x,y)}{\\hat{I}(x,y)}\\rightdxdy,
+```
+where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
-# Details
-This takes an intrinsic image and creates an
-function that returns the KL-divergence of the image, where the image is the
-distribution we are calculating the KL-divergence relative to.
-
+```
 """
 struct KullbackLeibler{T,S} <: AbstractDivergence
     """

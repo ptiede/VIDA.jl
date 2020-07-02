@@ -1,7 +1,7 @@
 """
     $(SIGNATURES)
 Function that uses Optim.jl to minimize our divergence to extract the image features.
-`divergence` is our cost function to be optimized that is formed from make_bh. `θinit`,
+`divergence`. `θinit`,
 is the initial filter to use and must be a subtype of AbstractFilter. `lbounds` and
 `ubounds` are the upper and lower bounds of the problem. `method` is the maximization
 algorithm to use. For a list of availible methos see the Optim.jl package, as well
