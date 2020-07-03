@@ -77,6 +77,7 @@ function bbextract(divergence, θinit::T, lbounds, ubounds,
     ndim = length(lbounds)
     f(p) = divergence(T(p))
     resbb =  bboptimize(f, args...; NumDimensions=ndim,
+                        Method=:adaptive_de_rand_1_bin_radiuslimited,
                         MaxFuncEvals=20000, TraceMode=:silent,
                         SearchRange=search_range,kwargs...)
     θinit2 = T(best_candidate(resbb))

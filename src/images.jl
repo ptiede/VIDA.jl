@@ -10,7 +10,7 @@ abstract type AbstractImage end
 An absract image that will hold a fits image after being created or parsed in.
 This will form the basis for most astronomical images that are defined.
 """
-abstract type AbstractFitsImage <: AbstractImage end
+abstract type AbstractFitsImage{T<:AbstractArray} <: AbstractImage end
 
 """
 $(TYPEDEF)
@@ -26,9 +26,9 @@ typically be Matrix{Float64}.
 `ra`,`dec` are the sources RA and DEC in J2000 coordinates using degrees
 `wavelength` is the wavelength of the image.
 `mjd` is the Modified Julian Date of the observation.
-`img` is the actual pixeled image.
+`img` is the actual pixeled image in Jy/pixel
 """
-struct EHTImage{T<:AbstractArray} <: AbstractFitsImage
+struct EHTImage{T} <: AbstractFitsImage{T}
     nx::Int #Number of pixel in x direction
     ny::Int #Number of pixels in y direction
     psize_x::Float64 #pixel size in μas

@@ -116,8 +116,8 @@ function main_sub(fitsfiles, nstart, out_name,
         image = clipimage(clip_percent,image,:relative)
 
         #Create the measure and fitting function using a closure
-        bh = make_div(image, :Bh)
-        kl = make_div(image, :KL)
+        bh = Bhattacharyya(image)
+        kl = KullbackLeibler(image)
 
         #Extract! and fill the dataframe
         results = extract(rng, nstart, bh, filter, lower, upper,

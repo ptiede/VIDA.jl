@@ -146,7 +146,7 @@ A simpler example is
   #filtermax is the filter that maximizes the bm,
   #bm_max is its max value
   #converved & itr are some run info to see if the optimizer said it reached convergence
-  filtermax,bh_max,converged,itr = bbextract(bh,filter,lower,upper)
+  filtermax,bh_max,converged,itr = bbextract(bh, filter, lower, upper)
   
   #plot the results
   triptic(img, filtermax)
