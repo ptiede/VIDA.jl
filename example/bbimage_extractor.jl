@@ -3,9 +3,7 @@ using ArgParse
 Distributed.@everywhere using VIDA
 using CSV
 using DataFrames
-using Optim
 using Random
-using SharedArrays
 
 
 function parse_commandline()
@@ -214,9 +212,13 @@ end
         println("Extracting $file using $d_type divergence")
         image = load_ehtimfits(string(file))
         cimage = VIDA.clipimage(clip_percent,image)
-        div = VIDA.make_div(cimage, d_type, breg)
+        div = VIDA.Bhattacharyya(cimage, breg)
+        if (d_type == :KL)
+            div = VIDA.KullbackLeibler(cimage, breg)
+        end
         θ,divmin,_,_ = bbextract(div, filter, lower, upper;
                                  TraceMode=:silent, MaxFuncEvals=50*10^3)
+        θ,divmin,_,_ = extract(div, θ, lower, upper)
         return VIDA.unpack(θ),divmin
     end
 end
@@ -261,7 +263,6 @@ function main_sub(fitsfiles, out_name,
     indexpart = Iterators.partition(start_indx:length(fitsfiles), stride)
     for ii in indexpart
       results = pmap(fit, fitsfiles[ii])
-      println(ii)
       df[ii,1:length(lower)] = hcat(first.(results)...)'
       df[ii,length(lower)+1] = last.(results)
       df[ii,end] = fitsfiles[ii]
