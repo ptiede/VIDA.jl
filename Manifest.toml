@@ -199,9 +199,9 @@ version = "4.1.0+3"
 
 [[FITSIO]]
 deps = ["BinaryProvider", "Libdl", "Printf"]
-git-tree-sha1 = "6624bd0cdd03aa82df34d3eac56ab77ff696472e"
+git-tree-sha1 = "20f5bc5ecb87c26dbc85473ef7ba0e96ec5428e3"
 uuid = "525bcba6-941b-5504-bd06-fd0dc1a4d2eb"
-version = "0.14.0"
+version = "0.15.0"
 
 [[FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"

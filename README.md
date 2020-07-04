@@ -91,7 +91,7 @@ Additionally any other function that dispatches on the filter type should just w
 
 
 ### Divergence
-In order to extract a feature you need to create a probability divergence function. Currently we have two divergences implemented [Bhattacharyya divergence (Bh)](https://en.wikipedia.org/wiki/Bhattacharyya_distance) and the [Kullback-Leiber divergence (KL)](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). In order to construct the divergence we first need to specify the `image` that we are trying to fit. To do this use the `make_div` function
+In order to extract a feature you need to create a probability divergence function. Currently the divergences are defined using a AbstractDivergence type. Currently we have two divergences implemented [Bhattacharyya divergence (Bh)](https://en.wikipedia.org/wiki/Bhattacharyya_distance) and the [Kullback-Leiber divergence (KL)](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). In order to construct the divergence we first need to specify the `image` that we are trying to fit. 
 ```julia
 bh = Bhattacharyya(image) #make the Bh divergence
 kl = KullbackLeibler(image) #makes the KL divergence
