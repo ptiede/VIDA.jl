@@ -183,7 +183,7 @@ size(::Type{SlashedGaussianRing}) = 6
     xrot,yrot = rotate(x-θ.x0,y-θ.y0,θ.ξ)
     #construct the slash
     ϕ = atan(yrot,xrot)
-    n = 1-θ.s*cos(ϕ/2)
+    n = (1-θ.s*cos(ϕ))/(θ.s + 1)
 
     return n*exp(-(r-θ.r0)^2/(2*θ.σ^2))
 end
@@ -308,10 +308,10 @@ size(::Type{TIDAGaussianRing}) = 7
     #construct the slash
     ϕ = atan(ey′,ex′)
     if θ.s >= 0
-    n = 1-θ.s*cos(ϕ/2)
+        n = (1-θ.s*cos(ϕ))/(θ.s + 1)
     else
         ϕ = mod(ϕ+π/2,2π)-π
-        n = 1+θ.s*cos(ϕ/2)
+        n = (1+θ.s*cos(ϕ))/(-θ.s + 1)
     end
 
     return n*exp(-distance/(2.0*θ.σ^2))
@@ -378,7 +378,7 @@ size(::Type{GeneralGaussianRing}) = 8
     #construct the slash
     ex′,ey′ = rotate(ex,ey,θ.ξs)
     ϕ = atan(ey′,ex′)
-    n = 1-θ.s*cos(ϕ/2)
+    n = (1-θ.s*cos(ϕ))/(θ.s + 1)
 
     return n*exp(-distance/(2.0*θ.σ^2))
 end
