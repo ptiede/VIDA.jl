@@ -83,7 +83,7 @@ end
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    @test (sum(VIDA.filter_image(θ,npix,xlim,ylim)[3]) - 193.31484083354985) < ϵ
+    @test (sum(VIDA.filter_image(θ,npix,xlim,ylim)[3]) - 207.69802388682433) < ϵ
     @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
