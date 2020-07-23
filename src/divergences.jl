@@ -32,7 +32,7 @@ end
 function Bhattacharyya(img::T) where {T<:EHTImage}
     Bhattacharyya(img, flux(img))
 end
-
+using LoopVectorization
 function (bh::Bhattacharyya)(θ::T) where {T<:AbstractFilter}
     @unpack img, flux = bh
     bsum = zero(eltype(img.img))
@@ -40,7 +40,7 @@ function (bh::Bhattacharyya)(θ::T) where {T<:AbstractFilter}
     xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
     ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
     for i in 1:img.nx
-        for j in 1:img.ny
+        @simd for j in 1:img.ny
             x = xstart + img.psize_x*(i-1)
             y = ystart + img.psize_y*(j-1)
             filter_value = θ(x,y)+1e-50
@@ -95,7 +95,7 @@ function (kl::KullbackLeibler)(θ::T) where {T<:AbstractFilter}
     ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
 
     @inbounds for i in 1:img.nx
-        @inbounds for j in 1:img.ny
+        @simd for j in 1:img.ny
             x = xstart + img.psize_x*(i-1)
             y = ystart + img.psize_y*(j-1)
             filter_value = θ(x,y)+1e-12

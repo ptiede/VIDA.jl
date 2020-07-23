@@ -158,14 +158,13 @@ function load_ehtimfits(fits_name::String)
     header = read_header(f[1])
     nx = Int(header["NAXIS1"])
     ny = Int(header["NAXIS2"])
-    image = Matrix{Float64}(read(f[1])')
+    image = deepcopy(Matrix{Float64}(read(f[1])'))
     source = string(header["OBJECT"])
     ra = float(header["OBSRA"])
     dec = float(header["OBSDEC"])
     freq = float(header["FREQ"])
     mjd = float(header["MJD"])
     psize_x = -abs(float(header["CDELT1"])*3600*1e6)
-    @assert psize_x < 0 "load_image: We are astronomers so we use sky coordinates and RA runs backwards"
     psize_y = abs(float(header["CDELT2"]))*3600*1e6
     close(f)
 
@@ -319,12 +318,8 @@ function save_ehtimfits(image::EHTImage, fname::String)
                 "",
                 ""]
     hdu = FITS(fname, "w")
-    println(length(headerkeys))
-    println(length(values))
-    println(length(comments))
     hduheader = FITSHeader(headerkeys, values, comments)
     img = copy(image.img')
-    println(typeof(img))
     write(hdu, img, header=hduheader)
     close(hdu)
 end
