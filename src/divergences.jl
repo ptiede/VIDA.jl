@@ -32,7 +32,6 @@ end
 function Bhattacharyya(img::T) where {T<:EHTImage}
     Bhattacharyya(img, flux(img))
 end
-using LoopVectorization
 function (bh::Bhattacharyya)(θ::T) where {T<:AbstractFilter}
     @unpack img, flux = bh
     bsum = zero(eltype(img.img))

@@ -52,6 +52,49 @@ size(::Type{Constant}) = 0
 
 """
     $(TYPEDEF)
+A smoothed disk model
+
+### Details
+Defines a filter for an image that has a smoothed disk model.
+
+
+"""
+@with_kw mutable struct Disk{T} <: AbstractFilter
+    """
+    Radius of the disk
+    """
+    r0::T
+    """
+    Disk edge standard deviation in μas
+    """
+    α::T
+    """
+    x location of disk center in μas
+    """
+    x0::T
+    """
+    y location of disk center in μas
+    """
+    y0::T
+end
+function Disk(p)
+    @assert length(p) == 4 "There are 4 parameters for the Disk filter."
+    Disk(p[1],p[2],p[3],p[4])
+end
+@fastmath @inline function (θ::Disk)(x,y)
+    @unpack r0, α, x0, y0 = θ
+    r = sqrt((x-x0)^2 + (y-y0)^2)
+    if ( r < r0 )
+        return one(eltype(r))
+    else
+        return exp(-(r-r0)/(2.0*α))
+    end
+end
+size(::Type{Disk}) = 4
+
+
+"""
+    $(TYPEDEF)
 An asymmetric Gaussian blob.
 
 ### Details

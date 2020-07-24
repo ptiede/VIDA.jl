@@ -11,16 +11,17 @@ module VIDA
 export
     #make the divergences to use for optimization
     Bhattacharyya, KullbackLeibler,
-    #plotting stuff I created
+    #Plot recipes
     plot, plot_triptic,
-    #All the filters I created
+    #Filters
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
+    Disk,
     cat,split,unpack,
-    #Imaging stuff
+    #Image functions
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,
     flux, centroid, inertia,
-    #Feature extraction stuff
+    #Optimizers
     extract, bbextract
 
 using BlackBoxOptim

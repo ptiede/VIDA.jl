@@ -26,6 +26,24 @@ include("common.jl")
 
 end
 
+@testset "FilterDisk" begin
+    θ = Disk(r0, α, x0,y0)
+    θ1 = Disk(r0=r0,α=α,y0=y0, x0=x0)
+    θ2 = Disk([r0,α,x0,y0])
+
+    @test unpack(θ) == unpack(θ1)
+    @test unpack(θ1) == unpack(θ2)
+
+    @test θ(x0,y0) == 1.0
+    @test length(fieldnames(Disk)) == VIDA.size(Disk)
+    img = VIDA.make_ehtimage(θ, npix, xlim, ylim)
+    @test isapprox(flux(img), 1.0, atol=ϵ)
+    xcent,ycent = centroid(img)
+    @test isapprox(xcent, x0; rtol=ϵ)
+    @test isapprox(ycent, y0; rtol=ϵ)
+end
+
+
 @testset "FilterGaussianRing" begin
     θ = GaussianRing(r0,σ,x0,y0)
     θ1 = GaussianRing(r0=r0,x0=x0,σ=σ,y0=y0)
@@ -83,7 +101,8 @@ end
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    @test (sum(VIDA.filter_image(θ,npix,xlim,ylim)[3]) - 207.69802388682433) < ϵ
+    fimg = VIDA.filter_image(θ,npix,xlim,ylim)
+    @test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
     @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
