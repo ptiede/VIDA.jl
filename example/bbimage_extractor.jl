@@ -173,8 +173,13 @@ function make_initial_filter(filter_type)
         upper = [35.0, 0.999, π, 60.0, 60.0 ]
         filter = AsymGaussian(5.0,0.001, 0.001, 0.0,0.0)
         return (filter, lower, upper)
+    elseif filter_type == "Disk"
+        lower = [0.5 , 0.001, -60.0, -60.0]
+        upper = [35.0, 20.0 ,  60.0,  60.0 ]
+        filter = Disk(5.0, 1.0, 0.0, 0.0)
+        return (filter, lower, upper)
     else
-      error("$filter_type not found must be Circ, Ellip, Slash, TIDA, Gen")
+      error("$filter_type not found must be Circ, Ellip, Slash, TIDA, Gen, Disk")
     end
 end
 
@@ -245,19 +250,21 @@ function main_sub(fitsfiles, out_name,
     upper = [upper..., 1]
     @assert length(lower) == length(upper) "Bounds must have equal size"
     @assert length(unpack(model)) == length(lower) "Number of filter params $(length(unpack(model))) != $(length(lower))"
+
+    #Need to make sure all the procs know this information
     @everywhere model = $(model)
     @everywhere lower = $(lower)
     @everywhere upper = $(upper)
     @everywhere div_type = $(div_type)
     @everywhere clip_percent = $(clip_percent)
     @everywhere breg = $(breg)
-    #prixt(d_type)
+
     #Set up the data frame to hold the optimizer output that
     #will be saved
     start_indx = 1
     df,start_indx = create_initial_df!(start_indx,fitsfiles, model, restart, out_name)
-    #CSV.write(out_name, df, delim=';')
     rng = MersenneTwister(seed) #set the rng
+
     #Now fit the files!
     @everywhere fit = fit_func(model,lower,upper, div_type, clip_percent, breg)
     indexpart = Iterators.partition(start_indx:length(fitsfiles), stride)

@@ -59,23 +59,23 @@ Defines a filter for an image that has a smoothed disk model.
 
 
 """
-@with_kw mutable struct Disk{T} <: AbstractFilter
+@with_kw mutable struct Disk <: AbstractFilter
     """
     Radius of the disk
     """
-    r0::T
+    r0::Float64
     """
     Disk edge standard deviation in μas
     """
-    α::T
+    α::Float64
     """
     x location of disk center in μas
     """
-    x0::T
+    x0::Float64
     """
     y location of disk center in μas
     """
-    y0::T
+    y0::Float64
 end
 function Disk(p)
     @assert length(p) == 4 "There are 4 parameters for the Disk filter."
@@ -407,7 +407,6 @@ function GeneralGaussianRing(p)
     @assert length(p)==8 "GeneralGaussianRing: Filter requires 8 parameters"
     GeneralGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8])
 end
-
 size(::Type{GeneralGaussianRing}) = 8
 
 @fastmath @inline function (θ::GeneralGaussianRing)(x,y)
