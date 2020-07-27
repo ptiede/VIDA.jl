@@ -217,9 +217,9 @@ end
         println("Extracting $file using $d_type divergence")
         image = load_ehtimfits(string(file))
         cimage = VIDA.clipimage(clip_percent,image)
-        div = VIDA.Bhattacharyya(cimage, breg)
+        div = VIDA.Bhattacharyya(cimage)
         if (d_type == :KL)
-            div = VIDA.KullbackLeibler(cimage, breg)
+            div = VIDA.KullbackLeibler(cimage)
         end
         θ,divmin,_,_ = bbextract(div, filter, lower, upper;
                                  TraceMode=:silent, MaxFuncEvals=50*10^3)
