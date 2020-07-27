@@ -87,7 +87,7 @@ end
     if ( r < r0 )
         return one(eltype(r))
     else
-        return exp(-(r-r0)/(2.0*α))
+        return exp(-(r-r0)^2/(2.0*α))
     end
 end
 size(::Type{Disk}) = 4

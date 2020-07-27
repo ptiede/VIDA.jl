@@ -179,7 +179,7 @@ function make_initial_filter(filter_type)
         filter = Disk(5.0, 1.0, 0.0, 0.0)
         return (filter, lower, upper)
     else
-      error("$filter_type not found must be Circ, Ellip, Slash, TIDA, Gen, Disk")
+      error("$filter_type not found must be Circ, Ellip, Slash, TIDA, Gen, Disk, AsymG")
     end
 end
 
