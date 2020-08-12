@@ -16,7 +16,8 @@ export
     #Filters
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    Disk,
+    CosineRing,Disk,
+    #Filter helper functions
     cat,split,unpack,
     #Image functions
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,

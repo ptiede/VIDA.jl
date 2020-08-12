@@ -436,6 +436,81 @@ end
     return (x′ ,y′)
 end
 
+
+"""
+    $(TYPEDEF)
+Extrememly flexible ring model. The ring is modelled as a series of
+Gaussian that is specified by the type parameter N. The smoothness
+of the ring will be impacted by N, but so will the speed of evaluation.
+
+"""
+struct CosineRing{N,M} <: AbstractFilter
+    """Radius of the Gaussian ring"""
+    r0::Float64
+    """Standard deviation of the width of the Gaussian ring"""
+    σ::Vector{Float64}
+    """Orientations of the cosine expansion width"""
+    ξσ::Vector{Float64}
+    """Asymmetry of the Gaussian ring defined as ``1-b/a``"""
+    τ::Float64
+    """Asymmetry orientation in radians, measured north of east"""
+    ξτ::Float64
+    """Slash of Gaussian ring."""
+    s::Vector{Float64}
+    """Slash orientation in radians measured north of east"""
+    ξs::Vector{Float64}
+    """x position of the center of the ring in μas"""
+    x0::Float64
+    """y position of the center of the ring in μas"""
+    y0::Float64
+    function CosineRing{N,M}(r0,σ, ξσ, τ, ξτ,s, ξs,x0,y0) where {N, M}
+        #@assert N isa Integer
+        #@assert M isa Integer
+        #@assert r0>0 "GeneralGaussianRing: r0 must be positive"
+        #@assert τ<1 && τ>=0 "GeneralGaussianRing: τ must be in [0,1)"
+        new{N,M}(float(r0),σ, ξσ, float(τ),float(ξτ), s, ξs,float(x0),float(y0))
+    end
+end
+
+function CosineRing{N,M}(p) where {N,M}
+    #@assert length(p) == size(CosineRing{N,M})
+    CosineRing{N,M}(p[1], p[2:(N+1)],
+                    p[(N+2):(2N)],
+                    p[2N+1], p[2N+2],
+                    p[2N+3:2N+2+M], p[2N+3+M:2N+2+2M],
+                    p[2N+3+2M], p[2N+4+2M]
+    )
+end
+
+
+size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N + N-1 + 2*M
+
+@fastmath @inline function (θ::CosineRing{N,M})(x,y) where {N, M}
+    ex = x-θ.x0
+    ey = y-θ.y0
+    ϕ = atan(-ey,-ex)
+    ex′,ey′ = rotate(ex,ey,θ.ξτ)
+    a = θ.r0/sqrt(1.0-θ.τ)
+    b = θ.r0*sqrt(1.0-θ.τ)
+    d2 = ellipse_sqdist(ex′,ey′,a, b)
+
+    #construct the slash
+    n = 1
+    for i in 1:M
+        n -= θ.s[i]*cos(i*(ϕ - θ.ξs[i]))
+    end
+
+    σ = θ.σ[1]
+
+    for i in 2:N
+        σ += θ.σ[i]*cos(i*(ϕ - θ.ξσ[i-1]))
+    end
+
+    return abs(n)*exp(-d2/(2.0*σ^2+1e-2))
+end
+
+
+
 """
     $(SIGNATURES)
 Find the minimum square distance between an ellipse centered at (0,0) with semi-major
@@ -499,19 +574,36 @@ end
 
 """
     $(SIGNATURES)
-Unpacks the parameters of the filter `θ`, except the last which is
-the boolean for if the filter is analytically normalized.
+Unpacks the parameters of the filter `θ`
 
 
 Returns the parameters in a vector.
 """
 function unpack(θinit::T) where {T<:AbstractFilter}
-    n = length(fieldnames(T))
+    n = size(T)
     fields = fieldnames(T)
     p = zeros(n)
     for i in 1:n
         p[i] = getfield(θinit,fields[i])
     end
+    return p
+end
+
+function unpack(θ::CosineRing{N,M}) where {N,M}
+    n = size(typeof(θ))
+    p = zeros(n)
+    p[1] = θ.r0
+    p[2:(N+1)] = θ.σ
+    if N>1
+        p[(N+2):(2N)] = θ.ξσ
+    end
+    p[2N+1] = θ.τ
+    p[2N+2] = θ.ξτ
+    p[2N+3:2N+2+M] = θ.s
+    p[2N+3+M:2N+2+2M] = θ.ξs
+    p[2N+3+2M] = θ.x0
+    p[2N+4+2M] = θ.y0
+
     return p
 end
 
