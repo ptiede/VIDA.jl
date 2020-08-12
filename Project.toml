@@ -1,7 +1,7 @@
 name = "VIDA"
 uuid = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
 authors = ["Paul Tiede <ptiede91@gmail.com>"]
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
@@ -28,7 +28,7 @@ Documenter = "0.24, 0.25"
 DocumenterTools = "0.1"
 FITSIO = "0.14, 0.15, 0.16"
 LaTeXStrings = "1.1"
-Optim = "0.20, 0.21"
+Optim = "0.20, 0.21, 0.22"
 Parameters = "0.12"
 Plots = "1.4"
 RecipesBase = "1.0"
