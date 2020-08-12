@@ -439,25 +439,34 @@ end
 
 """
     $(TYPEDEF)
-Extrememly flexible ring model. The ring is modelled as a series of
-Gaussian that is specified by the type parameter N. The smoothness
-of the ring will be impacted by N, but so will the speed of evaluation.
+Extrememly flexible ring model. The thickness is modeled as a cosine
+expansion with `N` terms and the slash by a expansion with `M` terms.
+
+
+# Details
+The ring is allowed to be elliptical.
+The thickness of the ring is modeled by a cosine expansion in azimuthal
+angle. `N` specifies the number of cosine modes to fit, where the first
+mode is the constant thickness portion and so has no corresponding angle.
+The slash is modeled as a separate cosine expansion, with `M` terms.
+Here the zero order term is forced to be unity, so `M` defines the `M`
+additional terms.
 
 """
-struct CosineRing{N,M} <: AbstractFilter
+@with_kw struct CosineRing{N,M} <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64
-    """Standard deviation of the width of the Gaussian ring"""
+    """Standard deviations (length N) of the width of the Gaussian ring"""
     σ::Vector{Float64}
-    """Orientations of the cosine expansion width"""
+    """Orientations of the cosine expansion width (length N-1)"""
     ξσ::Vector{Float64}
     """Asymmetry of the Gaussian ring defined as ``1-b/a``"""
     τ::Float64
     """Asymmetry orientation in radians, measured north of east"""
     ξτ::Float64
-    """Slash of Gaussian ring."""
+    """Slash of Gaussian ring (length M)."""
     s::Vector{Float64}
-    """Slash orientation in radians measured north of east"""
+    """Slash orientations (length M) in radians measured north of east"""
     ξs::Vector{Float64}
     """x position of the center of the ring in μas"""
     x0::Float64
@@ -472,7 +481,22 @@ struct CosineRing{N,M} <: AbstractFilter
     end
 end
 
-function CosineRing{N,M}(p) where {N,M}
+"""
+    CosineRing{N,M}(p::AbstractArray) where {N,M}
+Takes in a vector of paramters describing the filter.
+# Details
+The order of the vector must be
+ - p[1] = `r0`
+ - p[2:(N+1)] = `σ`
+ - p[(N+2):(2N)] = `ξσ`
+ - p[2N+1] = `τ`
+ - p[2N+2] = `ξτ`
+ - p[2N+3:2N+M+2] = `s`
+ - p[2N+3+M:2N+2+2M] = `ξs`
+ - p[2N+3+2M] = `x0`
+ - p[2N+4+2M] = `y0`
+"""
+function CosineRing{N,M}(p::AbstractArray) where {N,M}
     #@assert length(p) == size(CosineRing{N,M})
     CosineRing{N,M}(p[1], p[2:(N+1)],
                     p[(N+2):(2N)],
