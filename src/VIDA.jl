@@ -31,7 +31,6 @@ using DocStringExtensions
 using FITSIO
 using LaTeXStrings
 using Optim
-using PhysicalConstants.CODATA2018: c_0, h, k_B
 using Parameters
 using Plots
 using Plots.PlotMeasures: mm
