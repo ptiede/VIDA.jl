@@ -168,7 +168,7 @@ function load_ehtimfits(fits_name::String)
     psize_y = abs(float(header["CDELT2"]))*3600*1e6
     close(f)
 
-    return EHTImage(nx, ny, psize_x, psize_y, source, ra, dec, c_0.val/freq, mjd, image)
+    return EHTImage(nx, ny, psize_x, psize_y, source, ra, dec, C0/freq, mjd, image)
 end
 
 """
@@ -291,7 +291,7 @@ function save_ehtimfits(image::EHTImage, fname::String)
               image.psize_x/3600/1e6,
               image.ra,
               image.dec,
-              c_0.val/image.wavelength,
+              C0/image.wavelength,
               image.nx/2+0.5,
               image.ny/2+0.5,
               image.mjd,

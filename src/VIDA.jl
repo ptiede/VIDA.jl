@@ -38,6 +38,10 @@ using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
 using RecipesBase
 using SpecialFunctions:erf
 
+
+const C0 =299792458
+const KB =1.38064852e-23
+
 #Load the images
 include("images.jl")
 #Load the visualization stuff

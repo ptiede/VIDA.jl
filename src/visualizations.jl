@@ -54,10 +54,8 @@ Note that is does not save the figure.
     psizeuas_y = image.psize_y
     fovx = psizeuas_x*image.nx
     fovy = psizeuas_y*image.ny
-    k_B = 1.38064852e-23
-    c_0 = 299792458
 
-    brightness_temp = image.wavelength^2/(2*k_B)/1e26/
+    brightness_temp = image.wavelength^2/(2*KB)/1e26/
                       abs(μas2rad^2*image.psize_x*image.psize_y)
 
     #brightness_temp = image.wavelength^2/(2*k_B.val)/1e26/
@@ -84,7 +82,7 @@ Note that is does not save the figure.
     xflip --> true
     widen := false
     #framestyle --> :box
-    title --> image.source*" "*string(round(c_0/image.wavelength/1e9))*" GHz"
+    title --> image.source*" "*string(round(C0/image.wavelength/1e9))*" GHz"
     linecolor-->:black
     tick_direction --> :out
     ()
