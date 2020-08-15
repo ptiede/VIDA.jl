@@ -17,7 +17,7 @@ An example is given by:
 #All of our composite type are defined using the Paramters.jl package to you
 can directly refer to the struct parameters when creating it, although this isn't
 actually used anywhere in the code.
-@with_kw mutable struct Gaussian <: AbstractFilter
+@with_kw struct Gaussian <: AbstractFilter
     σ::Float64
     x0::Float64
     y0::Float64
@@ -59,7 +59,7 @@ Defines a filter for an image that has a smoothed disk model.
 
 
 """
-@with_kw mutable struct Disk <: AbstractFilter
+@with_kw struct Disk <: AbstractFilter
     """
     Radius of the disk
     """
@@ -111,7 +111,7 @@ how the asymmetry for the `EllipticalGaussianRing`.
 ### Fields
 $(FIELDS)
 """
-@with_kw mutable struct AsymGaussian <: AbstractFilter
+@with_kw struct AsymGaussian <: AbstractFilter
     """Gaussian size in μas"""
     σ::Float64
     """Gaussian asymmetry"""
@@ -153,7 +153,7 @@ to recover a location `x0`,`y0`, radius `r0` and thickness `σ` from some image.
 GaussianRing(r0=20.0,σ=5.0,x0=0.0,y0=-10.0)
 ```
 """
-@with_kw mutable struct GaussianRing <: AbstractFilter
+@with_kw struct GaussianRing <: AbstractFilter
     """Radius of Gaussian ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -192,7 +192,7 @@ mainting the azimuthal and smooth structure of the image.
     $(FIELDS)
 
 """
-@with_kw mutable struct SlashedGaussianRing <: AbstractFilter
+@with_kw struct SlashedGaussianRing <: AbstractFilter
     """Radius of the ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -254,7 +254,7 @@ normalize analytically. In fact the distance from the ellipse is implemented
 numerically using an algorithm adapted from
 [git](https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823)
 """
-@with_kw mutable struct EllipticalGaussianRing <: AbstractFilter
+@with_kw struct EllipticalGaussianRing <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64 #geometric mean of the semi-major, a, and semi-minor axis, b, r0=√ab
     """Standard deviation of the width of the Gaussian ring"""
@@ -308,7 +308,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 $(FIELDS)
 
 """
-@with_kw mutable struct TIDAGaussianRing <: AbstractFilter
+@with_kw struct TIDAGaussianRing <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
@@ -378,7 +378,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 ### Fields
 $(FIELDS)
 """
-@with_kw mutable struct GeneralGaussianRing <: AbstractFilter
+@with_kw struct GeneralGaussianRing <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
