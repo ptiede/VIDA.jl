@@ -519,7 +519,7 @@ size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N + N-1 + 2*M
     d2 = ellipse_sqdist(ex′,ey′,a, b)
 
     #construct the slash
-    n = 1
+    n = one(θ.r0)
     for i in 1:M
         n -= θ.s[i]*cos(i*(ϕ - θ.ξs[i]))
     end
