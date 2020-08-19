@@ -29,7 +29,7 @@ end
     bh = Bhattacharyya(fimg)
     θ0 = SlashedGaussianRing(r0*2, σ*1.5, s*1.1, 0.5, 0.0, 0.0) +
          0.5*AsymGaussian(5.0, 0.5, 0.25, 0.0, 0.0)
-    rθ,divmin,_,_ = bbextract(bh, θ0, lower, upper, MaxFuncEvals=40000)
+    rθ,divmin,_,_ = bbextract(bh, θ0, lower, upper, MaxFuncEvals=50000)
     rθ,divmin,_,_ = extract(bh, rθ, lower, upper)
-    @test isapprox(unpack(rθ), unpack(θ), rtol=ϵ)
+    @test isapprox(unpack(rθ), unpack(θ), rtol=1e-2)
 end
