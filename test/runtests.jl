@@ -5,9 +5,9 @@ using Test
     # Write your own tests here.
     tests = [
         "filters",
-        #"images",
-        #"divergences",
-        #"visualizations",
+        "images",
+        "divergences",
+        "visualizations",
         "extractor"
     ]
 

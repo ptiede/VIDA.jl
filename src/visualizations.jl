@@ -137,7 +137,6 @@ center of light.
     xseg = range(startx, startx-size, length=4)
     yseg = starty*ones(4)
     #Finally the slices
-    xcol,ycol = center_of_light(collect(xitr), collect(yitr), fimg)
     xx = collect(xitr)
     yy = collect(yitr)
     xcol,ycol = center_of_light(reverse(xitr),yitr,fimg)
@@ -403,10 +402,22 @@ function make_ehtimage(θ::AbstractFilter,
     Y = collect(yitr)
     psize_x = X[2]-X[1]
     psize_y = Y[2]-Y[1]
-    println(psize_x," ",psize_y)
     imgeht = EHTImage(npix, npix, psize_x, psize_y,
                       source_img.source, source_img.ra,
                       source_img.dec, source_img.wavelength,
                       source_img.mjd, img*scale_norm)
     return imgeht
+end
+
+
+function center_of_light(xitr,yitr,img)
+    xcl = zero(eltype(img))
+    ycl = zero(eltype(img))
+    for (i,xx) in enumerate(xitr)
+        xcl += sum(xx*@view(img[:,i]))
+    end
+        for (i,yy) in enumerate(yitr)
+        ycl += sum(yy*@view(img[i,:]))
+    end
+    return (xcl/sum(img),ycl/sum(img))
 end

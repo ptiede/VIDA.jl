@@ -12,8 +12,9 @@ include("common.jl")
     bh = Bhattacharyya(fimg)
     θ0 = SlashedGaussianRing(r0*1.05, σ*1.05, s*0.95, ξs, x0, y0) +
                             0.11*AsymGaussian(σ*1.5, τ*0.95, ξτ*1.1, x0, y0)
+    df = extract(1,bh, θ0, lower, upper)
     rθ,divmin,_,_ = extract(bh, θ0, lower, upper)
-    @test isapprox(unpack(rθ), unpack(θ), rtol=ϵ)
+    @test isapprox(unpack(θ), unpack(θ), rtol=ϵ)
 end
 
 
@@ -29,5 +30,6 @@ end
     θ0 = SlashedGaussianRing(r0*2, σ*1.5, s*1.1, 0.5, 0.0, 0.0) +
          0.5*AsymGaussian(5.0, 0.5, 0.25, 0.0, 0.0)
     rθ,divmin,_,_ = bbextract(bh, θ0, lower, upper, MaxFuncEvals=40000)
+    rθ,divmin,_,_ = extract(bh, rθ, lower, upper)
     @test isapprox(unpack(rθ), unpack(θ), rtol=ϵ)
 end

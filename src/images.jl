@@ -247,17 +247,7 @@ function flux(img::EHTImage)
     return sum(img.img)
 end
 
-function center_of_light(xitr,yitr,img)
-    xcl = zero(eltype(img))
-    ycl = zero(eltype(img))
-    for (i,xx) in enumerate(xitr)
-        xcl += sum(xx*@view(img[:,i]))
-    end
-        for (i,yy) in enumerate(yitr)
-        ycl += sum(yy*@view(img[i,:]))
-    end
-    return (xcl/sum(img),ycl/sum(img))
-end
+
 
 function save_ehtimfits(image::EHTImage, fname::String)
     headerkeys = ["SIMPLE",

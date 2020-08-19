@@ -106,12 +106,63 @@ end
     @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
+@testset "FilterConstant" begin
+    θ = Constant()
+    @test θ(1,1) == 1.0
+    @test length(unpack(θ)) == VIDA.size(typeof(θ))
+end
 
-@testset "FilterAddMul" begin
+@testset "FilterCosineRing" begin
+    θg = GeneralGaussianRing(r0,σ,τ, ξτ, s, ξs, x0, y0)
+    θsg = CosineRing{1,1}([r0, σ, τ, ξτ, s, ξs, x0, y0])
+    _,_,fimg_g = VIDA.filter_image(θg, 64, xlim, ylim)
+    _,_,fimg_sg = VIDA.filter_image(θsg, 64, xlim, ylim)
+    @test sum(fimg_g/sum(fimg_g) - fimg_sg/sum(fimg_sg)) < 1e-8
+    θ = CosineRing{N,M}(r0,
+                        [σ, σ_1],
+                        [ξσ],
+                        τ,
+                        ξτ,
+                        [s,s_1,s_2],
+                        [ξs, ξs_1, ξs_2],
+                        x0, y0)
+    θ1 = CosineRing{N,M}(r0=r0,
+                        σ=[σ, σ_1],
+                        ξσ=[ξσ],
+                        τ=τ,
+                        ξτ=ξτ,
+                        s=[s,s_1,s_2],
+                        ξs = [ξs, ξs_1, ξs_2],
+                        x0=x0, y0=y0)
+    θ2 = CosineRing{N,M}([r0,
+                         σ, σ_1,
+                         ξσ,
+                         τ,
+                         ξτ,
+                         s,s_1,s_2,
+                         ξs, ξs_1, ξs_2,
+                         x0, y0])
+    @test VIDA.size(typeof(θ)) == length(unpack(θ))
+    @test unpack(θ) == unpack(θ1)
+    @test unpack(θ1) == unpack(θ2)
+    #fimg = VIDA.filter_image(θ,npix,xlim,ylim)
+    #@test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
+    #@test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
+end
+
+@testset "FilterMulAdd" begin
     θ1 = GaussianRing(r0,σ,x0,y0)
     θ2 = AsymGaussian(σ,τ,ξτ,x0,y0)
     θ = θ1+1.0*θ2
+    @test 1.0*θ2 == θ2*1.0
     θs = stack(θ1,θ2)
+    println(1.0*θ2)
+
+    @test fieldnames(typeof(1.0*θ2)) == [fieldnames(typeof(θ2))..., :Irel]
+    @test fieldnames(typeof(θ1+θ2)) == [fieldnames(typeof(θ1))...,fieldnames(typeof(θ2))...]
+
+    @test VIDA.size(typeof(1.0*θ2)) == length(unpack(1.0*θ2))
+    @test VIDA.size(typeof(θ1+θ2)) == length(unpack(θ1+θ2))
     @test θ == θs
     θarr = split(θ)
     @test θ1 == θarr[1]

@@ -475,8 +475,6 @@ additional terms.
     function CosineRing{N,M}(r0,σ, ξσ, τ, ξτ,s, ξs,x0,y0) where {N, M}
         #@assert N isa Integer
         #@assert M isa Integer
-        #@assert r0>0 "GeneralGaussianRing: r0 must be positive"
-        #@assert τ<1 && τ>=0 "GeneralGaussianRing: τ must be in [0,1)"
         new{N,M}(float(r0),σ, ξσ, float(τ),float(ξτ), s, ξs,float(x0),float(y0))
     end
 end
