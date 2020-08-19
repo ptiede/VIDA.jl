@@ -694,30 +694,49 @@ Overloads the Base.:* function so you can easily multiple a filter by a number.
 2*θ
 ```
 """
-struct MulFilter{S<:Number,T<:AbstractFilter} <: AbstractFilter
-    a::S
+struct MulFilter{T<:AbstractFilter,S<:Number} <: AbstractFilter
     θ::T
+    Irel::S
+end
+function Base.show(io::IO,θ::MulFilter{T,S}) where {T<:AbstractFilter, S<:Number}
+    println(io,"VIDA.MulFilter{$T,$S}")
+    print(io,"θ: ")
+    show(io,θ.θ)
+    println(io,"Irel: $S $(θ.Irel)")
 end
 
-function MulFilter{S,T}(p) where {S<:Number,T<:AbstractFilter}
-    MulFilter{S,T}(p[end],T(@view p[1:end-1]))
+function MulFilter{T,S}(p) where {T<:AbstractFilter, S<:Number}
+    MulFilter{T,S}(T(@view p[1:end-1]), p[end])
 end
 
-function Base.fieldnames(::Type{MulFilter{S,T}}) where {S<:Number, T<:AbstractFilter}
+function Base.fieldnames(::Type{MulFilter{T,S}}) where {T<:AbstractFilter, S<:Number}
     return [fieldnames(T)...,:Irel]
 end
 
-function size(::Type{MulFilter{S,T}}) where {S<:Number,T<:AbstractFilter}
+function size(::Type{MulFilter{T,S}}) where {T<:AbstractFilter, S<:Number}
     return 1 + size(T)
 end
 
-Base.:*(a,x::T) where {T<:AbstractFilter} = MulFilter(a,x)
-Base.:*(x::T,a) where {T<:AbstractFilter} = MulFilter(a,x)
+Base.:*(a,x::T) where {T<:AbstractFilter} = MulFilter(x,a)
+Base.:*(x::T,a) where {T<:AbstractFilter} = MulFilter(x,a)
 function (θ::MulFilter)(x,y)
-    return θ.a*θ.θ(x,y)
+    return θ.Irel*θ.θ(x,y)
 end
+
 function unpack(θinit::MulFilter)
-    return append!(unpack(θinit.θ), θinit.a)
+    return append!(unpack(θinit.θ), θinit.Irel)
+end
+
+function Base.getproperty(θmul::MulFilter{T,S}, field::Symbol) where {T<:AbstractFilter, S<:Number}
+    if field == :θ
+        return getfield(θmul,:θ)
+    elseif field == :Irel
+        return getfield(θmul, :Irel)
+    elseif field in fieldnames(T)
+        return getfield(θmul.θ, field)
+    else
+        throw(KeyError(field))
+    end
 end
 
 """
@@ -726,7 +745,7 @@ Stacks filters together so you can easily combine multiple filters.
 It does this by calling the :+ and :* method. Every filter added will
 include an additional parameter that controls the relative weight of each filter.
 """
-function Base.cat(θ::T, θ1...) where {T<:AbstractFilter}
+function stack(θ::T, θ1...) where {T<:AbstractFilter}
     return θ+mapreduce(x->1.0*x, + , θ1)
 end
 

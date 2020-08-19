@@ -106,15 +106,17 @@ end
     @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
+
 @testset "FilterAddMul" begin
     θ1 = GaussianRing(r0,σ,x0,y0)
     θ2 = AsymGaussian(σ,τ,ξτ,x0,y0)
     θ = θ1+1.0*θ2
-    θs = cat(θ1,θ2)
+    θs = stack(θ1,θ2)
     @test θ == θs
     θarr = split(θ)
     @test θ1 == θarr[1]
     @test θ2 == θarr[2].θ
+    @test θarr[2].σ == σ
     @test unpack(θ) == unpack(θs)
     @test θ1(x0,y0) + θ2(x0,y0) == θ(x0,y0)
     @test θ1(x0,y0) + θ2(x0,y0) == θs(x0,y0)

@@ -18,7 +18,7 @@ export
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
     CosineRing,Disk,
     #Filter helper functions
-    cat,split,unpack,
+    stack,split,unpack,
     #Image functions
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,
     flux, centroid, inertia,

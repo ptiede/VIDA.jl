@@ -8,7 +8,7 @@ using Test
         #"images",
         #"divergences",
         #"visualizations",
-        #"extractor"
+        "extractor"
     ]
 
     res = map(tests) do t
