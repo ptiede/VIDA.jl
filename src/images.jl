@@ -80,7 +80,7 @@ This can be useful when the image has much higher resolutions than is needed for
 function downsample(factor::Int, im::EHTImage)
     im_arr = im.img
     dim_arr = im_arr[1:factor:end, 1:factor:end]
-    ny,nx = size(dim_arr)
+    ny,nx = Base.size(dim_arr)
     psize_x = im.psize_x*factor
     psize_y = im.psize_y*factor
     return EHTImage(nx,ny,
@@ -106,7 +106,7 @@ function window_image(domain_x, domain_y, im::EHTImage)
     jmin = argmin(abs.(yarr .- domain_y[1]))
     jmax = argmin(abs.(yarr .- domain_y[2]))
     window_image = im.img[jmin:jmax,imax:imin]
-    ny,nx = size(window_image)
+    ny,nx = Base.size(window_image)
     return EHTImage(nx,ny,
                     im.psize_x, im.psize_y,
                     im.source, im.ra, im.dec,
@@ -114,28 +114,7 @@ function window_image(domain_x, domain_y, im::EHTImage)
                     window_image)
 end
 
-"""
- $(SIGNATURES)
-Boosts the constrast of an image by a factor of `β`.
 
-# Details
-The boosts the contrast of an image according to the formula
-```math
- I_\\beta(x,y) = \\left(\\frac{I(x,y)}{I_{max}}\\right)^{\\beta}.
-```
-This should rarely be used.
-"""
-function contrastboot(β, im::EHTImage)
-    image = im.img
-    im_max = maximum(image)
-    image = max(x->clipvalue(0.0,x),image)
-    image = (image/im_max).^β
-    return EHTImage(im.nx, im.ny,
-                    im.psize_x, im.psize_y,
-                    im.source, im.ra, im.dec,
-                    im.wavelength, im.mjd,
-                    image)
-end
 
 
 """
