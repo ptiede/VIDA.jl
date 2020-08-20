@@ -1,7 +1,7 @@
 name = "VIDA"
 uuid = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
 authors = ["Paul Tiede <ptiede91@gmail.com>"]
-version = "0.4.0"
+version = "0.4.1"
 
 [deps]
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
@@ -11,6 +11,7 @@ DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
 FITSIO = "525bcba6-941b-5504-bd06-fd0dc1a4d2eb"
+Interpolations = "a98d9a8b-a2ab-59e6-89dd-64a1c18fca59"
 LaTeXStrings = "b964fa9f-0449-5b57-a5c2-d3ea65f4040f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"

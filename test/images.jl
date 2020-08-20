@@ -18,5 +18,6 @@ end
     cimg = VIDA.clipimage(0.1, img)
     dcimg = VIDA.downsample(2, cimg)
     wdcimg = VIDA.window_image([-40,50], [-30,20], img)
+    rescale_image(img, npix, xlim, ylim)
 
 end

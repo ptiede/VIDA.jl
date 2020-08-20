@@ -87,7 +87,7 @@ end
     if ( r < r0 )
         return one(eltype(r))
     else
-        return exp(-(r-r0)^2/(2.0*α^2))
+        return exp(-(r-r0)^2/(2.0*α^2)) + 1e-50
     end
 end
 size(::Type{Disk}) = 4
@@ -137,7 +137,7 @@ end
     σx2 = θ.σ *θ.σ/(1.0-θ.τ)
     σy2 = θ.σ*θ.σ*(1.0-θ.τ)
     d2 = x′*x′/σx2 + y′*y′/σy2
-    return exp(-0.5*d2)
+    return exp(-0.5*d2) + 1e-50
 end
 size(::Type{AsymGaussian}) = 5
 
@@ -177,7 +177,7 @@ size(::Type{GaussianRing}) = 4
 
 @fastmath @inline function (θ::GaussianRing)(x, y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
-    return exp( -(r - θ.r0)^2/(2*θ.σ^2))
+    return exp( -(r - θ.r0)^2/(2*θ.σ^2)) + 1e-50
 end
 
 
@@ -228,7 +228,7 @@ size(::Type{SlashedGaussianRing}) = 6
     ϕ = atan(yrot,xrot)
     n = (1-θ.s*cos(ϕ))/(θ.s + 1)
 
-    return n*exp(-(r-θ.r0)^2/(2*θ.σ^2))
+    return n*exp(-(r-θ.r0)^2/(2*θ.σ^2)) + 1e-50
 end
 
 
@@ -287,7 +287,7 @@ size(::Type{EllipticalGaussianRing}) = 6
     a = θ.r0/sqrt(1.0-θ.τ)
     b = θ.r0*sqrt(1.0-θ.τ)
     distance = ellipse_sqdist(ex′,ey′,a, b)
-    return exp(-distance/(2.0*θ.σ^2))
+    return exp(-distance/(2.0*θ.σ^2)) + 1e-50
 end
 
 """
@@ -357,7 +357,7 @@ size(::Type{TIDAGaussianRing}) = 7
         n = (1+θ.s*cos(ϕ))/(-θ.s + 1)
     end
 
-    return n*exp(-distance/(2.0*θ.σ^2))
+    return n*exp(-distance/(2.0*θ.σ^2)) + 1e-50
 end
 
 
@@ -422,7 +422,7 @@ size(::Type{GeneralGaussianRing}) = 8
     ϕ = atan(ey′,ex′)
     n = (1-θ.s*cos(ϕ))/(θ.s + 1)
 
-    return n*exp(-distance/(2.0*θ.σ^2))
+    return n*exp(-distance/(2.0*θ.σ^2)) + 1e-50
 end
 
 
@@ -528,7 +528,7 @@ size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N + N-1 + 2*M
         σ += θ.σ[i]*cos(i*(ϕ - θ.ξσ[i-1]))
     end
 
-    return abs(n)*exp(-d2/(2.0*σ^2+1e-2))
+    return abs(n)*exp(-d2/(2.0*σ^2+1e-2)) + 1e-50
 end
 
 

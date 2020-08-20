@@ -226,6 +226,43 @@ function flux(img::EHTImage)
     return sum(img.img)
 end
 
+@doc """
+    rescale_image(img::EHTImage, npix, xlim, ylim)
+# Inputs
+ - img::EHTImage : Image you want to rescale
+ - npix : Number of pixels in x and y direction
+ - xlim : Tuple with the limits of the image in the RA
+ - ylim : Tuple with the limits of the image in DEC
+"""
+function rescale_image(img::EHTImage, npix, xlim, ylim)
+    fovx, fovy = field_of_view(img)
+    x_itr = (fovx/2 - img.psize_x/2):-img.psize_x:(-fovx/2 + img.psize_x/2)
+	y_itr = (-fovy/2 + img.psize_y/2):img.psize_y:(fovy/2 - img.psize_y/2)
+	itp = interpolate(img.img, BSpline(Cubic(Line(OnGrid()))))
+	etp = extrapolate(itp, 0)
+	sitp = scale(etp, x_itr, y_itr)
+
+    #Create grid for new image
+    fovy_new = (ylim[2]-ylim[1])
+    psize_y = fovy_new/npix
+    fovx_new = (xlim[2]-xlim[1])
+    psize_x = fovx_new/npix
+    x_itr_new = (fovx_new/2 - psize_x/2):-psize_x:(-fovx_new/2 + psize_x/2)
+    y_itr_new = (-fovy_new/2 + psize_y/2):psize_y:(fovy_new/2 - psize_y/2)
+    #Create new image
+    img_new = sitp(reverse(x_itr_new), y_itr_new)
+    return EHTImage(npix, npix, -psize_x, psize_y, img.source, img.ra, img.dec,
+                    img.wavelength, img.mjd, img_new)
+end
+
+@doc """
+    field_of_view(img::EHTImage)
+Finds the field of view of an EHTImage. Return a w element tuple with the
+field of view in the x and y direction
+"""
+function field_of_view(img::EHTImage)
+    return img.nx*img.psize_x, img.ny*img.psize_y
+end
 
 
 function save_ehtimfits(image::EHTImage, fname::String)

@@ -43,7 +43,7 @@ function (bh::Bhattacharyya)(θ::T) where {T<:AbstractFilter}
             x = xstart + img.psize_x*(i-1)
             y = ystart + img.psize_y*(j-1)
             filter_value = θ(x,y)+1e-50
-            @inbounds bsum += sqrt(filter_value*img.img[j,i])
+            @inbounds bsum += sqrt(abs(filter_value)*img.img[j,i])
             filter_norm += filter_value
         end
     end

@@ -21,7 +21,7 @@ export
     stack,split,unpack,
     #Image functions
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,
-    flux, centroid, inertia,
+    flux, centroid, inertia, rescale_image,
     #Optimizers
     extract, bbextract
 
@@ -29,6 +29,7 @@ using BlackBoxOptim
 using DataFrames
 using DocStringExtensions
 using FITSIO
+using Interpolations: interpolate, BSpline, Cubic, Line, OnGrid, scale, extrapolate
 using LaTeXStrings
 using Optim
 using Parameters
