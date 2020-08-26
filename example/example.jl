@@ -51,8 +51,8 @@ plot(θgen)
                                τ = 0.999, ξτ = π,
                                s = 0.999, ξs = π,
                                x0 = 60.0, y0 = 60.0) + 1.0*Constant()
-θgenmin, divmin, _, _ = bbextract(bh, θgen, θlowergen, θuppergen, TraceMode=:compact)
 
+θgenmin, divmin, _, _ = bbextract(bh, θgen, θlowergen, θuppergen, TraceMode=:compact)
 triptic(images[8], θgenmin)
 
 #Awesome what if we want to resolve the lumpy structure of the ring
@@ -88,7 +88,7 @@ triptic(images[8], θ16min)
 results = []
 bhs = Bhattacharyya.(images)
 Threads.@threads for i in 1:length(images)
-    res = bbextract(bhs[i], θ, lower, upper, MaxFuncEvals=30000)
+    res = bbextract(bhs[i], θ, θlower, θupper, MaxFuncEvals=30000)
     push!(results, res[1])
 end
 
