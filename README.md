@@ -58,13 +58,15 @@ Let's dive into what each piece means
 
  If you want to add your own filter you just need to define a new Filter type a size method, and a imagefilter method for that type of Filter. For example if you want to add a symmetric Gaussian filter you would just add
  ```julia
-struct SymGaussian <: AbstractFilter
+@with_kw struct SymGaussian <: AbstractFilter
     σ::Float64 #standard deviation of the Gaussian
     x0::Float64 #x location of mean
     y0::Float64 #y location of mean
 end
 
-Base.size(::Type{SymGaussian}) = 3
+SymGaussian(p) = SymGaussian(p[1],p[2],p[3])
+
+size(::Type{SymGaussian}) = 3
 
 function (θ::SymGaussian)(x,y)
    z2 = ((x-θ.x0)^2 + (x-θ.y0)^2)/(2.0*θ.^2)
