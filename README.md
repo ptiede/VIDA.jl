@@ -64,6 +64,8 @@ Let's dive into what each piece means
     y0::Float64 #y location of mean
 end
 
+SymGaussian(p) = SymGaussian(p[1],p[2],p[3])
+
 size(::Type{SymGaussian}) = 3
 
 function (θ::SymGaussian)(x,y)
