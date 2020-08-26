@@ -117,13 +117,13 @@ end
 
 function make_initial_filter(filter_type)
     @show filter_type
-    lower_σ = [0.01, [ -2.0 for i in 2:filter_type[1]]... ]
-    upper_σ = [15.0, [ 2.0 for i in 2:filter_type[1]]... ]
+    lower_σ = [0.01, [ -2.0 for i in 1:filter_type[1]]... ]
+    upper_σ = [15.0, [ 2.0 for i in 1:filter_type[1]]... ]
     lower_ξσ = Float64[]
     upper_ξσ = Float64[]
-    if filter_type[1] > 1
-        lower_ξσ = Float64[-π for i in 2:filter_type[1] ]
-        upper_ξσ = Float64[ π for i in 2:filter_type[1] ]
+    if filter_type[1] > 0
+        lower_ξσ = Float64[-π for i in 1:filter_type[1] ]
+        upper_ξσ = Float64[ π for i in 1:filter_type[1] ]
     end
     lower_s = [0.001, [-0.99 for i in 2:filter_type[2]]...]
     upper_s = [0.999, [0.99 for i in 2:filter_type[2]]...]

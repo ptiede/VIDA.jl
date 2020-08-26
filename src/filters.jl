@@ -456,9 +456,9 @@ additional terms.
 @with_kw struct CosineRing{N,M} <: AbstractFilter
     """Radius of the Gaussian ring"""
     r0::Float64
-    """Standard deviations (length N) of the width of the Gaussian ring"""
+    """Standard deviations (length N+1) of the width of the Gaussian ring"""
     σ::Vector{Float64}
-    """Orientations of the cosine expansion width (length N-1)"""
+    """Orientations of the cosine expansion width (length N)"""
     ξσ::Vector{Float64}
     """Asymmetry of the Gaussian ring defined as ``1-b/a``"""
     τ::Float64
@@ -496,16 +496,16 @@ The order of the vector must be
 """
 function CosineRing{N,M}(p::AbstractArray) where {N,M}
     #@assert length(p) == size(CosineRing{N,M})
-    CosineRing{N,M}(p[1], p[2:(N+1)],
-                    p[(N+2):(2N)],
-                    p[2N+1], p[2N+2],
-                    p[2N+3:2N+2+M], p[2N+3+M:2N+2+2M],
-                    p[2N+3+2M], p[2N+4+2M]
+    CosineRing{N,M}(p[1], p[2:(N+2)],
+                    p[(N+3):(2N+2)],
+                    p[2N+3], p[2N+4],
+                    p[2N+5:2N+4+M], p[2N+5+M:2N+4+2M],
+                    p[2N+5+2M], p[2N+6+2M]
     )
 end
 
 
-size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N + N-1 + 2*M
+size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
 
 @fastmath @inline function (θ::CosineRing{N,M})(x,y) where {N, M}
     ex = x-θ.x0
@@ -523,12 +523,11 @@ size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N + N-1 + 2*M
     end
 
     σ = θ.σ[1]
-
-    for i in 2:N
-        σ += θ.σ[i]*cos(i*(ϕ - θ.ξσ[i-1]))
+    for i in 1:N
+        σ += θ.σ[i+1]*cos(i*(ϕ - θ.ξσ[i]))
     end
 
-    return abs(n)*exp(-d2/(2.0*σ^2+1e-2)) + 1e-50
+    return abs(n)*exp(-d2/(2.0*σ^2+1e-2))
 end
 
 
@@ -615,16 +614,16 @@ function unpack(θ::CosineRing{N,M}) where {N,M}
     n = size(typeof(θ))
     p = zeros(n)
     p[1] = θ.r0
-    p[2:(N+1)] = θ.σ
-    if N>1
-        p[(N+2):(2N)] = θ.ξσ
+    p[2:(N+2)] = θ.σ
+    if N>0
+        p[(N+3):(2N+2)] = θ.ξσ
     end
-    p[2N+1] = θ.τ
-    p[2N+2] = θ.ξτ
-    p[2N+3:2N+2+M] = θ.s
-    p[2N+3+M:2N+2+2M] = θ.ξs
-    p[2N+3+2M] = θ.x0
-    p[2N+4+2M] = θ.y0
+    p[2N+3] = θ.τ
+    p[2N+4] = θ.ξτ
+    p[2N+5:2N+4+M] = θ.s
+    p[2N+5+M:2N+4+2M] = θ.ξs
+    p[2N+5+2M] = θ.x0
+    p[2N+6+2M] = θ.y0
 
     return p
 end

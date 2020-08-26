@@ -43,6 +43,24 @@ struct EHTImage{T} <: AbstractFitsImage{T}
     img::T
 end
 
+@doc """
+    get_radec(img::T) <: AbstractFitsImage
+Returns two iterators (ra,dec) that give the locations
+of the `img` pixels.
+"""
+function get_radec(img::T) where {T<: AbstractFitsImage}
+    ra = range((-img.nx*img.psize_x + img.psize_x)/2.0,
+               step=img.psize_x,
+               length=img.nx
+    )
+    dec = range((-img.ny*img.psize_y + img.psize_y)/2.0,
+                step=img.psize_y,
+                length=img.ny
+    )
+
+    return ra,dec
+end
+
 
 clipvalue(c,x) = x < c ? zero(eltype(x)) : x
 """

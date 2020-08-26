@@ -1,4 +1,4 @@
-"""
+@doc """
     $(SIGNATURES)
 Function that uses Optim.jl to minimize our divergence to extract the image features.
 `divergence`. `θinit`,
@@ -8,20 +8,95 @@ algorithm to use. For a list of availible methos see the Optim.jl package, as we
 as for the other various args, and kwargs that can be passed.
 
 # Notes
-`lbounds` and `ubounds` will actually be evaluated, namely they must be included in the mode
-they form the closed hypercube of parameter space.
+`θlower` and `θupper` form the lower and upper bounds of the parameter space.
+For example, if the filter is `GaussianRing` then `r0` will be bounded in
+`[θlower.r0, θupper.r0]`.
+
+
+# Returns
+Returns a tuple (θmin, divmin, converged, iterations), where θmin is the
+optimal filter, divmin is the divergence evaluated as the optimal filter,
+converged is a boolean that says whether the algorithm converged, and
+iterations is the number of iterations it ran for.
+
+"""
+function extract(divergence::S, θinit::T, θlower::T, θupper::T,
+                 args...; method=Fminbox(BFGS()),
+                 kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter}
+    lower = unpack(θlower)
+    upper = unpack(θupper)
+    extract(divergence, θinit, lower, upper, args...; method=method, kwargs...)
+end
+
+function extract(divergence, θinit::T, lbounds, ubounds,
+                 args...; method=Fminbox(BFGS()),
+                 kwargs...) where {T<:AbstractFilter}
+    #Construct the function that takes in vector of params
+    f(p) = divergence(T(p))
+    #unpack the starting location
+    pinit = unpack(θinit)
+    try
+        results =  optimize(f, lbounds, ubounds, pinit,
+                            method,
+                            args...; kwargs...)
+        θ = T(Optim.minimizer(results))
+        ℓmax = Optim.minimum(results)
+        converged = Optim.converged(results)
+        iterations = Optim.iterations(results)
+        return (θ, ℓmax, converged, iterations)
+    catch e
+        println("Extractor failed for initializer:")
+        println(pinit)
+        println(e)
+        return (θinit, f(pinit), false, 1)
+    end
+end
+
+
+
+
+@doc """
+    $(SIGNATURES)
+Function that uses Optim.jl to minimize our divergence to extract the image features.
+`divergence`. `θinit`,
+is the initial filter to use and must be a subtype of AbstractFilter. `lbounds` and
+`ubounds` are the upper and lower bounds of the problem. `method` is the maximization
+algorithm to use. For a list of availible methos see the Optim.jl package, as well
+as for the other various args, and kwargs that can be passed.
+
+# Returns
+This returns a data frame with the optimal parameters
+
+
+# Notes
+`θlower` and `θupper` form the lower and upper bounds of the parameter space.
+For example, if the filter is `GaussianRing` then `r0` will be bounded in
+`[θlower.r0, θupper.r0]`.
 
 This is also the threaded version of the code. If you want to just run a single
 case don't pass nstart.
 
 Also most of the filters aren't autodiffable right now so be careful with the autodiff feature.
 """
+function extract(nstart::Int, divergence::S, θinit::T, θlower::T, θupper::T,
+                 args...; kwargs...) where {S<:AbstractDivergence,T<:AbstractFilter}
+    return extract(GLOBAL_RNG, nstart, divergence, θinit, θlower, θupper,
+                    args...; kwargs...)
+end
+
+
 function extract(nstart::Int, divergence, θinit::T, lbounds, ubounds,
                  args...; kwargs...) where {T<:AbstractFilter}
   return extract(GLOBAL_RNG, nstart, divergence, θinit, lbounds, ubounds,
                  args...; kwargs...)
 end
 
+function extract(rng::AbstractRNG, nstart::Int, divergence::S, θinit::T,
+                 θlower::T, θupper::T, args...; kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter}
+    lower = unpack(θlower)
+    upper = unpack(θupper)
+    extract(rng, nstart, divergence, θinit, lower, upper, args...; kwargs...)
+end
 
 function extract(rng::AbstractRNG, nstart::Int, divergence, θinit::T,
                  lbounds, ubounds,
@@ -59,16 +134,33 @@ function extract(rng::AbstractRNG, nstart::Int, divergence, θinit::T,
     return sort!(df, length(pinit)+1)
 end
 
-"""
+@doc """
     $(SIGNATURES)
-
 
 Function uses the BlackBoxOptim package to minimize the `divergence` function.
 The output from this is then passed to extract to use a deterministic minimizer
 to find the true minimum.
 
-Returns a tuple with elements (filter, div_min, converged, iterations)
+# Notes
+`θlower` and `θupper` form the lower and upper bounds of the parameter space.
+For example, if the filter is `GaussianRing` then `r0` will be bounded in
+`[θlower.r0, θupper.r0]`.
+
+# Returns
+Returns a tuple (θmin, divmin, converged, iterations), where θmin is the
+optimal filter, divmin is the divergence evaluated as the optimal filter,
+converged is a boolean that says whether the algorithm converged
+(currently always returns false), and
+iterations is the number of iterations it ran for.
+
 """
+function bbextract(divergence::S, θ::T, θlower::T, θupper::T,
+                   args...; kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter}
+    lower = unpack(θlower)
+    upper = unpack(θupper)
+    return bbextract(divergence, θ, lower, upper, args...; kwargs...)
+end
+
 function bbextract(divergence, θ::T, lbounds, ubounds,
                    args...; kwargs...) where {T<:AbstractFilter}
     @assert length(lbounds)==length(ubounds) "lbounds and ubounds must have the same length"
@@ -84,34 +176,4 @@ function bbextract(divergence, θ::T, lbounds, ubounds,
                         SearchRange=search_range,kwargs...)
     θinit2 = T(best_candidate(resbb))
     return (θinit2, best_fitness(resbb), false, 1)
-end
-
-"""
-    $(SIGNATURES)
-This is the single threaded version of extract. By default we use simulated
-annealing for the maximization, since other than the BlackBoxOptim drivers
-it tends to find the global max unlike some of the local methods.
-"""
-function extract(divergence, θinit::T, lbounds, ubounds,
-                 args...; method=Fminbox(BFGS()),
-                 kwargs...) where {T<:AbstractFilter}
-    #Construct the function that takes in vector of params
-    f(p) = divergence(T(p))
-    #unpack the starting location
-    pinit = unpack(θinit)
-    try
-        results =  optimize(f, lbounds, ubounds, pinit,
-                            method,
-                            args...; kwargs...)
-        θ = T(Optim.minimizer(results))
-        ℓmax = Optim.minimum(results)
-        converged = Optim.converged(results)
-        iterations = Optim.iterations(results)
-        return (θ, ℓmax, converged, iterations)
-    catch e
-        println("Extractor failed for initializer:")
-        println(pinit)
-        println(e)
-        return (θinit, f(pinit), false, 1)
-    end
 end

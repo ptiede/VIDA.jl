@@ -21,7 +21,7 @@ export
     stack,split,unpack,
     #Image functions
     EHTImage, load_ehtimfits, clipimage, save_ehtimfits,
-    flux, centroid, inertia, rescale_image,
+    flux, centroid, inertia, rescale_image, get_radec,
     #Optimizers
     extract, bbextract
 

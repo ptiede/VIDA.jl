@@ -114,11 +114,11 @@ end
 
 @testset "FilterCosineRing" begin
     θg = GeneralGaussianRing(r0,σ,τ, ξτ, s, ξs, x0, y0)
-    θsg = CosineRing{1,1}([r0, σ, τ, ξτ, s, ξs, x0, y0])
+    θsg = CosineRing{0,1}([r0, σ, τ, ξτ, s, ξs, x0, y0])
     _,_,fimg_g = VIDA.filter_image(θg, 64, xlim, ylim)
     _,_,fimg_sg = VIDA.filter_image(θsg, 64, xlim, ylim)
     @test sum(fimg_g/sum(fimg_g) - fimg_sg/sum(fimg_sg)) < 1e-8
-    θ = CosineRing{N,M}(r0,
+    θ = CosineRing{N-1,M}(r0,
                         [σ, σ_1],
                         [ξσ],
                         τ,
@@ -126,7 +126,7 @@ end
                         [s,s_1,s_2],
                         [ξs, ξs_1, ξs_2],
                         x0, y0)
-    θ1 = CosineRing{N,M}(r0=r0,
+    θ1 = CosineRing{N-1,M}(r0=r0,
                         σ=[σ, σ_1],
                         ξσ=[ξσ],
                         τ=τ,
@@ -134,7 +134,7 @@ end
                         s=[s,s_1,s_2],
                         ξs = [ξs, ξs_1, ξs_2],
                         x0=x0, y0=y0)
-    θ2 = CosineRing{N,M}([r0,
+    θ2 = CosineRing{N-1,M}([r0,
                          σ, σ_1,
                          ξσ,
                          τ,
