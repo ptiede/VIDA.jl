@@ -14,7 +14,7 @@ The inteface is based off of using probability divergences to extract features f
 
 ``` julia
 #load the image
-image = load_ehtimfits(file::String)
+image = load_fits(file::String)
 #create the divergence we want (Bhattacharyya divergence)
 bh = Bhattacharyya(image)
 #Create the filter we want to use to extract for example an slashed elliptical Gaussian
@@ -41,7 +41,7 @@ Let's dive into what each piece means
  - This is the image you want to fit. Currently we only have support for fits images that are similar to the fits image objects created by [ehtim](https://github.com/achael/eht-imaging). These images are loaded with the function
  ```julia
   #load fits image
-  image = load_ehtimfits("fitsname.fits")
+  image = load_fits("fitsname.fits")
 ```
  - There are an additional number of tools available for image processing, such as clipping flux and increasing constrast in the image. That will be included in the documentation when I get around to making it.
 
@@ -121,7 +121,7 @@ A simpler example is
 ```julia
   using VIDA
   #load the image and plot it
-  image = load_ehtimfits("examples/data/elliptical_gaussian_rot-0.00.fits")
+  image = load_fits("examples/data/elliptical_gaussian_rot-0.00.fits")
   plot(image)
 
   #Create the filter to use

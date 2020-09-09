@@ -214,7 +214,7 @@ function fit_func(filter,lower, upper, div_type, clip_percent, breg)
             error("$(div_type) not found! Must be KL or Bh")
         end
         println("Extracting $file using $d_type divergence")
-        image = load_ehtimfits(string(file))
+        image = load_fits(string(file))
         cimage = VIDA.clipimage(clip_percent,image)
         div = VIDA.Bhattacharyya(cimage)
         if (d_type == :KL)

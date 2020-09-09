@@ -1,20 +1,20 @@
 using VIDA
 
 cd(@__DIR__)
-img_el1 = load_ehtimfits("elliptical_gaussian_rot-45.00m87Scale_seed_23_simobs_netcal_scanavg-z0.6-s100-t0-v0-l0-p50-e0.000.fits")
+img_el1 = load_fits("elliptical_gaussian_rot-45.00m87Scale_seed_23_simobs_netcal_scanavg-z0.6-s100-t0-v0-l0-p50-e0.000.fits")
 plot(img_el1)
 bh_el1 = Bhattacharyya(img_el1)
 
-img_el2 = load_ehtimfits("elliptical_gaussian_rot-45.00m87Scale_seed_23_simobs_netcal_scanavg-z0.6-s100-t1-v100-l10-p40-e0.000.fits")
+img_el2 = load_fits("elliptical_gaussian_rot-45.00m87Scale_seed_23_simobs_netcal_scanavg-z0.6-s100-t1-v100-l10-p40-e0.000.fits")
 plot(img_el2)
 bh_el2 = Bhattacharyya(img_el2)
 
 #GRMHD imgs
-img_gr2 = load_ehtimfits("/home/ptiede/Research/Projects/Waffle/WaffleTest/Images/3597/dir_001/Good/image_a-0.94_1242_17_0_230.e9_6.2e9_8.03224e+28_20_SANE_3597_scale-1.1_seed_14_simobs_netcal_scanavg-z0.8-s100-t0-v1-l10-p50-e0.020.fits")
+img_gr2 = load_fits("/home/ptiede/Research/Projects/Waffle/WaffleTest/Images/3597/dir_001/Good/image_a-0.94_1242_17_0_230.e9_6.2e9_8.03224e+28_20_SANE_3597_scale-1.1_seed_14_simobs_netcal_scanavg-z0.8-s100-t0-v1-l10-p50-e0.020.fits")
 plot(img_gr2)
 bh_gr2 = Bhattacharyya(img_gr2)
 
-img_gr1 = load_ehtimfits("/home/ptiede/Research/Projects/Waffle/WaffleTest/Images/3597/dir_001/Good/image_a+0.5_0007_163_0_230.e9_6.2e9_1.59542e+25_40_MAD_3597_scale-1.0_seed_21_simobs_netcal_scanavg-z0.6-s100-t0-v0-l100-p50-e0.000.fits")
+img_gr1 = load_fits("/home/ptiede/Research/Projects/Waffle/WaffleTest/Images/3597/dir_001/Good/image_a+0.5_0007_163_0_230.e9_6.2e9_1.59542e+25_40_MAD_3597_scale-1.0_seed_21_simobs_netcal_scanavg-z0.6-s100-t0-v0-l100-p50-e0.000.fits")
 plot(img_gr1)
 bh_gr1 = Bhattacharyya(img_gr1)
 #Elliptical ring example runs

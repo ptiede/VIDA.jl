@@ -6,7 +6,7 @@ files = readdir("example/data/", join=true)
 filter!(x->endswith(x, ".fits"), files)
 
 #Load the images using Julia's . fusing syntax
-images = load_ehtimfits.(files)
+images = load_fits.(files)
 
 #Lets plots a random image
 plot(images[8])
