@@ -169,6 +169,86 @@ function load_ehtimfits(fits_name::String)
 end
 
 """
+$(SIGNATURES)
+
+where `fits_name` should be a fits file generated using ehtim
+# Details
+This reads in a fits file that is more robust to the various imaging algorithms
+in the EHT, i.e. is works with clean, smili, eht-imaging.
+
+The function returns an EHTImage object that contains the relevant image and parameters
+extracted from the fits file. It also ensures that we are astronomers and that the image
+using sky-left coordinates.
+"""
+function load_fits(fits_name::String)
+    #load the fits
+    f = FITS(fits_name)
+    #@assert ndims(f[1]) == 2 "load_image: First element is expected to be an ImageHDU so ndims is expected to be 2"
+
+    #Check if there are stokes parameters (don't load them right now)
+    if ndims(f[1]) == 2
+        image = deepcopy(Matrix{Float64}(read(f[1])'))
+    elseif ndims(f[1]) == 4
+        @warn "Only stokes I will be loaded. Polarization not implemented yet."
+        image = Matrix{Float64}(read(f[1])[:,:,1,1]')
+    end
+
+
+    header = read_header(f[1])
+    #Read image dimensions
+    nx = Int(header["NAXIS1"])
+    ny = Int(header["NAXIS2"])
+    psize_x = -abs(float(header["CDELT1"])*3600*1e6)
+    psize_y = abs(float(header["CDELT2"]))*3600*1e6
+
+
+    source = string(header["OBJECT"])
+    ra = float(header["OBSRA"])
+    dec = float(header["OBSDEC"])
+    #Get frequency
+    freq = 0.0
+    header_keys = keys(header)
+    if "Freq" in header_keys
+        freq = float(header["FREQ"])
+    elseif "CRVAL3" in keys(header)
+        freq = float(header["CRVAL3"])
+    end
+
+    mjd = 0.0
+    if "MJD" in header_keys
+        mjd = float(header["MJD"])
+    end
+
+    source = "NA"
+    if "OBJECT" in header_keys
+        source = string(header["OBJECT"])
+    end
+
+    #Now renormalize the images if not using Jy/pixel
+    bmaj = 1.0 #Nominal values
+    bmin = 1.0
+    if "BUNIT" in header_keys
+        if header["BUNIT"] == "JY/BEAM"
+            println("Converting Jy/Beam => Jy/pixel")
+            try
+                bmaj = header["BMAJ"]
+                bmin = header["BMIN"]
+            catch
+                @warn "No beam found in header using nominal values"
+            end
+            beamarea = (2.0*π*bmaj*bmin)/(8*log(2))
+            image .= image.*(header["CDELT2"]^2/beamarea)
+        end
+    end
+
+    close(f)
+
+    return EHTImage(nx, ny, psize_x, psize_y, source, ra, dec, C0/freq, mjd, image)
+end
+
+@deprecate load_ehtimfits load_fits
+
+"""
     $(SIGNATURES)
 Finds the centroid or center of light of the `img` in μas.
 """
