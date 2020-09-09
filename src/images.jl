@@ -207,27 +207,26 @@ function load_fits(fits_name::String)
     dec = float(header["OBSDEC"])
     #Get frequency
     freq = 0.0
-    header_keys = keys(header)
-    if "Freq" in header_keys
+    if haskey(header, "FREQ")
         freq = float(header["FREQ"])
     elseif "CRVAL3" in keys(header)
         freq = float(header["CRVAL3"])
     end
 
     mjd = 0.0
-    if "MJD" in header_keys
+    if haskey(header, "MJD")
         mjd = float(header["MJD"])
     end
 
     source = "NA"
-    if "OBJECT" in header_keys
+    if haskey(header,"OBJECT")
         source = string(header["OBJECT"])
     end
 
     #Now renormalize the images if not using Jy/pixel
     bmaj = 1.0 #Nominal values
     bmin = 1.0
-    if "BUNIT" in header_keys
+    if haskey(header, "BUNIT")
         if header["BUNIT"] == "JY/BEAM"
             println("Converting Jy/Beam => Jy/pixel")
             try
