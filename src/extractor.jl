@@ -161,8 +161,8 @@ function bbextract(divergence::S, θ::T, θlower::T, θupper::T,
     return bbextract(divergence, θ, lower, upper, args...; kwargs...)
 end
 
-function bbextract(divergence, θ::T, lbounds, ubounds,
-                   args...; kwargs...) where {T<:AbstractFilter}
+function bbextract(divergence::S, θ::T, lbounds::B, ubounds::B,
+                   args...; kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter,B<:AbstractArray}
     @assert length(lbounds)==length(ubounds) "lbounds and ubounds must have the same length"
     @assert length(lbounds)==length(unpack(θ)) "lbounds must have same number of params as θ"
     search_range = [ (lbounds[i],ubounds[i])  for i in 1:length(lbounds)]
