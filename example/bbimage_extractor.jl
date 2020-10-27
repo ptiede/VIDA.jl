@@ -37,7 +37,7 @@ function parse_commandline()
             arg_type = String
             default = "Bh"
         "--filter"
-            help = "Filter to use for the image extraction.\nOptions are, Gen, TIDA, Slash, Ellip, Circ"
+            help = "Filter to use for the image extraction.\nOptions are, Gen, TIDA, Slash, Ellip, Circ, AsymG"
             action = :append_arg
             nargs = '*'
             arg_type = String
