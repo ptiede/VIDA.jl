@@ -5,7 +5,7 @@
 [![Coverage](https://codecov.io/gh/ptiede/VIDA.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ptiede/VIDA.jl)
 
 
-**Now a registered Julia package use ]add VIDA to install in local Julia environment**
+**Warning v0.6 is features a breaking change to the optimizer funtionality. If upgrading from a previous version your scripts WILL break**
 
 VIDA.jl or the *Variational Image Domain Analysis* provides a interface to extracting features from fits images created for the EHT, using the notion of probabilty divergences similar to variational inference, hence the name. The currently implemented divergences are the Bhattacharyya distance/divergence as well as the Kullback-Leiber divergence. These are used to extract ring-like features from image reconstructions of black holes such as from M87. A paper applying this to various images ring-like images is in preparation.
 
@@ -19,21 +19,9 @@ image = load_fits(file::String)
 bh = Bhattacharyya(image)
 #Create the filter we want to use to extract for example an slashed elliptical Gaussian
 filter = GeneralGaussianRing(p::Array) <: AbstractFilter
-#To extract the features we use the extract function
-extract(bh,
-          θ<:AbstractFilter, #starting location of filter
-          lower,  #lower bounds on parameters for filter
-          upper;   #upper bounds on the parameters for filter
-          method=Fminbox(LBFGS()) #optimization method
-         )
-#To use a more robust global optimizer use
-bbextract(bh,
-          θ::AbstractFilter, #starting location of filter
-          lower,  #lower bounds on parameters for filter
-          upper;   #upper bounds on the parameters for filter
-          MaxFuncEvals = 2*10^4, #Maximum number of measure evals
-          TraceMode = :compact # write progress
-         )
+#To extract the features we define the ExtractProblem and run extractor
+prob = ExtractProblem(divergence, filter::T, filter_lower::T, filter_upper::T) where {T<:AbstractFilter}
+opt_filter, divmin = extractor(prob, opt::Optimizer)
 ```
 Let's dive into what each piece means
 
@@ -77,6 +65,7 @@ Then you can simply call the same optimizing functions and plotting functions. P
 
 You know what is even cooler? You can add filters together, and multiply then by a number. For example to plot a added filter just use
 ```julia
+using Plots
 θ1 = GaussianRing(15.0,10.0,1.0,1.0)
 θ2 = SymGaussian(5,-5,-5)
 θ = θ1 + 5*θ2
@@ -85,7 +74,7 @@ plot(θ)
 ```
 The plotting is done through the recipes macros in Plots.jl. So it should 
 just work! In addition to the plot function there is a new recipe called
-`triptic(img,θ)` that will produce a comparisson between the filter and
+`triptic(img,θ)` that will produce a comparison between the filter and
 the true image. This can be useful when comparing the best filter to the 
 image.
 
@@ -93,7 +82,7 @@ image.
 Additionally any other function that dispatches on the filter type should just work! One thing to note is that the weight between the two filters is relative. Namely, total intensity will always be normalized, so the above code says that θ2 has 5 times the relative flux compared to the first.
 
 
-### Divergence
+### Divergence `AbstractDivergence`
 In order to extract a feature you need to create a probability divergence function. Currently the divergences are defined using a AbstractDivergence type. Currently we have two divergences implemented [Bhattacharyya divergence (Bh)](https://en.wikipedia.org/wiki/Bhattacharyya_distance) and the [Kullback-Leiber divergence (KL)](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). In order to construct the divergence we first need to specify the `image` that we are trying to fit. 
 ```julia
 bh = Bhattacharyya(image) #make the Bh divergence
@@ -106,9 +95,25 @@ bh(θ::AbstractFilter)
 and `bh` will use multiple dispatch to figure out which filter function to use.
 
 
-### Extract `extract` and `bbextract`
-We then use the extract function to extract the image feature. Currently this uses either [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl) or [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) as its backend. Currently our recommendation is to use BlackBoxOptim and the `bbextract` function since it seems to be faster and better at finding the global maximum. Additionally if you want to use gradient based methods, we default to finite difference methods since Zygote.jl autodiff seems to be quite slow, although we may improve this in the future. 
-If you use Optim.jl we found our solution got stuck in local minima even if using simulated annealing e.g. SAMIN()). To help with this you can pass use a threaded extraction where each thread runs an independent run started at different random locations. We found that this tends to find the global maximum if you use $>10$ initial guesses. 
+### Extract features `extractor` and `ExtractProblem` and `Optimizer`
+We then use the extractor function to extract the image feature. To call extractor you need to define a `ExtractProblem` type with the call
+```julia
+prob = ExtractProblem(divergece, filter, filter_lower, filter_upper)
+```
+where `divergence` is your probability divergence, `filter` is the filter function and `filter_lower` and `filter_upper` are the filters that represent the
+lower and upper bounds you want to search over. Once you have your problem defined you can find the optimal filter and extract image features using the `extractor`
+function
+```julia
+opt_filter, divmin = extractor(prob, BBO())
+```
+Here `BBO()` used the [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) package to optimize. Currently, I have 3 packages that are incorporated with VIDA
+ - `BBO()`, [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) which uses genetic and evolutionary algorithms to find global maximum.
+ - `CMAES()`, [CMAESEvolutionStrategy.jl](https://github.com/jbrea/CMAEvolutionStrategy.jl) which uses the CMA-ES genetic algorithm to find the global maximum.
+ - `Opt()`,  [Optim.jl](https://github.com/JuliaNLSolvers/Optim.jl), which allows you to use and box-constrained optimizer from the Optim.jl package, e.g. SAMIN().
+In the future I may add interfaces. In terms of which optimizer to select I would suggest to use BBO() as your default, maybe with the maxevals increased from the default `25_000`. For other options you can see the documentation and help.
+
+Note I also have a threaded version of the extractor `threaded_extractor(nstart, prob, BBO())` that run `nstart` runs of extractor, with different initial conditions randomly sampled in the box-constraints.
+
 
 
 
@@ -125,11 +130,8 @@ A simpler example is
   plot(image)
 
   #Create the filter to use
-  filter = TIDAGaussianRing(20.0, #20 μas Gaussian ring
+  filter = GaussianRing(20.0, #20 μas Gaussian ring
                             5.0,  #std dev is 5.0 μas
-                            0.2,  #1-b/a asymmetry b/a semi-minor/major
-                            0.1,  #slash strength 0 is no slash 1 is max
-                            π/4,  #ring orientation north of east
                             0.0,  #RA (x) location of ring center in μas
                             0.0   #DEC (y) locatin of ring center in μas
                            )
@@ -141,18 +143,19 @@ A simpler example is
   
   #To call the function bh
   bh(filter)
-          
-  #parameter bounds
-  lower = [5.0 0.1, 1e-3, -0.99, -π, -50, -50]
-  upper = [40.0 30.0, 0.99, 0.99, π, 50, 50]
-  #Now extract!
-  #filtermax is the filter that maximizes the bm,
-  #bm_max is its max value
-  #converved & itr are some run info to see if the optimizer said it reached convergence
-  filtermax,bh_max,converged,itr = bbextract(bh, filter, lower, upper)
+
+  #Now lets define our extraction problem, i.e. the filter, bounds, and divergence
+  lower = GaussianRing(0.1, 0.01, -60.0, -60.0)
+  upper = GaussianRing(40.0, 20.0, 60.0, 60.0)
+  prob = ExtractProblem(bh, filter, lower, upper)
+  #Now we run the extractor with the BlackBoxOptim optimizer
+  opt_filter, divmin = extractor(prob, BBO())
+
+  #Now lets run 8 extractors using threads and the CMAES optimizer
+  opt_filter, divmin = threaded_extractor(prob, CMAES(ftol=1e-20, cov_scale=10))
   
   #plot the results
-  triptic(img, filtermax)
+  triptic(img, opt_filter)
 ```
 
 ### Distributed computing
