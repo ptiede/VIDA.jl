@@ -12,7 +12,7 @@ include("common.jl")
 
     @test θ(x0,y0) == 1.0
     @test length(fieldnames(AsymGaussian)) == VIDA.size(AsymGaussian)
-    img = VIDA.make_ehtimage(θ, npix, xlim, ylim)
+    img = VIDA.make_image(θ, npix, xlim, ylim)
     @test isapprox(flux(img), 1.0, atol=ϵ)
     xcent,ycent = centroid(img)
     @test isapprox(xcent, x0; rtol=ϵ)
@@ -36,7 +36,7 @@ end
 
     @test θ(x0,y0) == 1.0
     @test length(fieldnames(Disk)) == VIDA.size(Disk)
-    img = VIDA.make_ehtimage(θ, npix, xlim, ylim)
+    img = VIDA.make_image(θ, npix, xlim, ylim)
     @test isapprox(flux(img), 1.0, atol=ϵ)
     xcent,ycent = centroid(img)
     @test isapprox(xcent, x0; rtol=ϵ)

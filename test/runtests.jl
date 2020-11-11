@@ -7,7 +7,7 @@ using Test
         "filters",
         "images",
         "divergences",
-        "visualizations",
+        #"visualizations",
         "extractor"
     ]
 

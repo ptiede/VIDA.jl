@@ -23,9 +23,12 @@ export
     EHTImage, load_ehtimfits, load_fits, clipimage, save_ehtimfits,
     flux, centroid, inertia, rescale_image, get_radec,
     #Optimizers
-    extract, bbextract
+    extractor, threaded_extractor, BBO, CMAES, Opt,
+    #ExtractionProblem
+    ExtractProblem
 
 using BlackBoxOptim
+using CMAEvolutionStrategy
 using DataFrames
 using DocStringExtensions
 using FITSIO
@@ -33,15 +36,13 @@ using Interpolations: interpolate, BSpline, Cubic, Line, OnGrid, scale, extrapol
 using LaTeXStrings
 using Optim
 using Parameters
-using Plots
-using Plots.PlotMeasures: mm
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
-using RecipesBase
+using Requires
 using SpecialFunctions:erf
 
 
-const C0 =299792458
-const KB =1.38064852e-23
+const C0 = 299792458
+const KB = 1.38064852e-23
 
 #Load the images
 include("images.jl")
@@ -50,9 +51,13 @@ include("filters.jl")
 #Load the divergence functions
 include("divergences.jl")
 #Visualization tools
-include("visualizations.jl")
+function __init__()
+#    @require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209"
+    @require Plots="91a5bcdd-55d7-5caf-9e0b-520d859cae80" include("visualizations.jl")
+end
 #filter extractor
 include("extractor.jl")
+include("utils.jl")
 
 
 end #end the module
