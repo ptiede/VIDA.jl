@@ -2,23 +2,24 @@
 The best way to learn how to use VIDA is to look at some of the example notebooks provided.
 
 ## Installation
-`VIDA` isn't yet registered. To install the pkg type
+`VIDA` is a registered Julia package to install
 ```julia
-using Pkg; Pkg.add(PackageSpec(url="https://github.com/ptiede/VIDA.jl.git"))
+using Pkg; Pkg.add("VIDA")
 ```
-Or go to the repl and simply type `]add https://github.com/ptiede/VIDA.jl.git`.
+Or go to the repl and simply type `]add VIDA`. Note that we require a Julia version >= 1.4.
 
 Some additional dependencies that enable full functionality can be added with
 ```julia
-Pkg.add.(["Optim","PyPlot","FITSIO","ArgParse"])
+Pkg.add.(["Plots","ArgParse"])
 ```
+Plots.jl is required to use some of the plotting recipes defined in the package and ArgParse is used for some of the scripts in the example folder.
 
 ## Idea behind VIDA
-`VIDA` is based on the idea of intrepreting the image as a probility distribution. Namely since any image is integrable, the space of images is in one-to-one correspondence with a probability distribution, especially since the total flux of the image is already known a priori.
+`VIDA` is based on the idea of interpreting the image as a probability distribution. Namely since any image is integrable, the space of images is in one-to-one correspondence with a probability distribution.
 
-Therefore, our idea is very close to variational inference, hence the name *(the) Variational Image Domain Analysis*. Namely, where we view the image as a distribution and we aim to find a approximation of the distribution given some parameteric family ``f_\theta(x,y)``, which for our purproses we will typically call a *filter*. 
+Therefore, our idea is very close to variational inference, hence the name *(the) Variational Image Domain Analysis*. Namely, where we view the image as a distribution and we aim to find a approximation of the distribution given some parametric family ``f_\theta(x,y)``, which for our purposes we will typically call a *filter*.
 
-The choice of filter, depends on the problem of interest, namely what features we are interested in. Typically for the EHT where our images tend to be rings, we are interested in
+The choice of filter, depends on the problem of interest, namely what features we are interested in. Typically for the Event Horizon Telescope (EHT) where the images tend to be rings, we are interested in
 
  - Radius r₀
  - Width or half width σ
@@ -29,10 +30,11 @@ The choice of filter, depends on the problem of interest, namely what features w
 `VIDA` then defines a series of filters parameterize these features.
 
 ### Filters
-Currently we have 5 filters defined, although they all belong to the same family. For an example on how to see the process for defining your own filter please see the [readme](https://github.com/ptiede/VIDA.jl/blob/master/README.md).
+Currently we have 6 filters defined, although they all belong to the same family. For an example on how to see the process for defining your own filter please see the [readme](https://github.com/ptiede/VIDA.jl/blob/master/README.md).
 
 The filters implemented are:
 
+ - `CosineRing{N,M}` which defines a ring with a cosine expansion in azimuthal thickness (order N) and brightness (order M).
  - `GaussianRing` which is a symmetric and circular Gaussian ring.
  - `SlashedGaussianRing` which is a circular Gaussian ring with a flux gradient across its emission.
  - `EllipticalGaussianRing` symmetric Gaussian elliptical ring, where the emission is constant across the ring, unlike with the SlashedGaussianRing.
@@ -42,7 +44,9 @@ The filters implemented are:
  - `Constant` Adds a constant flux floor to the image. This is very helpful for image reconstructions that tend to add small scale flux everywhere in the image.
 
 ### Divergences
-In order to extract features we first need a cost function that penalized our parameterized distributions ``f_\theta(x,y)``. Since we are considering the image as a probability distribution, one cost function would be the distance or **divergence** between two distributions. A probability divergence is just a functional that takes in two probability distributions p,q and is minimized iff ``p\equiv q``.
+In order to extract features we first need a cost function that penalized our parameterized distributions ``f_\theta(x,y)``. Since we are considering the image as a probability distribution, one cost function would be the distance or **divergence** between two distributions. A probability divergence is just a functional that takes in two probability distributions p,q and is minimized iff ``p\equiv q``. 
+
+Divergences are defined by the abstract type `AbstractDivergence`. Implementations of the this type are also expected to implement a functor that evaluates the divergence on some filter. For an example see the implementation of the divergences in 
 
 Currently we have two divergences implemented in `VIDA`
  - Bhattacharyya divergence (Bh)
