@@ -1,5 +1,5 @@
 # Getting Started
-The best way to learn how to use VIDA is to look at some of the example notebooks provided.
+
 
 ## Installation
 `VIDA` is a registered Julia package to install
