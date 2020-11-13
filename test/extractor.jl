@@ -13,7 +13,8 @@ include("common.jl")
     θ0 = SlashedGaussianRing(r0*1.05, σ*1.05, s*0.95, ξs, x0, y0) +
                             0.11*AsymGaussian(σ*1.5, τ*0.95, ξτ*1.1, x0, y0)
     prob = ExtractProblem(bh, θ0, lower, upper)
-    rθ,divmin = threaded_extractor(4, prob, Opt(Fminbox(LBFGS())))
+    rθ,divmin = threaded_extractor(1, prob, Opt(Fminbox(LBFGS())))
+    rθ,divmin = extractor(prob, Opt(Fminbox(LBFGS())))
     @test isapprox(unpack(θ), unpack(θ), rtol=ϵ)
 end
 
