@@ -9,7 +9,7 @@ include("common.jl")
     @test ycent == 1.2458998319861223
     θ = GaussianRing(r0,σ,x0,y0)
     img_fake = VIDA.make_image(θ, 64, xlim, ylim, img)
-    save_ehtimfits(img, "tmp")
+    save_fits(img, "tmp")
     rm("tmp")
 end
 

@@ -221,9 +221,10 @@ end
         if (d_type == :KL)
             div = VIDA.KullbackLeibler(cimage)
         end
-        θ,divmin,_,_ = bbextract(div, filter, lower, upper;
-                                 TraceMode=:silent, MaxFuncEvals=50*10^3)
-        θ,divmin,_,_ = extract(div, θ, lower, upper)
+        prob = ExtractProblem(div, filter, lower, upper)
+        θ,divmin = extractor(prob, BBO(tracemode=:silent, maxevals=50_000))
+        prob_new = ExtractProblem(div, θ, lower, upper)
+        θ,divmin = extractor(prob_new, CMAES(cov_scale=0.01, verbosity=0))
         return VIDA.unpack(θ),divmin
     end
 end
@@ -236,20 +237,18 @@ function main_sub(fitsfiles, out_name,
     #"Define the filter I want to use and the var bounds"
     matom = make_initial_filter.(filter_type)
     model = 1.0*matom[1][1]
-    lower = [matom[1][2]...,1e-6]
+    lower = [matom[1][2]...,1e-10]
     upper = [matom[1][3]...,1e2]
     if length(matom) > 1
       for i in 2:length(matom)
         model = model + 1.0*matom[i][1]
-        lower = [lower..., matom[i][2]..., 1e-6]
+        lower = [lower..., matom[i][2]..., 1e-10]
         upper = [upper..., matom[i][3]..., 1e2]
       end
     end
     model = model + 1.0*Constant()
-    lower = [lower..., 1e-6]
-    upper = [upper..., 1]
-    @assert length(lower) == length(upper) "Bounds must have equal size"
-    @assert length(unpack(model)) == length(lower) "Number of filter params $(length(unpack(model))) != $(length(lower))"
+    lower = typeof(model)([lower..., 1e-10])
+    upper = typeof(model)([upper..., 1])
 
     #Need to make sure all the procs know this information
     @everywhere model = $(model)
@@ -263,15 +262,15 @@ function main_sub(fitsfiles, out_name,
     #will be saved
     start_indx = 1
     df,start_indx = create_initial_df!(start_indx,fitsfiles, model, restart, out_name)
-    rng = MersenneTwister(seed) #set the rng
 
     #Now fit the files!
     @everywhere fit = fit_func(model,lower,upper, div_type, clip_percent, breg)
+    #Partition the list for checkpointing purposes
     indexpart = Iterators.partition(start_indx:length(fitsfiles), stride)
     for ii in indexpart
       results = pmap(fit, fitsfiles[ii])
-      df[ii,1:length(lower)] = hcat(first.(results)...)'
-      df[ii,length(lower)+1] = last.(results)
+      df[ii,1:VIDA.size(typeof(lower))] = hcat(first.(results)...)'
+      df[ii,VIDA.size(typeof(lower))+1] = last.(results)
       df[ii,end] = fitsfiles[ii]
       #save the file
       println("Checkpointing $(ii)")

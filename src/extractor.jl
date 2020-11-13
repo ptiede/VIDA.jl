@@ -73,6 +73,8 @@ $(FIELDS)
     ftol::Union{Nothing,Float64} = 1e-11
     """maximum number of divergence evals, nothing means run until termination"""
     maxevals::Union{Nothing,Float64} = nothing
+    """verbosity of output"""
+    verbosity=1
 end
 
 
@@ -179,7 +181,8 @@ function extractor(prob::ExtractProblem{S,T}, optimizer::CMAES) where {S,T}
                         maxfevals=optimizer.maxevals,
                         xtol=optimizer.xtol,
                         ftol=optimizer.ftol,
-                        ftarget=optimizer.ftarget
+                        ftarget=optimizer.ftarget,
+                        verbosity=optimizer.verbosity
                     )
     θ = T(xbest(results))
     ℓmax = fbest(results)

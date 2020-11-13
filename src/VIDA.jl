@@ -20,7 +20,7 @@ export
     #Filter helper functions
     stack,split,unpack,
     #Image functions
-    EHTImage, load_ehtimfits, load_fits, clipimage, save_ehtimfits,
+    EHTImage, load_ehtimfits, load_fits, clipimage, save_fits,
     flux, centroid, inertia, rescale_image, get_radec,
     #Optimizers
     extractor, threaded_extractor, BBO, CMAES, Opt,

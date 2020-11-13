@@ -315,7 +315,7 @@ function inertia(img::EHTImage, center=false)
     return moments
 end
 
-"""
+@doc """
     $(SIGNATURES)
 Finds the image flux of an EHTImage `img`
 """
@@ -362,7 +362,7 @@ function field_of_view(img::EHTImage)
 end
 
 
-function save_ehtimfits(image::EHTImage, fname::String)
+function save_fits(image::EHTImage, fname::String)
     headerkeys = ["SIMPLE",
                   "BITPIX",
                   "NAXIS",
