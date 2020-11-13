@@ -1,5 +1,6 @@
 using VIDA
 using Test
+using Plots
 
 @testset "VIDA.jl" begin
     # Write your own tests here.
@@ -7,7 +8,7 @@ using Test
         "filters",
         "images",
         "divergences",
-        #"visualizations",
+        "visualizations",
         "extractor"
     ]
 
