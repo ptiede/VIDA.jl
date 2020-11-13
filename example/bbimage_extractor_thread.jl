@@ -220,12 +220,15 @@ function fit_func(filter,lower, upper, div_type, clip_percent, breg)
         if (d_type == :KL)
             div = VIDA.KullbackLeibler(cimage)
         end
-        θ,divmin,_,_ = bbextract(div, filter, lower, upper;
-                                 TraceMode=:silent, MaxFuncEvals=50*10^3)
-        θ,divmin,_,_ = extract(div, θ, lower, upper)
+        prob = ExtractProblem(div, filter, lower, upper)
+        θ,divmin = extractor(prob, BBO(tracemode=:silent, maxevals=50_000))
+        prob_new = ExtractProblem(div, θ, lower, upper)
+        θ,divmin = extractor(prob_new, CMAES(cov_scale=0.01, verbosity=0))
         return VIDA.unpack(θ),divmin
     end
 end
+
+
 
 function main_sub(fitsfiles, out_name,
                   div_type, filter_type,
@@ -245,10 +248,8 @@ function main_sub(fitsfiles, out_name,
       end
     end
     model = model + 1.0*Constant()
-    lower = [lower..., 1e-6]
-    upper = [upper..., 1]
-    @assert length(lower) == length(upper) "Bounds must have equal size"
-    @assert length(unpack(model)) == length(lower) "Number of filter params $(length(unpack(model))) != $(length(lower))"
+    lower = typeof(model)([lower..., 1e-10])
+    upper = typeof(model)([upper..., 1])
 
     #Need to make sure all the procs know this information
 
@@ -256,7 +257,6 @@ function main_sub(fitsfiles, out_name,
     #will be saved
     start_indx = 1
     df,start_indx = create_initial_df!(start_indx,fitsfiles, model, restart, out_name)
-    rng = MersenneTwister(seed) #set the rng
 
     #Now fit the files!
     fit = fit_func(model,lower,upper, div_type, clip_percent, breg)
@@ -264,8 +264,8 @@ function main_sub(fitsfiles, out_name,
     for ii in indexpart
         Threads.@threads for i in ii
             result = fit(fitsfiles[i])
-            df[i,1:length(lower)] = result[1]
-            df[i,length(lower)+1] = result[2]
+            df[i,1:VIDA.size(typeof(lower))] = result[1]
+            df[i,VIDA.size(typeof(lower))+1] = result[2]
             df[i,end] = fitsfiles[i]
         end
         #save the file

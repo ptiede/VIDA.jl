@@ -1,179 +1,195 @@
 @doc """
-    $(SIGNATURES)
-Function that uses Optim.jl to minimize our divergence to extract the image features.
-`divergence`. `θinit`,
-is the initial filter to use and must be a subtype of AbstractFilter. `lbounds` and
-`ubounds` are the upper and lower bounds of the problem. `method` is the maximization
-algorithm to use. For a list of availible methos see the Optim.jl package, as well
-as for the other various args, and kwargs that can be passed.
+    $(TYPEDEF)
+Abstract optimizer class that defines the optimizer to use.
+This is the interface I'll need to define all the different optimizer
+classes below.
+"""
+abstract type Optimizer end
+
+@doc """
+    $(TYPEDEF)
+Defines the interface for the BlackBoxOptim interface.
+This requires that the user to have imported the BlackBoxOptim package.
+
+# Fields
+ - popsize: The population size DEFAULT 64
+ - maxevals: The maximum number of times to evaluate the divergence before terminiation.
+ - tracemode: The output option. Default is silent, i.e. no output.
+ Other options are `:compact` and `:verbose`
+
 
 # Notes
-`θlower` and `θupper` form the lower and upper bounds of the parameter space.
-For example, if the filter is `GaussianRing` then `r0` will be bounded in
-`[θlower.r0, θupper.r0]`.
+This uses the default BlackBoxOptim optimizer i.e. adaptive_de_rand_1_bin_radiuslimited.
+Currently other options aren't implemented since I found that this version
+tended to work the best.
 
-
-# Returns
-Returns a tuple (θmin, divmin, converged, iterations), where θmin is the
-optimal filter, divmin is the divergence evaluated as the optimal filter,
-converged is a boolean that says whether the algorithm converged, and
-iterations is the number of iterations it ran for.
-
+# Fields
+$(FIELDS)
 """
-function extract(divergence::S, θinit::T, θlower::T, θupper::T,
-                 args...; method=Fminbox(BFGS()),
-                 kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter}
-    lower = unpack(θlower)
-    upper = unpack(θupper)
-    extract(divergence, θinit, lower, upper, args...; method=method, kwargs...)
+@with_kw struct BBO <: Optimizer
+    method=:adaptive_de_rand_1_bin_radiuslimited
+    popsize::Int = 64
+    maxevals::Int = 25_000
+    tracemode::Symbol = :compact
 end
 
-function extract(divergence, θinit::T, lbounds, ubounds,
-                 args...; method=Fminbox(BFGS()),
-                 kwargs...) where {T<:AbstractFilter}
-    #Construct the function that takes in vector of params
-    f(p) = divergence(T(p))
-    #unpack the starting location
-    pinit = unpack(θinit)
-    try
-        results =  optimize(f, lbounds, ubounds, pinit,
-                            method,
-                            args...; kwargs...)
-        θ = T(Optim.minimizer(results))
-        ℓmax = Optim.minimum(results)
-        converged = Optim.converged(results)
-        iterations = Optim.iterations(results)
-        return (θ, ℓmax, converged, iterations)
-    catch e
-        println("Extractor failed for initializer:")
-        println(pinit)
-        println(e)
-        return (θinit, f(pinit), false, 1)
-    end
+@doc """
+    $(TYPEDEF)
+Defines the interface for the LBFGS-B interface from the Optim.jl package.
+This requires that the user to have imported the **Optim package**.
+
+# Fields
+$(FIELDS)
+"""
+@with_kw struct Opt{O<:Optim.AbstractConstrainedOptimizer} <: Optimizer
+    opt::O
+    options::Optim.Options = Optim.Options()
 end
 
+function Opt(opt::O) where {O<:Optim.AbstractConstrainedOptimizer}
+    return Opt(opt=opt, options=Optim.Options())
+end
+
+@doc """
+    $(TYPEDEF)
+Defines the interface for the LBFGS-B interface from the Optim.jl package.
+This requires that the user to have imported the **CMAEvolutionStrategy package**.
+
+Typically I have found that this works very well. This the usual first optimizer to try.
+
+# Fields
+$(FIELDS)
+"""
+@with_kw struct CMAES <: Optimizer
+    """ PopulationSize """
+    popsize::Int = 64
+    """ Initial covariance scale """
+    cov_scale::Float64 = 1.0
+    """ target divergence values. `nothing` means there is no target """
+    ftarget::Union{Nothing,Float64} = nothing
+    """xtol"""
+    xtol::Union{Nothing,Float64} = nothing
+    """ftol"""
+    ftol::Union{Nothing,Float64} = 1e-11
+    """maximum number of divergence evals, nothing means run until termination"""
+    maxevals::Union{Nothing,Float64} = nothing
+    """verbosity of output"""
+    verbosity=1
+end
 
 
 
 @doc """
-    $(SIGNATURES)
-Function that uses Optim.jl to minimize our divergence to extract the image features.
-`divergence`. `θinit`,
-is the initial filter to use and must be a subtype of AbstractFilter. `lbounds` and
-`ubounds` are the upper and lower bounds of the problem. `method` is the maximization
-algorithm to use. For a list of availible methos see the Optim.jl package, as well
-as for the other various args, and kwargs that can be passed.
+    ExtractProblem{T<:AbstractDivergence, S<:AbstractFilter}
+Defines a feature extraction problem to minimize, with an abstract filte
+and an abstract divergence. This is needed to interface with the extractor
+minimizer, which will minimize the divergence to find the optimal filter.
 
-# Returns
-This returns a data frame with the optimal parameters
-
-
-# Notes
-`θlower` and `θupper` form the lower and upper bounds of the parameter space.
-For example, if the filter is `GaussianRing` then `r0` will be bounded in
-`[θlower.r0, θupper.r0]`.
-
-This is also the threaded version of the code. If you want to just run a single
-case don't pass nstart.
-
-Also most of the filters aren't autodiffable right now so be careful with the autodiff feature.
+# Fields
+$(FIELDS)
 """
-function extract(nstart::Int, divergence::S, θinit::T, θlower::T, θupper::T,
-                 args...; kwargs...) where {S<:AbstractDivergence,T<:AbstractFilter}
-    return extract(GLOBAL_RNG, nstart, divergence, θinit, θlower, θupper,
-                    args...; kwargs...)
+struct ExtractProblem{T<:AbstractDivergence, S<:AbstractFilter}
+    """ Divergence function to minimize """
+    div::T
+    """ Initial location of the optimizer """
+    θinit::S
+    """ Lower bound of the search region """
+    θlower::S
+    """ Upper bound of the search region """
+    θupper::S
 end
 
+@doc """
+    threaded_extractor(nstart::Int, prob::ExtractProblem, optimizer::Optimizer)
+A threaded multi-start version of the extractor method. This will run `nstart`
+instances of extractor, where the initial location of chosen uniformly within the
+bounds defined in `prob`.
 
-function extract(nstart::Int, divergence, θinit::T, lbounds, ubounds,
-                 args...; kwargs...) where {T<:AbstractFilter}
-  return extract(GLOBAL_RNG, nstart, divergence, θinit, lbounds, ubounds,
-                 args...; kwargs...)
-end
-
-function extract(rng::AbstractRNG, nstart::Int, divergence::S, θinit::T,
-                 θlower::T, θupper::T, args...; kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter}
-    lower = unpack(θlower)
-    upper = unpack(θupper)
-    extract(rng, nstart, divergence, θinit, lower, upper, args...; kwargs...)
-end
-
-function extract(rng::AbstractRNG, nstart::Int, divergence, θinit::T,
-                 lbounds, ubounds,
-                 args...; kwargs...) where {T<:AbstractFilter}
-    pinit = unpack(θinit)
-    start_states = rand(rng, length(pinit), nstart)
-
-    #Create data frame that holds the results
-    df = DataFrame()
-    key_names = fieldnames(typeof(θinit))
-    for i in 1:length(key_names)
-        insertcols!(df,i, Symbol(key_names[i])=>zeros(nstart), makeunique=true)
-    end
-    setproperty!(df, :ℓmax, zeros(nstart))
-    setproperty!(df, :threadid, zeros(nstart))
-    setproperty!(df, :converged, Vector{Bool}(undef, nstart))
-    setproperty!(df, :iterations, Vector{Int}(undef, nstart))
-    @assert length(pinit)==length(ubounds) "Number of parameters doesn't equal number of bounds"
-    @assert length(pinit)==length(lbounds) "Number of parameters doesn't equal number of bounds"
+# Outputs
+This outputs the best filter and minimum divergence of all the extractors run.
+"""
+function threaded_extractor(nstart::Int, prob::ExtractProblem{S1,S2}, optimizer::T) where {S1,S2,T<:Optimizer}
+    lbounds, ubounds = _bounds(prob)
+    θmin = prob.θinit
+    divmin = prob.div(θmin)
     Threads.@threads for i in 1:nstart
-        p = zeros(length(pinit))
-        for j in 1:length(pinit)
-            p[j] = (ubounds[j]-lbounds[j])*start_states[j,i] + lbounds[j]
+        p0 = lbounds + (ubounds-lbounds)*rand()
+        θ0 = S2(p0)
+        prob = ExtractProblem(prob.div, θ0, prob.θlower, prob.θupper)
+        res = extractor(prob, optimizer)
+        if divmin > res[2]
+            θmin = res[1]
+            divmin = res[2]
         end
-        θinit = T(p)
-        θ, ℓmax, converged, iterations = extract(divergence, θinit,
-                             lbounds, ubounds,
-                             args..., kwargs...)
-        df[i,1:length(p)] = unpack(θ)
-        df[i,length(p)+1] = ℓmax
-        df[i,length(p)+2] = Threads.threadid()
-        df[i,length(p)+3] = converged
-        df[i,length(p)+4] = iterations
     end
-    return sort!(df, length(pinit)+1)
+    return θmin, divmin
 end
+
 
 @doc """
-    $(SIGNATURES)
+    extractor(prob::ExtractProblem, optimizer::Optimizer)
+This extracts the optimal filter defined by the `prob` problem.
+This will minimize the divergence in prob and return the optimal filter
+and minimum divergence in a tuple.
 
-Function uses the BlackBoxOptim package to minimize the `divergence` function.
-The output from this is then passed to extract to use a deterministic minimizer
-to find the true minimum.
+`optimizer` is one of VIDA's optimizer types. Typically I would recommend the BBO()
+optimizer
 
-# Notes
-`θlower` and `θupper` form the lower and upper bounds of the parameter space.
-For example, if the filter is `GaussianRing` then `r0` will be bounded in
-`[θlower.r0, θupper.r0]`.
-
-# Returns
-Returns a tuple (θmin, divmin, converged, iterations), where θmin is the
-optimal filter, divmin is the divergence evaluated as the optimal filter,
-converged is a boolean that says whether the algorithm converged
-(currently always returns false), and
-iterations is the number of iterations it ran for.
-
+# Examples
+```julia
+    θopt, divmin = extractor(prob, BBO())
+```
 """
-function bbextract(divergence::S, θ::T, θlower::T, θupper::T,
-                   args...; kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter}
-    lower = unpack(θlower)
-    upper = unpack(θupper)
-    return bbextract(divergence, θ, lower, upper, args...; kwargs...)
+function extractor(prob, optimizer) end
+
+function extractor(prob::ExtractProblem{S,T}, optimizer::BBO) where {S,T}
+    lbounds, ubounds = _bounds(prob)
+    search_range = [ (lbounds[i],ubounds[i])  for i in 1:length(lbounds)]
+    ndim = length(lbounds)
+    f(p) = prob.div(T(p))
+    resbb =  bboptimize(f; NumDimensions=ndim,
+                        Method=optimizer.method,
+                        MaxFuncEvals=optimizer.maxevals, TraceMode=optimizer.tracemode,
+                        PopulationSize=optimizer.popsize,
+                        SearchRange=search_range)
+    θinit2 = T(best_candidate(resbb))
+    return (θinit2, best_fitness(resbb))
+
 end
 
-function bbextract(divergence::S, θ::T, lbounds::B, ubounds::B,
-                   args...; kwargs...) where {S<:AbstractDivergence, T<:AbstractFilter,B<:AbstractArray}
-    @assert length(lbounds)==length(ubounds) "lbounds and ubounds must have the same length"
-    @assert length(lbounds)==length(unpack(θ)) "lbounds must have same number of params as θ"
-    search_range = [ (lbounds[i],ubounds[i])  for i in 1:length(lbounds)]
-    #Create function to optimize
-    #println("Using $θ")
-    ndim = length(lbounds)
-    f(p) = divergence(T(p))
-    resbb =  bboptimize(f, args...; NumDimensions=ndim,
-                        Method=:adaptive_de_rand_1_bin_radiuslimited,
-                        MaxFuncEvals=20000, TraceMode=:silent,
-                        SearchRange=search_range,kwargs...)
-    θinit2 = T(best_candidate(resbb))
-    return (θinit2, best_fitness(resbb), false, 1)
+
+function extractor(prob::ExtractProblem{S,T}, optimizer::Opt) where {S,T}
+    lbounds, ubounds = _bounds(prob)
+    f(p) = prob.div(T(p))
+    #unpack the starting location
+    pinit = unpack(prob.θinit)
+    results =  optimize(f, lbounds, ubounds, pinit, optimizer.opt, optimizer.options)
+    θ = T(Optim.minimizer(results))
+    ℓmax = Optim.minimum(results)
+    return (θ, ℓmax)
+end
+
+
+function extractor(prob::ExtractProblem{S,T}, optimizer::CMAES) where {S,T}
+    lbounds, ubounds = _bounds(prob)
+    f(p) = prob.div(T(p))
+    #unpack the starting location
+    pinit = unpack(prob.θinit)
+    results =  minimize(f, pinit, optimizer.cov_scale;
+                        lower=lbounds,
+                        upper=ubounds,
+                        maxfevals=optimizer.maxevals,
+                        xtol=optimizer.xtol,
+                        ftol=optimizer.ftol,
+                        ftarget=optimizer.ftarget,
+                        verbosity=optimizer.verbosity
+                    )
+    θ = T(xbest(results))
+    ℓmax = fbest(results)
+    return (θ, ℓmax)
+end
+
+
+@inline function _bounds(prob::ExtractProblem)
+    return unpack(prob.θlower), unpack(prob.θupper)
 end
