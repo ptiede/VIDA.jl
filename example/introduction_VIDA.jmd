@@ -1,0 +1,237 @@
+---
+title: Introduction to VIDA
+author: Paul Tiede
+date: today
+---
+
+## Installation
+VIDA is written in the Julia programming language for a few reasons:
+
+ 1. It is fast! Julia can achieve C and Fortan speeds while not having to deal with memory.
+ 2. It's syntax is very simple. Unlike Themis which is written in C++ the development time is orders of magnitude lower in Julia.
+
+ 
+So to install VIDA you first have to install the Julia binary on your system. The best bet is to go to the Julia site and install the official [binary](https://julialang.org/downloads/)
+
+To install the VIDA package you can run the following
+```julia
+using Pkg;Pkg.add("VIDA")
+```
+
+## Idea behind VIDA
+`VIDA` is based on the idea of intrepreting the image as a probility distribution. Namely since any image is integrable, the space of images is in one-to-one correspondence with a probability distribution, especially since the total flux of the image is already known a priori.
+
+Therefore, our idea is very close to variational inference, hence the name *Variational Image Domain Analysis*. Namely, where we view the image as a distribution and we aim to find a approximation of the distribution given some parameteric family $f_\theta(x,y)$, which for our purproses we will typically call a *filter*. 
+
+The choice of filter, depends on the problem of interest, namely what features we are interested in. Typically for the EHT where our images tend to be rings, we are interested in
+
+ - Radius r₀
+ - Width or half width σ
+ - Structural asymmetry τ
+ - Flux asymmetry s
+ - Position angle ξ
+
+`VIDA` then defines a series of filters parameterize these features.
+
+### Filters
+Currently we have 5 filters defined, although they all belong to the same family. For an example on how to see the process for defining your own filter please see the [readme](https://github.com/ptiede/VIDA.jl/blob/master/README.md).
+
+The filters implemented are:
+
+ - `GaussianRing` which is a symmetric and circular Gaussian ring.
+ - `SlashedGaussianRing` which is a circular Gaussian ring with a flux gradient across its emission.
+ - `EllipticalGaussianRing` symmetric Gaussian elliptical ring, where the emission is constant across the ring, unlike with the SlashedGaussianRing.
+ - `GeneralGaussianRing` A combination of the two above where the ring is allowed to be elliptical and have a intensity gradient.
+ - `TIDAGaussianRing` The GeneralGaussianRing, but where the asymmetry and flux orienation are fixed relative to one another.
+ - `AsymGaussian` A asymmetric Gaussian blob. This can be useful if you image has a strong non-ring component in it.
+ - `Constant` Adds a constant flux floor to the image. This is very helpful for image reconstructions that tend to add small scale flux everywhere in the image.
+ - `CosineRing{N,M}` A ring filter where the azimuthal brightness and thickness is expressed using a cosine expansion.
+### Divergences
+In order to extract features we first need a cost function that penalized our parameterized distributions $f_\theta(x,y)$. Since we are considering the image as a probability distribution, one cost function would be the distance or **divergence** between two distributions. A probability divergence is just a functional that takes in two probability distributions p,q and is minimized iff $p\equiv q$.
+
+Currently we have two divergences implemented in `VIDA`
+ - Bhattacharyya divergence (Bh)
+$$
+ Bh(f_\theta|I) = \int \sqrt{f_\theta(x,y)I(x,y)} dxdy.
+$$
+ - KL divergence 
+$$
+ KL(f_\theta|I) = \int f_\theta(x,y)\log\left(\frac{f_\theta(x,y)}{I(x,y)}\right)dxdy. 
+$$
+Both divergences give very similar answers, although we found the BH to be easier to maximize.
+
+
+### Using `VIDA`
+Using VIDA is based on constructing three items:
+ 1. Data, i.e. an image that you want to extract features from.
+ 2. Cost function, i.e. pick if you want to use the KL or BH divergence 
+ 3. Filter, i.e. construct the family of distributions or filters that you will use to approximate the image.
+Then all you need to do is minimize the divergence and you will have extracted you image features.
+
+Now lets runs through how that works
+
+
+
+## Getting started
+To load VIDA we follow the typical Julia flow. Note that to include plotting functionality you need to include Plots as well
+```julia
+using Plots
+using VIDA
+using InteractiveUtils
+```
+
+### Step 1 Read in Data
+`VIDA` currently only works with fits images. THe fits header is based off of what [eht-imaging](https://github.com/achael/eht-imaging) outputs. So as long as you stick to that standard you should be fine.
+
+To read in an image we just use the `load_fits` function
+which should work with any fits image from ehtim and clean
+
+```julia
+#Load the image
+img = load_fits("data/elliptical_gaussian_rot-45.00m87Scale_seed_23_simobs_netcal_scanavg-z0.6-s100-t0-v0-l0-p50-e0.000.fits")
+
+#To see what this img is lets print the type
+println(typeof(img))
+
+#To plot the image we can just call plot. This uses recipes and the Plots.jl framework
+plot(img)
+```
+So from the output we see that img is a EHTImage type. The information in the curly brackets defines the parametric type information. What this means is that the image that is constrained in the EHTImage type is a Matrix whose elements are Float64's. 
+
+
+Julia isn't a traditional OOP language. Namely, methods/functions are first class and aren't members of a class. Instead how a function behaves is dependent on the type of argument inputs. This is known as something called multimethods or *multiple dispatch* where at run-time the type of functions called is determined by the arguments. 
+
+In some sense OOP is just a multiple dispatch type language where the our type of dispatch only depends on the class, i.e. the self argument in Python classes. 
+
+
+Now because of the lack of classes sometimes it can be difficult to figure out which functions will act of our datatypes, e.g. the EHTImage type. Fortunately, Julia has some convenience functions that let you see which functions/methods can act of the EHTImage type
+
+```julia
+#To see what functions can act on an EHTImage object just call
+methodswith(EHTImage)
+```
+
+From this list we see there are several methods that can act on EHTImage types. To see what a certain function does you can type `?inertia` in the terminal to see the help for the inertia method.
+
+## Creating a divergence
+In order to find the optimal filter you need to first decide on your objective or cost function. In VIDA we use probaility divergences to measure differences between the filter and image. A divergence is defined as an abstract type `AbstractDivergence`. In VIDA a divergence is a `functor`. A functor is a type that has an anonymous function attached to it. That means it is both a type and a function. For instance we create a divergence by
+
+```julia
+ bh = Bhattacharyya(img);
+ kl = KullbackLeibler(img);
+```
+
+Now to evaluate the divergence we need to pass it a filter. This can be any filter your choose. The great thing about julia is that bh will use multiple dispatch to figure out which filter is being passed to the divergence. 
+
+For instance lets create a few different filters
+```julia
+gr = GaussianRing(r0=20.0, σ=5.0, x0=0.0, y0=0.0)
+ggr = GeneralGaussianRing(r0=20.0, 
+                          σ = 5.0,
+                          τ = 0.2,
+                          ξτ = 0.78,
+                          s = 0.5,
+                          ξs = 0.78,
+                          x0=0.0,
+                          y0=0.0
+                        )
+# We can also plot both filters
+a = plot(gr, title="GaussianRing")
+b = plot(ggr, title="GeneralGaussianRing")
+plot(a, b, layout=(1,2), size=(600,300))
+```
+
+VIDA has a number of filters defined. These are all subtypes of the AbstractFilter type. To see which filters are implemented you can use the subtype method:
+```julia
+subtypes(VIDA.AbstractFilter)
+```
+
+Note that the AddFilter and MulFilter are internal filters that allow the user to easily combine two filters, for example:
+```julia
+add = gr + 1.0*ggr
+```
+
+To evaluate the divergence between our filter and image we then just evaluate the divergence on the filter
+```julia
+@show bh(gr);
+@show bh(ggr);
+@show bh(add);
+```
+
+Now neither filter is really a great approximation to the true image. For instance visually they look quite different, which can be checked with the `triptic` function
+
+```julia
+a = triptic(img, gr)
+b = triptic(img, ggr)
+c = triptic(img, add)
+plot(a,b,c, layout=(3,1), size=(800,800))
+```
+
+
+## Extracting the Optimal Filter
+To extract the optimal filter the first thing you need to do is define your `ExtractProblem`. This requires your divergence, initial filter, and bounds.
+```julia
+lower = GaussianRing(r0=0.1, σ=0.01, x0=-60.0, y0=-60.0);
+upper = GaussianRing(r0=60.0, σ=20.0, x0=60.0, y0=60.0);
+initial = GaussianRing(r0=20.0, σ=5.0, x0=0.0, y0=0.0);
+
+prob = ExtractProblem(bh, initial, lower, upper);
+```
+
+Now to run the optimizers you just need to select which optimizer to use. Currently VIDA has three families of optimizers installed. Each one is a subtype of the VIDA.Optimizer abstract type
+```julia
+subtypes(VIDA.Optimizer)
+```
+Of the three implemented optimizers my suggestion would be to try the BBO one first. This uses the [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) package.
+BBO has a number of options that can be changed. To see them please use the julia `?` mode, or see the documentation.
+
+To optimize all you need to do is run the extractor function.
+```julia; cache=true
+optfilt, divmin = extractor(prob, BBO())
+triptic(img, optfilt)
+```
+
+Well that seemed to do a terrible job. The reason is that a lot of these images tend to have some low level flux throughout the image. To account for this the filter tends to get very big to absorb some of this flux. To combat this you can add a constant background filter to the problem.
+
+```julia; cache=true
+lower = GaussianRing(r0=0.1, σ=0.01, x0=-60.0, y0=-60.0) + 1e-10*Constant();
+upper = GaussianRing(r0=60.0, σ=20.0, x0=60.0, y0=60.0) + 1.0*Constant();
+initial = GaussianRing(r0=20.0, σ=5.0, x0=0.0, y0=0.0) + 0.1*Constant();
+
+prob = ExtractProblem(bh, initial, lower, upper);
+optfilt, divmin = extractor(prob, BBO())
+triptic(img, optfilt)
+```
+
+Well that's much better! Now if you wanted to capture the asymmetry in the ring you can use other filters, for example the CosineRing filter. Note that this filter tends to be a little harder to fit.
+
+```julia
+lower = CosineRing{1,4}(r0=0.1, 
+                        σ=[0.1, -1.0], ξσ = [-π],
+                        τ = 0.01, ξτ = -π,
+                        s = [0.01, -1.0, -1.0, -1.0],
+                        ξs = [-π,-π,-π,-π],
+                        x0=-60.0, y0=-60.0
+                       ) + 1e-10*Constant();
+upper = CosineRing{1,4}(r0=40.0, 
+                        σ=[20.0, 1.0], ξσ = [π],
+                        τ = 0.999, ξτ = π,
+                        s = [0.999, 1.0, 1.0, 1.0],
+                        ξs = [π,π,π,π],
+                        x0=60.0, y0=60.0
+                       ) + 1.0*Constant();
+initial = CosineRing{1,4}(r0=20.0, 
+                        σ=[5.0, 0.1], ξσ = [0.0],
+                        τ = 0.1, ξτ = 0.0,
+                        s = [0.1, 0.0, 0.0, 0.0],
+                        ξs = [0.0,0.0,0.0,0.0],
+                        x0=0.0, y0=0.0
+                       ) + 1e-2*Constant();
+
+prob = ExtractProblem(bh, initial, lower, upper);
+optfilt, divmin = extractor(prob, BBO(tracemode=:silent));
+triptic(img, optfilt)
+```
+
+Well that looks pretty great! 
+
