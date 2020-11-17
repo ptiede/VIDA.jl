@@ -7,7 +7,7 @@ date: today
 ## Installation
 VIDA is written in the Julia programming language for a few reasons:
 
- 1. It is fast! Julia can achieve C and Fortan speeds while not having to deal with memory.
+ 1. It is fast! Julia can achieve C and FORTRAN speeds while not having to deal with memory.
  2. It's syntax is very simple. Unlike Themis which is written in C++ the development time is orders of magnitude lower in Julia.
 
  
@@ -19,7 +19,7 @@ using Pkg;Pkg.add("VIDA")
 ```
 
 ## Idea behind VIDA
-`VIDA` is based on the idea of intrepreting the image as a probility distribution. Namely since any image is integrable, the space of images is in one-to-one correspondence with a probability distribution, especially since the total flux of the image is already known a priori.
+`VIDA` is based on the idea of interpreting the image as a probability distribution. Namely since any image is integrable, the space of images is in one-to-one correspondence with a probability distribution, especially since the total flux of the image is already known a priori.
 
 Therefore, our idea is very close to variational inference, hence the name *Variational Image Domain Analysis*. Namely, where we view the image as a distribution and we aim to find a approximation of the distribution given some parameteric family $f_\theta(x,y)$, which for our purproses we will typically call a *filter*. 
 
