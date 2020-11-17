@@ -1,4 +1,4 @@
-using Test,VIDA
+using Test,VIDA,Plots
 include("common.jl")
 
 @testset "VisualizationsTest" begin
