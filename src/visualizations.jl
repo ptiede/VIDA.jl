@@ -1,8 +1,5 @@
 using RecipesBase
-using Plots
-using Plots.PlotMeasures: mm
-
-
+mm = Plots.PlotMeasures.mm
 @recipe function f(image::AbstractImage)
     size --> (500,400)
     xaxis --> "RA (pixel)"
