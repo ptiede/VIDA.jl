@@ -1,35 +1,6 @@
 using RecipesBase
-mm = Plots.PlotMeasures.mm
-@recipe function f(image::AbstractImage)
-    size --> (500,400)
-    xaxis --> "RA (pixel)"
-    yaxis --> "DEC (pixel)"
-    seriescolor --> :afmhot
-    aspect_ratio := 1
-    xitr = 1:image.nx
-    yitr = 1:image.ny
-    bar_width --> 0
-    xlims --> (0,image.nx)
-    ylims --> (0,image.ny)
-    left_margin --> -5mm
-    right_margin --> 5mm
-    x := xitr
-    y := yitr
-    z := Surface(image.img.*1000.0)
-    seriestype := heatmap
-    fontfamily --> "serif"
-    colorbar_title --> "mJy/pixel"
-    colorbar --> :top
-    widen := false
-    framestyle --> :box
-    #margin --> 0mm
-
-    ()
-end
-
-
-
-
+using Measures
+font = Plots.font
 
 
 
@@ -72,10 +43,10 @@ Note that is does not save the figure.
     ylims --> (-fovy/2,fovy/2)
     #left_margin --> -2mm
     right_margin --> 5mm
-    x := range(-fovx/2, fovx/2; length=image.nx)
-    y := range(-fovy/2, fovy/2; length=image.ny)
-    z := Surface(@view(image.img[:,end:-1:1])*brightness_temp/1e9)
-    seriestype := heatmap
+    x = collect(range(-fovx/2, fovx/2; length=image.nx))
+    y = collect(range(-fovy/2, fovy/2; length=image.ny))
+    z = image.img[:,end:-1:1]*brightness_temp/1e9
+    seriestype := :heatmap
     fontfamily --> "sans serif"
     colorbar_title --> "Brightness Temperature (10⁹ K)"
     xflip --> true
@@ -84,7 +55,7 @@ Note that is does not save the figure.
     title --> image.source*" "*string(round(C0/image.wavelength/1e9))*" GHz"
     linecolor-->:black
     tick_direction --> :out
-    ()
+    x,y,z
 end
 
 @userplot Triptic
@@ -107,7 +78,7 @@ center of light.
     framestyle := [:none,:none,:axes]
     grid := false
     size --> (825,300)
-    layout := @layout [a b c]
+    layout := (1,3)
     left_margin --> -2mm
     right_margin --> 2mm
     bottom_margin --> 3mm
@@ -156,11 +127,10 @@ center of light.
         #size := (300,300)
         aspect_ratio := 1
         xflip := true
-        x := xitr
-        y := yitr
-        z := Surface(dataim)
-        ()
-
+        x = collect(xitr)
+        y = collect(yitr)
+        z = dataim
+        x,y,z
     end
 
     @series begin
@@ -170,11 +140,11 @@ center of light.
         linestyle := :solid
         framestyle := :none
         seriescolor := :cornflowerblue
-        y := ycol
+        y = [ycol]
         widen := false
         aspect_ratio := 1
         linewidth := 2
-        ()
+        y
     end
 
     @series begin
@@ -184,11 +154,11 @@ center of light.
         linestyle := :solid
         framestyle := :none
         seriescolor := :red
-        y := xcol
+        y = [xcol]
         widen := false
         aspect_ratio := 1
         linewidth := 2
-        ()
+        y
     end
 
 
@@ -199,18 +169,18 @@ center of light.
         seriestype := :line
         seriescolor := :white
         linewidth := 1
-        annotations := [(startx-size/2,starty-4, "40 μas", font(10,color=:white)),
-                        (startx-size/4, -starty+4, "Image", font(10,color=:white))]
+        annotations := [(startx-size/2,starty-4, "40 μas", font(10, color=:white)),
+                        (startx-size/4, -starty+4, "Image", font(10, color=:white))]
         fontcolor := :white
         xlims = (-fovx/2,fovx/2)
         ylims = (-fovy/2,fovy/2)
-        x := xseg
-        y := yseg
+        x = collect(xseg)
+        y = yseg
         legend := false
         framestyle := :none
         left_margin := -2mm
         right_margin := -2mm
-        ()
+        x,y
     end
 
     #Now we move onto the filter Image
@@ -225,11 +195,10 @@ center of light.
         colorbar := false
         subplot := 2
         aspect_ratio := 1
-        x := xitr
-        y := yitr
-        z := Surface(@view(fimg[:,end:-1:1]))
-        ()
-
+        x = collect(xitr)
+        y = collect(yitr)
+        z = @view(fimg[:,end:-1:1])
+        x,y,z
     end
 
     @series begin
@@ -240,10 +209,10 @@ center of light.
         framestyle := :none
         aspect_ratio := 1
         seriescolor := :cornflowerblue
-        y := ycol
+        y = [ycol]
         widen := false
         linewidth := 2
-        ()
+        y
     end
 
     @series begin
@@ -255,10 +224,10 @@ center of light.
         xflip := true
         aspect_ratio := 1
         seriescolor := :red
-        y := xcol
+        y = [xcol]
         widen := false
         linewidth := 2
-        ()
+        y
     end
 
     #Now do the scale bar
@@ -269,18 +238,18 @@ center of light.
         seriescolor := :white
         linewidth := 1
         aspect_ratio := 1
-        annotations := [(startx-size/2,starty-4, "40 μas", font(10,color=:white)),
-                        (startx-size/4, -starty+4, "Filter", font(10,color=:white))]
+        annotations := [(startx-size/2,starty-4, "40 μas", font(10, color=:white)),
+                        (startx-size/4, -starty+4, "Filter", font(10, color=:white))]
         fontcolor := :white
         xlims = (-fovx/2,fovx/2)
         ylims = (-fovy/2,fovy/2)
-        x := xseg
-        y := yseg
+        x = collect(xseg)
+        y = yseg
         xflip := true
         legend := false
         framestyle := :none
         widen := false
-        ()
+        x,y
     end
 
     #Now the chord plot
@@ -289,10 +258,10 @@ center of light.
         seriestype := :line
         linestyle := :solid
         seriescolor := :cornflowerblue
-        x := reverse(xitr)
-        y := @view dataim[jmin,image.ny:-1:1]
+        x = collect(reverse(xitr))
+        y = @view dataim[jmin,image.ny:-1:1]
         legend := false
-        ()
+        x,y
     end
     #Now the chord plot
     @series begin
@@ -300,12 +269,12 @@ center of light.
         seriestype := :line
         linestyle := :solid
         seriescolor := :red
-        x := yitr
-        y := @view dataim[:, image.nx-imin]
+        x = collect(yitr)
+        y = @view dataim[:, image.nx-imin]
         xguide := "RA, DEC chords (μas)"
         yticks := false
         legend := false
-        ()
+        x,y
     end
     #Now the chord plot
     @series begin
@@ -313,10 +282,10 @@ center of light.
         seriestype := :line
         linestyle := :dash
         seriescolor := :cornflowerblue
-        x := xitr
-        y := @view fimg[jmin,image.ny:-1:1]
+        x = collect(xitr)
+        y = @view fimg[jmin,image.ny:-1:1]
         legend := false
-        ()
+        x,y
     end
     #Now the chord plot
     @series begin
@@ -324,12 +293,12 @@ center of light.
         seriestype := :line
         seriescolor := :red
         linestyle := :dash
-        x := yitr
-        y := fimg[:, image.nx-imin]
+        x = collect(yitr)
+        y = fimg[:, image.nx-imin]
         xguide := "RA, DEC chords (μas)"
         yticks := false
         legend := false
-        ()
+        x,y
     end
 
 end
@@ -355,15 +324,17 @@ The default image will use 128x128 pixels with a 120x120 field of view.
     xitr,yitr,img = filter_image(θ, npix, [-fovx/2,fovx/2],[-fovy/2,fovy/2])
     #left_margin --> -2mm
     right_margin --> 5mm
-    x := reverse(xitr)
-    y := yitr
-    z := Surface(img[:,end:-1:1]/sum(img))
-    seriestype := heatmap
+    x = collect(reverse(xitr))
+    y = collect(yitr)
+    z = img[:,end:-1:1]/sum(img)
+    seriestype := :heatmap
     xflip --> true
     widen := false
     #framestyle --> :box
     linecolor-->:black
     tick_direction --> :out
     colorbar --> false
-    ()
+    x,y,z
 end
+
+export plot, plot_triptic

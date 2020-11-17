@@ -8,11 +8,25 @@ divergences implemented.
 """
 module VIDA
 
+
+
+using BlackBoxOptim
+using CMAEvolutionStrategy
+using DataFrames
+using DocStringExtensions
+using FITSIO
+using Interpolations: interpolate, BSpline, Cubic, Line, OnGrid, scale, extrapolate
+using LaTeXStrings
+using Optim
+using Parameters
+using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
+using RecipesBase
+using Requires
+using SpecialFunctions:erf
+
 export
     #make the divergences to use for optimization
     Bhattacharyya, KullbackLeibler,
-    #Plot recipes
-    plot, plot_triptic,
     #Filters
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
@@ -26,19 +40,6 @@ export
     extractor, threaded_extractor, BBO, CMAES, Opt,
     #ExtractionProblem
     ExtractProblem
-
-using BlackBoxOptim
-using CMAEvolutionStrategy
-using DataFrames
-using DocStringExtensions
-using FITSIO
-using Interpolations: interpolate, BSpline, Cubic, Line, OnGrid, scale, extrapolate
-using LaTeXStrings
-using Optim
-using Parameters
-using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
-using Requires
-using SpecialFunctions:erf
 
 
 const C0 = 299792458
@@ -55,9 +56,11 @@ function __init__()
 #    @require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209"
     @require Plots="91a5bcdd-55d7-5caf-9e0b-520d859cae80" include("visualizations.jl")
 end
+#include("visualizations.jl")
 #filter extractor
 include("extractor.jl")
 include("utils.jl")
+
 
 
 end #end the module
