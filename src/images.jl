@@ -43,6 +43,16 @@ struct EHTImage{T} <: AbstractFitsImage{T}
     img::T
 end
 
+function image_interpolate(img::EHTImage, interp)
+    fovx, fovy = field_of_view(img)
+    x_itr = (fovx/2 - img.psize_x/2):-img.psize_x:(-fovx/2 + img.psize_x/2)
+	y_itr = (-fovy/2 + img.psize_y/2):img.psize_y:(fovy/2 - img.psize_y/2)
+    itp = interpolate(img.img[:,end:-1:1], interp)
+    etp = extrapolate(itp, 0)
+    sitp = scale(etp, x_itr, y_itr)
+    return sitp
+end
+
 @doc """
     get_radec(img::T) <: AbstractFitsImage
 Returns two iterators (ra,dec) that give the locations

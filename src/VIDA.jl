@@ -15,7 +15,7 @@ using CMAEvolutionStrategy
 using DataFrames
 using DocStringExtensions
 using FITSIO
-using Interpolations: interpolate, BSpline, Cubic, Line, OnGrid, scale, extrapolate
+using Interpolations
 using LaTeXStrings
 using Optim
 using Parameters
@@ -30,7 +30,7 @@ export
     #Filters
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    CosineRing,Disk,
+    CosineRing,Disk,ImageFilter,
     #Filter helper functions
     stack,split,unpack,
     #Image functions

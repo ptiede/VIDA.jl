@@ -1,5 +1,6 @@
 using Test,VIDA
 using LinearAlgebra
+using Interpolations: Lanczos
 include("common.jl")
 
 @testset "FilterAsymGaussian" begin
@@ -104,6 +105,16 @@ end
     fimg = VIDA.filter_image(θ,npix,xlim,ylim)
     @test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
     @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
+end
+
+@testset "FilterImageFilter" begin
+    tmp = GaussianRing(r0, σ, x0, y0)
+    img = VIDA.make_image(tmp, 60, (-60.0, 60.0), (-60.0, 60.0))
+    θ = ImageFilter(0.0, 0.0, img)
+    sitp = VIDA.image_interpolate(img, Lanczos())
+    θ2 = ImageFilter(0.0, 0.0, sitp)
+    bh = Bhattacharyya(img)
+    @test bh(θ) < 1e-6
 end
 
 @testset "FilterConstant" begin
