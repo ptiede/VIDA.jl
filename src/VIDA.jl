@@ -15,6 +15,7 @@ using CMAEvolutionStrategy
 using DataFrames
 using DocStringExtensions
 using FITSIO
+using HDF5
 using Interpolations
 using LaTeXStrings
 using Optim
@@ -36,6 +37,9 @@ export
     #Image functions
     EHTImage, load_ehtimfits, load_fits, clipimage, save_fits,
     flux, centroid, inertia, rescale_image, get_radec,
+    #Movie functions
+    EHTMovie, load_hdf5, save_hdf5,
+    get_image, get_frames, get_times, join_frames,
     #Optimizers
     extractor, threaded_extractor, BBO, CMAES, Opt,
     #ExtractionProblem
@@ -47,6 +51,8 @@ const KB = 1.38064852e-23
 
 #Load the images
 include("images.jl")
+#Load the movies
+include("movies.jl")
 #Load the visualization stuff
 include("filters.jl")
 #Load the divergence functions
