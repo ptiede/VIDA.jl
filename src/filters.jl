@@ -52,7 +52,8 @@ end
     return 2
 end
 function (θ::ImageFilter{T})(x,y) where {T<:Interpolations.AbstractInterpolation}
-    @unpack x0, y0, itp = θ
+    @unpack x0, y0 = θ
+    itp = getfield(θ, :itp)
     return itp(y-y0, x-x0)
 end
 

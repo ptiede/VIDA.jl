@@ -202,8 +202,6 @@ function _load_ehtimhdf5(filename)
         rf = parse(Float64, read(header["rf"]))
         psize = parse(Float64, read(header["psize"]))*3600*1e6*180.0/π
         close(fid)
-        println("$ra $dec $source $mjd $rf $npix $psize")
-        println(Base.size(images))
         return EHTMovie(npix, npix,
                         -psize, psize,
                         source,
