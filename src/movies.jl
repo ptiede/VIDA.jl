@@ -162,23 +162,26 @@ function load_hdf5(filename; style=:ehtim)
 end
 
 function save_hdf5(filename, mov; style=:ehtim)
-    I = reshape(mov.frames.coefs, mov.nx, mov.ny, length(mov.frames.knots[2]))
-    I .= permutedims(I, [2,1,3])
+    I = deepcopy(reshape(mov.frames.coefs, mov.nx, mov.ny, length(mov.frames.knots[2])))
+    println("saving")
+    I = permutedims(I, [2,1,3])[:,end:-1:1,:]
+    #I .= permutedims(I, [1,2,3])
     times = mov.frames.knots[2]
     h5open(filename, "w") do file
         #Write the Intensity
         @write file I
-        #Create the header group and write it
-        header = create_group(file, "header")
+        #Create the header dataset and write it
+        file["header"] = ""
+        header = file["header"]
         #Now I write the header as attributes since this is what ehtim does
-        attrs(header)["dec"] = string(mov.dec)
-        attrs(header)["mjd"] = string(Int(mov.mjd))
-        attrs(header)["pol_prim"] = "I"
-        attrs(header)["polrep"] = "stokes"
-        attrs(header)["psize"] = string(mov.psize_y/(3600.0*1e6*180.0/π))
-        attrs(header)["ra"] = string(mov.ra)
-        attrs(header)["rf"] = string(C0/mov.wavelength)
-        attrs(header)["source"] = string(mov.source)
+        attributes(header)["dec"] = string(mov.dec)
+        attributes(header)["mjd"] = string(Int(mov.mjd))
+        attributes(header)["pol_prim"] = "I"
+        attributes(header)["polrep"] = "stokes"
+        attributes(header)["psize"] = string(mov.psize_y/(3600.0*1e6*180.0/π))
+        attributes(header)["ra"] = string(mov.ra)
+        attributes(header)["rf"] = string(C0/mov.wavelength)
+        attributes(header)["source"] = string(mov.source)
         #Now write the times
         @write file times
     end

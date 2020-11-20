@@ -7,6 +7,7 @@ using Plots
     tests = [
         "filters",
         "images",
+        "movies",
         "divergences",
         "visualizations",
         "extractor"
