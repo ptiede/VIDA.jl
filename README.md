@@ -1,7 +1,7 @@
 # VIDA
 
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://ptiede.github.io/VIDA.jl/dev)
-[![Build Status](https://travis-ci.com/ptiede/VIDA.jl.svg?branch=master)](https://travis-ci.com/ptiede/VIDA.jl)
+[![Build Status](https://github.com/ptiede/VIDA.jl/workflows/CI/badge.svg)](https://github.com/ptiede/VIDA.jl/actions)
 [![Coverage](https://codecov.io/gh/ptiede/VIDA.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ptiede/VIDA.jl)
 
 
