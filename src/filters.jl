@@ -57,7 +57,20 @@ function (θ::ImageFilter{T})(x,y) where {T<:Interpolations.AbstractInterpolatio
 end
 
 function _update(θ::ImageFilter, p)
-    return typeof(θ)(p[1], p[2], θ.itp)
+    return typeof(θ)(p[1], p[2], getfield(θ, :itp))
+end
+
+function Base.getproperty(θ::ImageFilter, symbol::Symbol)
+    names = fieldnames(ImageFilter)
+    if symbol ∈ names
+        return getfield(θ, symbol)
+    end
+    throw("type ImageFilter has no field $symbol")
+end
+
+
+function Base.fieldnames(::Type{ImageFilter})
+    return (:x0, :y0)
 end
 
 #Load the filters
