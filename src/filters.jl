@@ -31,7 +31,48 @@ size(::Type{Gaussian}) = 3
 ```
 """
 abstract type AbstractFilter end
+abstract type AbstractImageFilter <: AbstractFilter end
 
+
+function _update(θ::AbstractFilter, p)
+    return typeof(θ)(p)
+end
+
+@with_kw struct ImageFilter{T} <: AbstractImageFilter
+    x0::Float64
+    y0::Float64
+    itp::T
+end
+function ImageFilter(x0, y0, img::EHTImage; interp=BSpline(Cubic(Line(OnGrid()))))
+    itp = image_interpolate(img, interp)
+    return ImageFilter(float(x0), float(y0), itp)
+end
+
+@inline function size(::Type{ImageFilter{T}}) where {T<:Interpolations.AbstractInterpolation}
+    return 2
+end
+function (θ::ImageFilter{T})(x,y) where {T<:Interpolations.AbstractInterpolation}
+    @unpack x0, y0 = θ
+    itp = getfield(θ, :itp)
+    return itp(y-y0, x-x0)
+end
+
+function _update(θ::ImageFilter, p)
+    return typeof(θ)(p[1], p[2], getfield(θ, :itp))
+end
+
+function Base.getproperty(θ::ImageFilter, symbol::Symbol)
+    names = fieldnames(ImageFilter)
+    if symbol ∈ names
+        return getfield(θ, symbol)
+    end
+    throw("type ImageFilter has no field $symbol")
+end
+
+
+function Base.fieldnames(::Type{ImageFilter})
+    return (:x0, :y0)
+end
 
 #Load the filters
 """
@@ -625,6 +666,13 @@ function unpack(θ::CosineRing{N,M}) where {N,M}
     p[2N+5+2M] = θ.x0
     p[2N+6+2M] = θ.y0
 
+    return p
+end
+
+function unpack(θ::ImageFilter)
+    p = zeros(2)
+    p[1] = θ.x0
+    p[2] = θ.y0
     return p
 end
 

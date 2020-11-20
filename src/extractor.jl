@@ -114,7 +114,7 @@ function threaded_extractor(nstart::Int, prob::ExtractProblem{S1,S2}, optimizer:
     divmin = prob.div(θmin)
     Threads.@threads for i in 1:nstart
         p0 = lbounds + (ubounds-lbounds)*rand()
-        θ0 = S2(p0)
+        θ0 = _update(prob.θinit, p0)
         prob = ExtractProblem(prob.div, θ0, prob.θlower, prob.θupper)
         res = extractor(prob, optimizer)
         if divmin > res[2]
@@ -143,38 +143,33 @@ optimizer
 function extractor(prob, optimizer) end
 
 function extractor(prob::ExtractProblem{S,T}, optimizer::BBO) where {S,T}
-    lbounds, ubounds = _bounds(prob)
+    lbounds, ubounds, f, pinit = _create_opts(prob)
     search_range = [ (lbounds[i],ubounds[i])  for i in 1:length(lbounds)]
     ndim = length(lbounds)
-    f(p) = prob.div(T(p))
     resbb =  bboptimize(f; NumDimensions=ndim,
                         Method=optimizer.method,
                         MaxFuncEvals=optimizer.maxevals, TraceMode=optimizer.tracemode,
                         PopulationSize=optimizer.popsize,
                         SearchRange=search_range)
-    θinit2 = T(best_candidate(resbb))
+    θinit2 = _update(prob.θinit, best_candidate(resbb))
     return (θinit2, best_fitness(resbb))
 
 end
 
 
+
+
 function extractor(prob::ExtractProblem{S,T}, optimizer::Opt) where {S,T}
-    lbounds, ubounds = _bounds(prob)
-    f(p) = prob.div(T(p))
-    #unpack the starting location
-    pinit = unpack(prob.θinit)
+    lbounds, ubounds, f, pinit = _create_opts(prob)
     results =  optimize(f, lbounds, ubounds, pinit, optimizer.opt, optimizer.options)
-    θ = T(Optim.minimizer(results))
+    θ = _update(prob.θinit, Optim.minimizer(results))
     ℓmax = Optim.minimum(results)
     return (θ, ℓmax)
 end
 
 
 function extractor(prob::ExtractProblem{S,T}, optimizer::CMAES) where {S,T}
-    lbounds, ubounds = _bounds(prob)
-    f(p) = prob.div(T(p))
-    #unpack the starting location
-    pinit = unpack(prob.θinit)
+    lbounds, ubounds, f, pinit = _create_opts(prob)
     results =  minimize(f, pinit, optimizer.cov_scale;
                         lower=lbounds,
                         upper=ubounds,
@@ -184,7 +179,7 @@ function extractor(prob::ExtractProblem{S,T}, optimizer::CMAES) where {S,T}
                         ftarget=optimizer.ftarget,
                         verbosity=optimizer.verbosity
                     )
-    θ = T(xbest(results))
+    θ = _update(prob.θinit, xbest(results))
     ℓmax = fbest(results)
     return (θ, ℓmax)
 end
@@ -192,4 +187,12 @@ end
 
 @inline function _bounds(prob::ExtractProblem)
     return unpack(prob.θlower), unpack(prob.θupper)
+end
+
+@inline function _create_opts(prob::ExtractProblem{S,T}) where {S,T}
+    lbounds, ubounds = _bounds(prob)
+    f(p) = prob.div(_update(prob.θinit, p))
+    #unpack the starting location
+    pinit = unpack(prob.θinit)
+    return lbounds, ubounds, f, pinit
 end

@@ -6,6 +6,7 @@ unless you don't want to use fits images this will not be used
 """
 abstract type AbstractImage end
 
+
 """
 An absract image that will hold a fits image after being created or parsed in.
 This will form the basis for most astronomical images that are defined.
@@ -41,6 +42,19 @@ struct EHTImage{T} <: AbstractFitsImage{T}
     mjd::Float64 #modified julian date of observation
     #Image matrix stored in Jy/px
     img::T
+end
+
+
+
+
+function image_interpolate(img::EHTImage, interp)
+    fovx, fovy = field_of_view(img)
+    x_itr = (fovx/2 - img.psize_x/2):-img.psize_x:(-fovx/2 + img.psize_x/2)
+	y_itr = (-fovy/2 + img.psize_y/2):img.psize_y:(fovy/2 - img.psize_y/2)
+    itp = interpolate(img.img[:,end:-1:1], interp)
+    etp = extrapolate(itp, 0)
+    sitp = scale(etp, x_itr, y_itr)
+    return sitp
 end
 
 @doc """

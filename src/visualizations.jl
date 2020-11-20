@@ -294,7 +294,7 @@ center of light.
         seriescolor := :red
         linestyle := :dash
         x = collect(yitr)
-        y = fimg[:, image.nx-imin]
+        y = @view fimg[:, image.nx-imin]
         xguide := "RA, DEC chords (μas)"
         yticks := false
         legend := false
