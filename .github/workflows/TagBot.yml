@@ -13,6 +13,5 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.DOCUMENTER_KEY }}
-        with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ssh: ${{ secrets.SSH_KEY }}
