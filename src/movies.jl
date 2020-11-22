@@ -75,7 +75,7 @@ function join_frames(times, images::Vector{T}) where {T<:EHTImage}
     #Allocate the image array and fill it
     imarr = zeros(ny,nx,nt)
     for i in 1:nt
-        imarr[:,:,i] .= images[i].img
+        imarr[:,:,i] = images[i].img
     end
 
     return EHTMovie(nx,ny,
@@ -123,22 +123,57 @@ Gets all the frames of the movie object `mov`. This returns a array of `EHTImage
 objects.
 """
 function get_frames(mov::EHTMovie)
-    images = Vector{EHTImage}(undef, length(mov.frames.knots[2]))
-    for i in 1:length(images)
-        img = @view mov.frames.coefs[:,i]
-        img = reshape(img, mov.ny, mov.nx)
-        images[i] = EHTImage(mov.nx,
-                             mov.ny,
-                             mov.psize_x,
-                             mov.psize_y,
-                             mov.source,
-                             mov.ra, mov.dec,
-                             mov.wavelength,
-                             mov.mjd,
-                             img
-                            )
+    images = sizehint!(EHTImage[], length(get_times(mov)))
+    for i in 1:length(get_times(mov))
+        imvec = @view mov.frames.coefs[:,i]
+        img2 = reshape(imvec, mov.ny, mov.nx)
+        ehtimg = EHTImage(mov.nx,
+                        mov.ny,
+                        mov.psize_x,
+                        mov.psize_y,
+                        mov.source,
+                        mov.ra, mov.dec,
+                        mov.wavelength,
+                        mov.mjd,
+                        img2
+                      )
+        push!(images, ehtimg)
     end
     return images
+end
+
+
+@doc """
+    $(SIGNATURES)
+Blurs the `mov` with a gaussian kernel with fwhm in μas. If `fwhm` is a scalar
+then the kernel is assumed to be symmetric, otherwise you
+the first entry is the fwhm in the EW direction and second
+the NS direction.
+
+Returns the blurred movie.
+"""
+function blur(mov::EHTMovie, fwhm)
+    times = get_times(mov)
+    frames = get_frames(mov)
+    bframes = blur.(frames, Ref(fwhm))
+    return join_frames(times, frames)
+end
+
+@doc """
+    rescale(img::EHTMovie, npix, xlim, ylim)
+# Inputs
+ - img::EHTImage : Image you want to rescale
+ - npix : Number of pixels in x and y direction
+ - xlim : Tuple with the limits of the image in the RA
+ - ylim : Tuple with the limits of the image in DEC
+"""
+function rescale(mov::EHTMovie, npix, xlim, ylim)
+    # Get the times and frames and apply the image method to each
+    times = get_times(mov)
+    frames = get_frames(mov)
+    # Isn't broadcasting the best?
+    rframes = rescale.(frames, Ref(npix), Ref(xlim), Ref(ylim))
+    return join_frames(times, rframes)
 end
 
 
@@ -162,11 +197,14 @@ function load_hdf5(filename; style=:ehtim)
 end
 
 function save_hdf5(filename, mov; style=:ehtim)
+    # Copy this so I don't manipulate the movie itself
     I = deepcopy(reshape(mov.frames.coefs, mov.nx, mov.ny, length(mov.frames.knots[2])))
-    println("saving")
+    # Now because HDF5 uses row major I need to permute the dims around
+    # so that ehtim reads this in correctly.
     I = permutedims(I, [2,1,3])[:,end:-1:1,:]
-    #I .= permutedims(I, [1,2,3])
     times = mov.frames.knots[2]
+
+    #Open and output in a safe manner
     h5open(filename, "w") do file
         #Write the Intensity
         @write file I

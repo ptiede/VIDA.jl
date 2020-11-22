@@ -338,14 +338,14 @@ function flux(img::EHTImage)
 end
 
 @doc """
-    rescale_image(img::EHTImage, npix, xlim, ylim)
+    rescale(img::EHTImage, npix, xlim, ylim)
 # Inputs
  - img::EHTImage : Image you want to rescale
  - npix : Number of pixels in x and y direction
  - xlim : Tuple with the limits of the image in the RA
  - ylim : Tuple with the limits of the image in DEC
 """
-function rescale_image(img::EHTImage, npix, xlim, ylim)
+function rescale(img::EHTImage, npix, xlim, ylim)
     fovx, fovy = field_of_view(img)
     x_itr = (fovx/2 - img.psize_x/2):-img.psize_x:(-fovx/2 + img.psize_x/2)
 	y_itr = (-fovy/2 + img.psize_y/2):img.psize_y:(fovy/2 - img.psize_y/2)
@@ -367,6 +367,48 @@ function rescale_image(img::EHTImage, npix, xlim, ylim)
 end
 
 @doc """
+    $(SIGNATURES)
+Blurs the `img` with a gaussian kernel with fwhm in μas. If `fwhm` is a scalar
+then the kernel is assumed to be symmetric, otherwise you
+the first entry is the fwhm in the EW direction and second
+the NS direction.
+
+Returns the blurred image.
+"""
+function blur(img::EHTImage, fwhm)
+    # Using image filter function which blurs on the pixel scale.
+    # So first transform from μas to pixel number and standard deviation
+    σ_px = fwhm./(2*sqrt(2*log(2)))./abs(img.psize_x)
+
+    # Now I need to pick my kernel size. I am going out to 5σ for the
+    # gaussian kernel. I have to add one for the convolution to play nice
+    nkern = Int(floor(σ_px)*10 + 1)
+    # Note I tried to use IIRGaussian but it wasn't accurate enough for us.
+    bimg = imfilter(img.img,
+                    gaussian((σ_px, σ_px),(nkern,nkern)),
+                    Fill(0.0, img.img),
+                    FFT()
+                )
+
+    #Now return the updated image
+    #TODO can I find a way to do this without having to allocate a new image?
+    return EHTImage(img.nx, img.ny,
+                    img.psize_x, img.psize_y,
+                    img.source,
+                    img.ra, img.dec,
+                    img.wavelength, img.mjd,
+                    bimg)
+end
+
+@doc """
+    size(img::EHTImage)
+Finds the size of the image, i.e. the number of pixels in the y and x directions
+
+Returns: (npix_y, npix_x)
+"""
+Base.size(img::EHTImage) = (img.ny, img.nx)
+
+@doc """
     field_of_view(img::EHTImage)
 Finds the field of view of an EHTImage. Return a w element tuple with the
 field of view in the x and y direction
@@ -375,7 +417,10 @@ function field_of_view(img::EHTImage)
     return img.nx*img.psize_x, img.ny*img.psize_y
 end
 
-
+@doc  """
+    save_fits(image::EHTImage, fname::String)
+Save the `image` as a fits object with filename `fname`
+"""
 function save_fits(image::EHTImage, fname::String)
     headerkeys = ["SIMPLE",
                   "BITPIX",

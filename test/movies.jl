@@ -11,12 +11,9 @@ include("common.jl")
         push!(images, im)
     end
     mov = join_frames(times, images)
-    println("Here")
     #Test the save and read hdf5
     save_hdf5("test.hdf5", mov)
-    println("saved movie")
     mov_read = load_hdf5("test.hdf5")
-    println("read movie")
     @test mov_read.frames.coefs ≈ mov.frames.coefs
     # Kill the temp file
     rm("test.hdf5")
@@ -26,5 +23,10 @@ include("common.jl")
     frames = get_frames(mov)
     @test frames[1].img == images[1].img
     @test img.img == images[1].img
+
+    #Now lets blur the movie
+    bmov = blur(mov, 10.0)
+    #Rescale the movie
+    rmov = rescale(mov, 128, [-50.0, 50.0], [-50.0, 50.0])
 
 end

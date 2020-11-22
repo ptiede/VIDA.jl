@@ -16,6 +16,7 @@ using DataFrames
 using DocStringExtensions
 using FITSIO
 using HDF5
+using ImageFiltering: imfilter, Kernel.gaussian, Fill, Algorithm.FFT
 using Interpolations
 using LaTeXStrings
 using Optim
@@ -37,6 +38,7 @@ export
     #Image functions
     EHTImage, load_ehtimfits, load_fits, clipimage, save_fits,
     flux, centroid, inertia, rescale_image, get_radec,
+    rescale, blur,
     #Movie functions
     EHTMovie, load_hdf5, save_hdf5,
     get_image, get_frames, get_times, join_frames,

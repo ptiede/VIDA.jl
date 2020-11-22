@@ -18,6 +18,14 @@ end
     cimg = VIDA.clipimage(0.1, img)
     dcimg = VIDA.downsample(2, cimg)
     wdcimg = VIDA.window_image([-40,50], [-30,20], img)
-    rescale_image(img, npix, xlim, ylim)
+    rescale(img, npix, xlim, ylim)
     ra,dec = get_radec(img)
+end
+
+@testset "BlurImages" begin
+    filt = AsymGaussian(σ=σ, τ=0.0, ξ=0.0, x0=0.0, y0=0.0)
+    img = VIDA.make_image(filt, 1024, [-100.0, 100.0], [-100.0, 100.0])
+    bimg = blur(img, σ*2*sqrt(2*log(2)))
+    s2 = sqrt(inertia(bimg)[1])
+    @test isapprox(s2,sqrt(2)*σ, rtol=1e-3)
 end
