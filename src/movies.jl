@@ -16,7 +16,7 @@ is assumed to be in the form DEC,RA,Time.
 `mjd` is the Modified Julian Date of the observation.
 `frames` is the interpolation object that hold the movie frames
 """
-struct EHTMovie{T<:Interpolations.GriddedInterpolation} <: AbstractMovie
+struct EHTMovie{T<:Interpolations.AbstractExtrapolation} <: AbstractMovie
     nx::Int #Number of pixel in x direction
     ny::Int #Number of pixels in y direction
     psize_x::Float64 #pixel size in μas
@@ -43,10 +43,10 @@ function EHTMovie(nx,
     #Create the interpolation object for the movie
     #This does not need equal times
     fimages = reshape(images, nx*ny, length(times))
-    sitp = interpolate((collect(1.0:(nx*ny)), times),
+    sitp = extrapolate(interpolate((collect(1.0:(nx*ny)), times),
                         fimages,
-                        (NoInterp(), Gridded(Linear()))
-                      )
+                        (NoInterp(), Gridded(Linear()))),
+                        (Interpolations.Flat(), Interpolations.Flat()))
     return EHTMovie(nx, ny,
                     psize_x, psize_y,
                     source,
@@ -94,7 +94,7 @@ Returns the times that the movie object `mov` was created at. This does not
 have to be uniform in time.
 """
 function get_times(mov::EHTMovie)
-    return mov.frames.knots[2]
+    return mov.frames.itp.knots[2]
 end
 
 
@@ -125,7 +125,7 @@ objects.
 function get_frames(mov::EHTMovie)
     images = sizehint!(EHTImage[], length(get_times(mov)))
     for i in 1:length(get_times(mov))
-        imvec = @view mov.frames.coefs[:,i]
+        imvec = @view mov.frames.itp.coefs[:,i]
         img2 = reshape(imvec, mov.ny, mov.nx)
         ehtimg = EHTImage(mov.nx,
                         mov.ny,
@@ -198,11 +198,11 @@ end
 
 function save_hdf5(filename, mov; style=:ehtim)
     # Copy this so I don't manipulate the movie itself
-    I = deepcopy(reshape(mov.frames.coefs, mov.nx, mov.ny, length(mov.frames.knots[2])))
+    I = deepcopy(reshape(mov.frames.itp.coefs, mov.nx, mov.ny, length(mov.frames.itp.knots[2])))
     # Now because HDF5 uses row major I need to permute the dims around
     # so that ehtim reads this in correctly.
     I = permutedims(I, [2,1,3])[:,end:-1:1,:]
-    times = mov.frames.knots[2]
+    times = mov.frames.itp.knots[2]
 
     #Open and output in a safe manner
     h5open(filename, "w") do file

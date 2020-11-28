@@ -14,7 +14,7 @@ include("common.jl")
     #Test the save and read hdf5
     save_hdf5("test.hdf5", mov)
     mov_read = load_hdf5("test.hdf5")
-    @test mov_read.frames.coefs ≈ mov.frames.coefs
+    @test mov_read.frames.itp.coefs ≈ mov.frames.itp.coefs
     # Kill the temp file
     rm("test.hdf5")
 

@@ -44,7 +44,7 @@ function (bh::Bhattacharyya)(θ::T) where {T<:AbstractFilter}
             y = ystart + img.psize_y*(j-1)
             filter_value = θ(x,y)+1e-50
             @inbounds bsum += sqrt(abs(filter_value)*img.img[j,i])
-            filter_norm += filter_value
+            filter_norm += abs(filter_value)
         end
     end
     return -log(bsum/sqrt(filter_norm*flux))

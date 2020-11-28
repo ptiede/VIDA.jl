@@ -289,10 +289,10 @@ uuid = "2803e5a7-5153-5ecf-9a86-9b4c37f5f5ac"
 version = "0.6.7"
 
 [[ImageCore]]
-deps = ["Colors", "FixedPointNumbers", "Graphics", "MappedArrays", "MosaicViews", "OffsetArrays", "PaddedViews", "Reexport", "Requires"]
-git-tree-sha1 = "b6d3bc61ad9509332317c280b4b271f7d3a3b5ae"
+deps = ["AbstractFFTs", "Colors", "FixedPointNumbers", "Graphics", "MappedArrays", "MosaicViews", "OffsetArrays", "PaddedViews", "Reexport"]
+git-tree-sha1 = "ec29985885981ec7a8b97faa0ec86934ed813490"
 uuid = "a09fc81d-aa75-5fe9-8630-4744c3626534"
-version = "0.8.18"
+version = "0.8.19"
 
 [[ImageFiltering]]
 deps = ["CatIndices", "ColorVectorSpace", "ComputationalResources", "DataStructures", "FFTViews", "FFTW", "ImageCore", "ImageMetadata", "LinearAlgebra", "OffsetArrays", "Requires", "SparseArrays", "StaticArrays", "Statistics", "TiledIteration"]
@@ -526,10 +526,10 @@ uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
 version = "0.5.3"
 
 [[PositiveFactorizations]]
-deps = ["LinearAlgebra", "Test"]
-git-tree-sha1 = "127c47b91990c101ee3752291c4f45640eeb03d1"
+deps = ["LinearAlgebra"]
+git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
 uuid = "85a6dd25-e78a-55b7-8502-1745935b8125"
-version = "0.2.3"
+version = "0.2.4"
 
 [[PrettyTables]]
 deps = ["Crayons", "Formatting", "Markdown", "Reexport", "Tables"]
