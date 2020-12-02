@@ -158,6 +158,9 @@ A simpler example is
   triptic(img, opt_filter)
 ```
 
+### Image Evaluation
+We now also have an ImageFilter type that allows for divergences to be used for image evaluation.
+
 ### Distributed computing
 In the examples folder we have a complete script that shows how to use VIDA on a cluster to extract image features from multiple images at the same time. It uses argparse to read in command line options and a file that contains a list of paths of images to run VIDA on. For example the bbimage_extractor.jl file will use Julia's Distributed package to split a job amoung a number of cores. To run this you need a file that contains the paths to the list of fits images you would like to run VIDA on. Then you you can select the filter you want using the `--filter` command line option. For the other options type `-h`. If for example you wanted to fit the images with an asymmetric Gaussian filter then you would type:
 ```bash
