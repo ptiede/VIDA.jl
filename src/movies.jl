@@ -98,7 +98,7 @@ function get_times(mov::EHTMovie)
 end
 
 
-"""
+@doc """
     $(SIGNATURES)
 Gets the frame of the movie object `mov` at the time t. This returns an `EHTImage`
 object at the requested time. The returned object is found by linear interpolation.
@@ -117,7 +117,7 @@ function get_image(mov::EHTMovie, t)
                     )
 end
 
-"""
+@doc """
     $(SIGNATURES)
 Gets all the frames of the movie object `mov`. This returns a array of `EHTImage`
 objects.
@@ -177,10 +177,10 @@ function rescale(mov::EHTMovie, npix, xlim, ylim)
 end
 
 
-"""
-$(SIGNATURES)
+@doc """
+    $(SIGNATURES)
 
-where `filename` should be a HDF5 file.
+Loads an hdf5 file where `filename` should be a HDF5 file.
 # Details
 This reads in a hdf5 file and outputs and EHTMovie object.
 
@@ -196,6 +196,12 @@ function load_hdf5(filename; style=:ehtim)
     end
 end
 
+@doc """
+    $(SIGNATURES)
+Saves and hdf5 file where `filename` is the write out location.
+Currently style only works with ehtim, namely we save HDF5 files
+that only work with ehtim.
+"""
 function save_hdf5(filename, mov; style=:ehtim)
     # Copy this so I don't manipulate the movie itself
     I = deepcopy(reshape(mov.frames.itp.coefs, mov.nx, mov.ny, length(mov.frames.itp.knots[2])))
