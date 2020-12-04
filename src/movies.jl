@@ -97,6 +97,15 @@ function get_times(mov::EHTMovie)
     return mov.frames.itp.knots[2]
 end
 
+@doc """
+    $(SIGNATURES)
+Returns the flux of the `mov` at the times `time` in fractional hours
+"""
+function flux(mov, t)
+    img = get_image(mov, t)
+    return flux(img)
+end
+
 
 @doc """
     $(SIGNATURES)

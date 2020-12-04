@@ -24,6 +24,8 @@ include("common.jl")
     @test frames[1].img == images[1].img
     @test img.img == images[1].img
 
+    flux(mov, 10.0)
+
     #Now lets blur the movie
     bmov = blur(mov, 10.0)
     #Rescale the movie
