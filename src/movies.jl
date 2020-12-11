@@ -165,7 +165,7 @@ function blur(mov::EHTMovie, fwhm)
     times = get_times(mov)
     frames = get_frames(mov)
     bframes = blur.(frames, Ref(fwhm))
-    return join_frames(times, frames)
+    return join_frames(times, bframes)
 end
 
 @doc """
