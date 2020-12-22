@@ -222,14 +222,14 @@ function load_fits(fits_name::String)
     #Get frequency
     freq = 0.0
     if haskey(header, "FREQ")
-        freq = float(header["FREQ"])
+        freq = parse(Float64, string(header["FREQ"]))
     elseif "CRVAL3" in keys(header)
         freq = float(header["CRVAL3"])
     end
 
     mjd = 0.0
     if haskey(header, "MJD")
-        mjd = float(header["MJD"])
+        mjd = parse(Float64, string(header["MJD"]))
     end
 
     source = "NA"
