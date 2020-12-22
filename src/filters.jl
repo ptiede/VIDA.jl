@@ -38,6 +38,59 @@ function _update(θ::AbstractFilter, p)
     return typeof(θ)(p)
 end
 
+
+@doc """
+    $(SIGNATURES)
+Filter type for a logarithmic spiral that also has a
+Gaussian falloff for the inner and outer radius of the arms
+"""
+@with_kw struct LogSpiral{T<:Real} <: AbstractImageFilter
+    """ Unit curvature of the logarithmic spiral """
+    κ::T
+    """ Radius of the logarithmic spiral """
+    r0::T
+    """ width of the Gaussian spiral arm """
+    σ::T
+    """ peak brightness location """
+    ϕmax::T
+    """ angular extent of arc """
+    σϕ::T
+    """ azimuthal angle of the Gaussian spiral arm """
+    ξ::T
+    """ x location of disk center in μas """
+    x0::T
+    """ y location of disk center in μas """
+    y0::T
+end
+function LogSpiral(p::Vector{T}) where {T<:Real}
+    @assert length(p) == 8
+    LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8])
+end
+size(::Type{LogSpiral}) = 8
+@inline function (θ::LogSpiral)(x,y)
+    @unpack κ, r0, σ, ϕmax, σϕ, ξ, x0, y0 = θ
+    r = hypot(x-x0,y-y0)
+    α = atan(y-y0,x-x0)
+    x′,y′ = rotate(x-x0,y-y0,ξ)
+    k = sqrt(1-κ*κ)/κ
+    n = (log(r/r0)/k - α)/(2π)
+    nc = ceil(n)
+    nf = floor(n)
+    rc = r0*exp(k*(α + nc*2π))
+    rf = r0*exp(k*(α + nf*2π))
+    dist = min(abs(rc-r),abs(rf-r))
+    return exp(-dist^2/(2*σ^2))
+end
+
+@doc """
+    $(SIGNATURES)
+Type for an image filter. This takes an EHTImage or any image object
+and creates a filter out of it. The parameters of the image are
+the center of the image `x0`, `y0`.
+
+# Fields
+$(FIELDS)
+"""
 @with_kw struct ImageFilter{T} <: AbstractImageFilter
     x0::Float64
     y0::Float64
