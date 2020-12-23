@@ -41,21 +41,21 @@ end
 
 @doc """
     $(SIGNATURES)
-Filter type for a logarithmic spiral that also has a
-Gaussian falloff for the inner and outer radius of the arms
+Filter type for a logarithmic spiral segment
+
+## Fields
+$(FIELDS)
 """
 @with_kw struct LogSpiral{T<:Real} <: AbstractImageFilter
+    """ Radius of the spiral peak brightness """
+    r0::T
     """ Unit curvature of the logarithmic spiral """
     κ::T
-    """ Radius of the logarithmic spiral """
-    r0::T
-    """ width of the Gaussian spiral arm """
+    """ thickness of the Gaussian spiral arm """
     σ::T
+    """ Azimuthal extent of the spiral arm """
+    δϕ::T
     """ peak brightness location """
-    ϕmax::T
-    """ angular extent of arc """
-    σϕ::T
-    """ azimuthal angle of the Gaussian spiral arm """
     ξ::T
     """ x location of disk center in μas """
     x0::T
@@ -63,23 +63,40 @@ Gaussian falloff for the inner and outer radius of the arms
     y0::T
 end
 function LogSpiral(p::Vector{T}) where {T<:Real}
-    @assert length(p) == 8
-    LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8])
+    @assert length(p) == 7
+    LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
-size(::Type{LogSpiral}) = 8
+size(::Type{LogSpiral{T}}) where {T} = 7
+
+
 @inline function (θ::LogSpiral)(x,y)
-    @unpack κ, r0, σ, ϕmax, σϕ, ξ, x0, y0 = θ
-    r = hypot(x-x0,y-y0)
-    α = atan(y-y0,x-x0)
-    x′,y′ = rotate(x-x0,y-y0,ξ)
+    @unpack κ, σ, r0, δϕ, ξ, x0, y0 = θ
+    x′,y′ = x-x0,y-y0
+    #Set up the spiral
     k = sqrt(1-κ*κ)/κ
-    n = (log(r/r0)/k - α)/(2π)
+    rc = exp(k*10π) #This finds where we should start our spiral arm from
+    a = r0/rc #Get on the correct logspiral
+
+    r = hypot(x′,y′)
+    α = (atan(y′,x′)) - ξ
+    
+    #Now I need to find the distance from the closest spiral arm
+    n = (log(r/a)/k - α)/(2π)
     nc = ceil(n)
     nf = floor(n)
-    rc = r0*exp(k*(α + nc*2π))
-    rf = r0*exp(k*(α + nf*2π))
-    dist = min(abs(rc-r),abs(rf-r))
-    return exp(-dist^2/(2*σ^2))
+    rc = a*exp(k*(α + nc*2π))
+    rf = a*exp(k*(α + nf*2π))
+    r1,r2 = abs(rc-r),abs(rf-r)
+    if r1 < r2
+        nn = nc
+        dist = r1
+    else
+        nn = nf
+        dist = r2
+    end
+    #Get the angular extent
+    dtheta = (10π - (α + nn*2π))
+    return exp(-dist^2/(2*σ^2) -dtheta^2/(2*(δϕ/2)^2))
 end
 
 @doc """
@@ -894,3 +911,4 @@ function filter_image(θ::AbstractFilter,
     end
     return (xitr,yitr,img)
 end
+ 
