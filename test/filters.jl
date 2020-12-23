@@ -107,6 +107,18 @@ end
     @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
+@testset "FilterLogSpiral" begin
+    θ = LogSpiral(r0, τ, σ, δϕ, ξs, x0, y0)
+    θ1 = LogSpiral(r0=r0,x0=x0,σ=σ,y0=y0,κ=τ,ξ=ξs, δϕ=δϕ)
+    θ2 = LogSpiral([r0, τ, σ, δϕ, ξs, x0, y0])
+
+    @test unpack(θ) == unpack(θ1)
+    @test unpack(θ1) == unpack(θ2)
+    fimg = VIDA.filter_image(θ,npix,xlim,ylim)
+    @test length(fieldnames(LogSpiral)) == VIDA.size(typeof(θ))
+end
+
+
 @testset "FilterImageFilter" begin
     tmp = GaussianRing(r0, σ, x0, y0)
     img = VIDA.make_image(tmp, 60, (-60.0, 60.0), (-60.0, 60.0))
