@@ -1,4 +1,4 @@
-__precompile__()
+#__precompile__()
 """
     VIDA
 Is a image feature extraction tool for use with EHT images of black holes.
@@ -32,7 +32,7 @@ export
     #Filters
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    CosineRing,Disk,ImageFilter,
+    CosineRing,Disk,ImageFilter,LogSpiral,
     #Filter helper functions
     stack,split,unpack,
     #Image functions

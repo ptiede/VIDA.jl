@@ -15,6 +15,8 @@ const ξs_1 = 0.25
 const ξs_2 = -0.567
 const x0 = -5.0
 const y0 = 2.5
+const δϕ = 0.1π
+
 
 const npix = 512
 const xlim = [-60.0,60.0]
