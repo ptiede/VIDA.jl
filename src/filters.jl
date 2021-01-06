@@ -39,12 +39,91 @@ function _update(θ::AbstractFilter, p)
 end
 
 
-@doc """
+
+@doc raw"""
     $(SIGNATURES)
-Filter type for a logarithmic spiral segment
+Filter type for a logarithmic spiral segment. This uses a
+standard log-sprial parameterization in terms of the unit
+curvature of the segment.
 
 ## Fields
 $(FIELDS)
+
+## Notes
+This uses the generalized archimedes [spiral](https://en.wikipedia.org/wiki/Archimedean_spiral#General_Archimedean_spiral)
+as its parameters. For VIDA we use the polar parameterization:
+```math
+    r(θ) = r_0 + v(θ-\xi)^{1/c}.
+```
+If $c=1$ we get the standard Archimedes spiral, c=2 is Fermat's spiral, c=-1 is the hyperbolic
+spiral.
+"""
+@with_kw struct ArchimedesSpiral{T<:Real} <: AbstractImageFilter
+    """ Radius of the spiral peak brightness """
+    r0::T
+    """ Unit curvature of the logarithmic spiral """
+    v::T
+    """ Exponent of the generalized spiral """
+    c::T
+    """ thickness of the Gaussian spiral arm """
+    σ::T
+    """ Azimuthal extent of the spiral arm """
+    δϕ::T
+    """ peak brightness location """
+    ξ::T
+    """ x location of disk center in μas """
+    x0::T
+    """ y location of disk center in μas """
+    y0::T
+end
+function ArchimedesSpiral(p::Vector{T}) where {T<:Real}
+    @assert length(p) == 8
+    LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7], p[8])
+end
+size(::Type{ArchimedesSpiral{T}}) where {T} = 8
+
+
+@fastmath function (θ::ArchimedesSpiral)(x,y)
+    @unpack v, σ, r0, c, δϕ, ξ, x0, y0 = θ
+    x′,y′ = rotate(x-x0,y-y0,ξ)
+    #Set up the spiral
+
+    r = hypot(x′,y′)
+    α = atan(y′,x′)
+
+    v′ = v#r0+polar_spiral(v, c, 1.0*π)
+    #Now I need to find the distance from the closest spiral arm
+    #to do this I'll find the closest arms and add each contribution
+    n = ((abs(r-r0)/v′)^c)/(2π)
+    nc = ceil(n)
+    nf = floor(n)
+    rceil  = r0+polar_spiral(v′, c, α + nc*2π) #v*(α + nc*2π)^(1.0/c)
+    rfloor = r0+polar_spiral(v′, c, α + nf*2π)#v*(α + nf*2π)^(1.0/c)
+
+    dr1,dr2 = abs2((rceil-r)/σ),abs2((rfloor-r)/σ)
+    #Get the angular extent
+    dtheta1 = 0#((15π - (α + nc*2π))/(δϕ/2))^2
+    dtheta2 = 0#((15π - (α + nf*2π))/(δϕ/2))^2
+    return exp(-0.5*(min(dr1,dr2) + dtheta1))# + exp(-0.5*(dr1 + dtheta2))
+end
+
+function polar_spiral(v, c, θ)
+    return ifelse(θ < 0.0, -v*abs(θ)^(1/c), v*abs(θ)^(1/c))
+end
+
+
+@doc """
+    $(SIGNATURES)
+Filter type for a logarithmic spiral segment. This uses a
+standard log-sprial parameterization in terms of the unit
+curvature of the segment.
+
+## Fields
+$(FIELDS)
+
+## Notes
+If the thickness of the sprial is too large you do get clipping artifacts.
+This is because the sprial segments tend to merge into one object.
 """
 @with_kw struct LogSpiral{T<:Real} <: AbstractImageFilter
     """ Radius of the spiral peak brightness """
@@ -69,35 +148,30 @@ end
 size(::Type{LogSpiral{T}}) where {T} = 7
 
 
-@inline function (θ::LogSpiral)(x,y)
+@fastmath function (θ::LogSpiral)(x,y)
     @unpack κ, σ, r0, δϕ, ξ, x0, y0 = θ
     x′,y′ = x-x0,y-y0
     #Set up the spiral
     k = sqrt(1-κ*κ)/κ
-    rc = exp(k*10π) #This finds where we should start our spiral arm from
+    rc = exp(k*15π) #This finds where we should start our spiral arm from
     a = r0/rc #Get on the correct logspiral
 
     r = hypot(x′,y′)
     α = (atan(y′,x′)) - ξ
-    
+
     #Now I need to find the distance from the closest spiral arm
     n = (log(r/a)/k - α)/(2π)
     nc = ceil(n)
     nf = floor(n)
-    rc = a*exp(k*(α + nc*2π))
-    rf = a*exp(k*(α + nf*2π))
-    r1,r2 = abs(rc-r),abs(rf-r)
-    if r1 < r2
-        nn = nc
-        dist = r1
-    else
-        nn = nf
-        dist = r2
-    end
+    rceil = a*exp(k*(α + nc*2π))
+    rfloor = a*exp(k*(α + nf*2π))
+    dr1,dr2 = abs2((rceil-r)/σ),abs2((rfloor-r)/σ)
     #Get the angular extent
-    dtheta = (10π - (α + nn*2π))
-    return exp(-dist^2/(2*σ^2) -dtheta^2/(2*(δϕ/2)^2))
+    dtheta1 = ((15π - (α + nc*2π))/(δϕ/2))^2
+    dtheta2 = ((15π - (α + nf*2π))/(δϕ/2))^2
+    return exp(-0.5*(dr1 + dtheta1)) + exp(-0.5*(dr2 + dtheta2))
 end
+
 
 @doc """
     $(SIGNATURES)
@@ -548,7 +622,7 @@ end
 end
 
 
-"""
+@doc """
     $(TYPEDEF)
 Extrememly flexible ring model. The thickness is modeled as a cosine
 expansion with `N` terms and the slash by a expansion with `M` terms.
@@ -590,7 +664,7 @@ additional terms.
     end
 end
 
-"""
+@doc """
     CosineRing{N,M}(p::AbstractArray) where {N,M}
 Takes in a vector of paramters describing the filter.
 # Details
@@ -618,7 +692,7 @@ end
 
 size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
 
-@fastmath @inline function (θ::CosineRing{N,M})(x,y) where {N, M}
+@fastmath function (θ::CosineRing{N,M})(x,y) where {N, M}
     ex = x-θ.x0
     ey = y-θ.y0
     ϕ = atan(-ey,-ex)
@@ -633,12 +707,12 @@ size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
         n -= θ.s[i]*cos(i*(ϕ - θ.ξs[i]))
     end
 
-    σ = θ.σ[1]
+    σ = θ.σ[1] + convert(typeof(x), 1e-6)
     for i in 1:N
         σ += θ.σ[i+1]*cos(i*(ϕ - θ.ξσ[i]))
     end
 
-    return abs(n)*exp(-d2/(2.0*σ^2+1e-2))
+    return abs(n)*exp(-d2/(2.0*σ^2))
 end
 
 
@@ -716,7 +790,7 @@ function unpack(θinit::T) where {T<:AbstractFilter}
     fields = fieldnames(T)
     p = zeros(n)
     for i in 1:n
-        p[i] = getfield(θinit,fields[i])
+        p[i] = getproperty(θinit,fields[i])
     end
     return p
 end
@@ -911,4 +985,3 @@ function filter_image(θ::AbstractFilter,
     end
     return (xitr,yitr,img)
 end
- 
