@@ -155,7 +155,7 @@ A simpler example is
   opt_filter, divmin = threaded_extractor(prob, CMAES(ftol=1e-20, cov_scale=10))
   
   #plot the results
-  triptic(img, opt_filter)
+  triptic(image, opt_filter)
 ```
 
 ### Image Evaluation
