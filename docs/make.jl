@@ -30,6 +30,7 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "getting_started.md",
+        "interface.md",
         "generated/introduction.md",
         "generated/custom_filter.md",
         "api/function_index.md",

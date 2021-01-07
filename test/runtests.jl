@@ -8,9 +8,9 @@ using Plots
         "filters",
         "images",
         "movies",
-        #"divergences",
-        #"visualizations",
-        #"extractor"
+        "divergences",
+        "visualizations",
+        "extractor"
     ]
 
     res = map(tests) do t

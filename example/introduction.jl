@@ -1,14 +1,5 @@
 # # Introduction to VIDA
-#
-# ## Installation
-# VIDA is written in the Julia programming language for a few reasons:
-#
-#  1. It is fast! Julia can achieve C and FORTRAN speeds while not having to deal with memory.
-#  2. It's syntax is very simple. Unlike Themis which is written in C++ the development time is orders of magnitude lower in Julia.
-#
 
-
-# ### Using `VIDA`
 # Using VIDA is based on constructing three items:
 #  1. Data, i.e. an image that you want to extract features from.
 #  2. Cost function, i.e. pick if you want to use the KL or BH divergence
@@ -16,8 +7,6 @@
 # Then all you need to do is minimize the divergence and you will have extracted you image features.
 #
 # Now lets runs through how that works
-
-
 
 # ## Getting started
 # To load VIDA we follow the typical Julia flow. Note that to include plotting functionality
@@ -170,6 +159,12 @@ prob = ExtractProblem(bh, initial, lower, upper);
 optfilt, divmin = extractor(prob, CMAES())
 triptic(img, optfilt)
 
+# We can also run multple instances of the extractor, and use Julia's Threads interface
+optfilt, divmin = threaded_extractor(4, prob, CMAES())
+
+# This will run `4` instances of the extractor function using the available threads in the
+# Julia session.
+
 # That's much better! Now if you wanted to capture the asymmetry in the ring you can use
 # other filters, for example the CosineRing filter. Note that this filter tends to be
 # a little harder to fit.
@@ -200,4 +195,4 @@ prob = ExtractProblem(bh, initial, lower, upper);
 optfilt, divmin = extractor(prob, CMAES(verbosity=0));
 triptic(img, optfilt)
 
-# Now looks pretty great!
+# Now looks pretty great! To see how to add a custom filter see the [Adding a Custom Filter](@ref) page.
