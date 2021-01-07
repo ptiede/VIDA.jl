@@ -44,34 +44,7 @@ Let's dive into what each piece means
 ```
  - For the parameters that it takes please use the julia ? mode.
 
- If you want to add your own filter you just need to define a new Filter type a size method, and a imagefilter method for that type of Filter. For example if you want to add a symmetric Gaussian filter you would just add
- ```julia
-@with_kw struct SymGaussian <: AbstractFilter
-    σ::Float64 #standard deviation of the Gaussian
-    x0::Float64 #x location of mean
-    y0::Float64 #y location of mean
-end
 
-SymGaussian(p) = SymGaussian(p[1],p[2],p[3])
-
-size(::Type{SymGaussian}) = 3
-
-function (θ::SymGaussian)(x,y)
-   z2 = ((x-θ.x0)^2 + (x-θ.y0)^2)/(2.0*θ.^2)
-   return = 1.0/(2π*θ.σ^2)*exp(-z2)
-end
- ```
-Then you can simply call the same optimizing functions and plotting functions. Pretty neat eh?
-
-You know what is even cooler? You can add filters together, and multiply then by a number. For example to plot a added filter just use
-```julia
-using Plots
-θ1 = GaussianRing(15.0,10.0,1.0,1.0)
-θ2 = SymGaussian(5,-5,-5)
-θ = θ1 + 5*θ2
-
-plot(θ)
-```
 The plotting is done through the recipes macros in Plots.jl. So it should 
 just work! In addition to the plot function there is a new recipe called
 `triptic(img,θ)` that will produce a comparison between the filter and

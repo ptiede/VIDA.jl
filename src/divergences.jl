@@ -1,8 +1,22 @@
 
 """
     $(TYPEDEF)
-An abstract class for a divergence of a function. This is defined in terms
-of an Image type object. For two examples see below
+An abstract class for a divergence of a function. This expects
+that a subtype has a field with an EHTImage object and a flux type.
+The struct is then assumed to be a **functor** and have a function
+that computes the divergence of the image and a filter.
+
+For example
+```julia
+    struct MyDiv{T,S} <: AbstractDivergence
+        img::EHTImage{T}
+        flux::S
+    end
+    function (bh::MyDiv)(θ::AbstractFilter)
+        ...
+    end
+```
+
 """
 abstract type AbstractDivergence end
 
@@ -67,12 +81,11 @@ divergence is defined as
 
 ```math
 KL(f_\\theta||\\hat{I}) = -\\log\\int f_{\\theta}(x,y)\\log
-        \\left(\\frac{f_{\\theta}(x,y)}{\\hat{I}(x,y)}\\rightdxdy,
+        \\left(\\frac{f_{\\theta}(x,y)}{\\hat{I}(x,y)}\\right)dxdy,
 ```
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 This struct is also a functor.
-```
 """
 struct KullbackLeibler{T,S} <: AbstractDivergence
     """

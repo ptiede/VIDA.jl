@@ -4,17 +4,20 @@ An abstact type that acts as a wrapper for image objects used in astronomy.
 This is the top of the castle for images and will be rarely touched. Basically
 unless you don't want to use fits images this will not be used
 """
-abstract type AbstractImage end
+abstract type AbstractImage{F<:Number} end
 
 
 """
 An absract image that will hold a fits image after being created or parsed in.
 This will form the basis for most astronomical images that are defined.
-"""
-abstract type AbstractFitsImage{T<:AbstractArray} <: AbstractImage end
 
+The defines an interface to the FITS image methods below. In the future
+I may change this to use the traits interfaces.
 """
-$(TYPEDEF)
+abstract type AbstractFitsImage{F<:Number,T<:AbstractArray{F,2}} <: AbstractImage{F} end
+
+@doc """
+    $(TYPEDEF)
 
 # Details
 The trait is to hold a EHT image tyically in matrix form. Namely the trait will
@@ -29,7 +32,7 @@ typically be Matrix{Float64}.
 `mjd` is the Modified Julian Date of the observation.
 `img` is the actual pixeled image in Jy/pixel
 """
-struct EHTImage{T} <: AbstractFitsImage{T}
+struct EHTImage{F,T<:AbstractArray{F,2}} <: AbstractFitsImage{F,T}
     nx::Int #Number of pixel in x direction
     ny::Int #Number of pixels in y direction
     psize_x::Float64 #pixel size in μas
@@ -46,7 +49,14 @@ end
 
 
 
+@doc """
+    $(SIGNATURES)
+Creates an image interpolation functor from an `img` and
+Interpolations.jl `interp` type.
 
+## Notes
+This pads the image with zeros for extrapolation.
+"""
 function image_interpolate(img::EHTImage, interp)
     fovx, fovy = field_of_view(img)
     x_itr = (fovx/2 - img.psize_x/2):-img.psize_x:(-fovx/2 + img.psize_x/2)
@@ -77,11 +87,13 @@ end
 
 
 clipvalue(c,x) = x < c ? zero(eltype(x)) : x
-"""
+
+@doc """
     $(SIGNATURES)
-Clips the image `im` according to the value clip, which
-can either be an absolute flux in Jy/px or the intensity
-relative to the maximum.
+Clips the image `im` according to the value clip.
+There are two modes for image clipping:
+    - `:relative` which zeros the pixels whose intensity are below `clip` relative to the max.
+    - `:absolute` which zeros the pixels whose intensity is below `clip` in Jy/pixel
 """
 function clipimage(clip, im::EHTImage, mode=:relative)
     image = im.img
@@ -100,68 +112,8 @@ function clipimage(clip, im::EHTImage, mode=:relative)
                     image)
 end
 
-"""
-    $(SIGNATURES)
-Down samples the image `im` by a `factor`
-
-# Details
-Given an image `im` with ``Nx\\times Ny`` pixels, `downsample`
-converts that to an image with ``Nx/factor \\times Ny/factor`` pixels.
-This can be useful when the image has much higher resolutions than is needed for feature extraction.
-"""
-function downsample(factor::Int, im::EHTImage)
-    im_arr = im.img
-    dim_arr = im_arr[1:factor:end, 1:factor:end]
-    ny,nx = Base.size(dim_arr)
-    psize_x = im.psize_x*factor
-    psize_y = im.psize_y*factor
-    return EHTImage(nx,ny,
-                    psize_x,psize_y,
-                    im.source, im.ra, im.dec,
-                    im.wavelength, im.mjd,
-                    dim_arr*factor^2)
-end
-
-"""
-    $(SIGNATURES)
-Given an image `im` it selects a new field of view for the image given by
-`domain_x`, `domain_y`.
-"""
-function window_image(domain_x, domain_y, im::EHTImage)
-    fovx = -im.psize_x*im.nx
-    fovy = im.psize_y*im.ny
-    xarr = collect((fovx+im.psize_x)/2:im.psize_x:-fovx/2)
-    yarr = collect((-fovy+im.psize_y)/2:im.psize_y:fovy/2)
-
-    imin = argmin(abs.(xarr .- domain_x[1]))
-    imax = argmin(abs.(xarr .- domain_x[2]))
-    jmin = argmin(abs.(yarr .- domain_y[1]))
-    jmax = argmin(abs.(yarr .- domain_y[2]))
-    window_image = im.img[jmin:jmax,imax:imin]
-    ny,nx = Base.size(window_image)
-    return EHTImage(nx,ny,
-                    im.psize_x, im.psize_y,
-                    im.source, im.ra, im.dec,
-                    im.wavelength, im.mjd,
-                    window_image)
-end
 
 
-
-
-"""
-$(SIGNATURES)
-
-where `fits_name` should be a fits file generated using ehtim
-# Details
-This reads in a fits file created using ehtim. This is because ehtim only outputs
-the image and not a separate HDU for the field, so the usual fits reader doesn't work
-properly.
-
-The function returns an EHTImage object that contains the relevant image and parameters
-extracted from the fits file. It also ensures that we are astronomers and that the image
-using sky-left coordinates.
-"""
 function load_ehtimfits(fits_name::String)
     #load the fits
     f = FITS(fits_name)
@@ -259,6 +211,75 @@ function load_fits(fits_name::String)
     return EHTImage(nx, ny, psize_x, psize_y, source, ra, dec, C0/freq, mjd, image)
 end
 
+@doc  """
+    save_fits(image::EHTImage, fname::String)
+Save the `image` as a fits object with filename `fname`
+"""
+function save_fits(image::EHTImage, fname::String)
+    headerkeys = ["SIMPLE",
+                  "BITPIX",
+                  "NAXIS",
+                  "NAXIS1",
+                  "NAXIS2",
+                  "OBJECT",
+                  "CTYPE1",
+                  "CTYPE2",
+                  "CDELT1",
+                  "CDELT2",
+                  "OBSRA",
+                  "OBSDEC",
+                  "FREQ",
+                  "CRPIX1",
+                  "CRPIX2",
+                  "MJD",
+                  "TELESCOP",
+                  "BUNIT",
+                  "STOKES"]
+    values = [true,
+              -64,
+              2,
+              image.ny,
+              image.nx,
+              image.source,
+              "RA---SIN",
+              "DEC---SIN",
+              image.psize_y/3600/1e6,
+              image.psize_x/3600/1e6,
+              image.ra,
+              image.dec,
+              C0/image.wavelength,
+              image.nx/2+0.5,
+              image.ny/2+0.5,
+              image.mjd,
+              "VLBI",
+              "JY/PIXEL",
+              "STOKES"]
+    comments = ["conforms to FITS standard",
+                "array data type",
+                "number of array dimensions",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                ""]
+    hdu = FITS(fname, "w")
+    hduheader = FITSHeader(headerkeys, values, comments)
+    img = copy(image.img')
+    write(hdu, img, header=hduheader)
+    close(hdu)
+end
+
 @deprecate load_ehtimfits load_fits
 
 """
@@ -338,12 +359,22 @@ function flux(img::EHTImage)
 end
 
 @doc """
+    field_of_view(img::EHTImage)
+Finds the field of view of an EHTImage. Return a w element tuple with the
+field of view in the x and y direction
+"""
+function field_of_view(img::EHTImage)
+    return img.nx*img.psize_x, img.ny*img.psize_y
+end
+
+
+@doc """
     rescale(img::EHTImage, npix, xlim, ylim)
 # Inputs
  - img::EHTImage : Image you want to rescale
  - npix : Number of pixels in x and y direction
- - xlim : Tuple with the limits of the image in the RA
- - ylim : Tuple with the limits of the image in DEC
+ - xlim : Tuple with the limits of the image in the RA in μas
+ - ylim : Tuple with the limits of the image in DEC in μas
 """
 function rescale(img::EHTImage, npix, xlim, ylim)
     fovx, fovy = field_of_view(img)
@@ -407,81 +438,3 @@ Finds the size of the image, i.e. the number of pixels in the y and x directions
 Returns: (npix_y, npix_x)
 """
 Base.size(img::EHTImage) = (img.ny, img.nx)
-
-@doc """
-    field_of_view(img::EHTImage)
-Finds the field of view of an EHTImage. Return a w element tuple with the
-field of view in the x and y direction
-"""
-function field_of_view(img::EHTImage)
-    return img.nx*img.psize_x, img.ny*img.psize_y
-end
-
-@doc  """
-    save_fits(image::EHTImage, fname::String)
-Save the `image` as a fits object with filename `fname`
-"""
-function save_fits(image::EHTImage, fname::String)
-    headerkeys = ["SIMPLE",
-                  "BITPIX",
-                  "NAXIS",
-                  "NAXIS1",
-                  "NAXIS2",
-                  "OBJECT",
-                  "CTYPE1",
-                  "CTYPE2",
-                  "CDELT1",
-                  "CDELT2",
-                  "OBSRA",
-                  "OBSDEC",
-                  "FREQ",
-                  "CRPIX1",
-                  "CRPIX2",
-                  "MJD",
-                  "TELESCOP",
-                  "BUNIT",
-                  "STOKES"]
-    values = [true,
-              -64,
-              2,
-              image.ny,
-              image.nx,
-              image.source,
-              "RA---SIN",
-              "DEC---SIN",
-              image.psize_y/3600/1e6,
-              image.psize_x/3600/1e6,
-              image.ra,
-              image.dec,
-              C0/image.wavelength,
-              image.nx/2+0.5,
-              image.ny/2+0.5,
-              image.mjd,
-              "VLBI",
-              "JY/PIXEL",
-              "STOKES"]
-    comments = ["conforms to FITS standard",
-                "array data type",
-                "number of array dimensions",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                "",
-                ""]
-    hdu = FITS(fname, "w")
-    hduheader = FITSHeader(headerkeys, values, comments)
-    img = copy(image.img')
-    write(hdu, img, header=hduheader)
-    close(hdu)
-end

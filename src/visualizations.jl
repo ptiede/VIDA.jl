@@ -5,7 +5,7 @@ font = Plots.font
 
 
 """
- plot(image::EHTImage)
+    plot(image::EHTImage)
 
 where `image` is templated off of EHTImage struct.
 
@@ -57,6 +57,14 @@ Note that is does not save the figure.
     tick_direction --> :out
     x,y,z
 end
+
+@doc """
+    triptic(img::EHTImage, filter)
+Plots a triptic where the left panel is the `img` middle
+the `filter` and the right a two cross-sections of the image
+and filter
+"""
+function triptic end
 
 @userplot Triptic
 """

@@ -1,5 +1,21 @@
-using VIDA
 using Documenter
+
+if haskey(ENV, "GITHUB_ACTIONS")
+    ENV["JULIA_DEBUG"] = "Documenter"
+end
+
+
+Documenter.post_status(; type="pending", repo="github.com/ptiede/VIDA.jl.git")
+using VIDA
+using Plots
+using Literate
+
+EXAMPLE1 = joinpath(@__DIR__, "..", "example", "introduction.jl")
+EXAMPLE2 = joinpath(@__DIR__, "..", "example", "custom_filter.jl")
+OUTPUT = joinpath(@__DIR__, "src/generated")
+
+Literate.markdown(EXAMPLE1, OUTPUT, documenter=true)
+Literate.markdown(EXAMPLE2, OUTPUT, documenter=true)
 
 makedocs(;
     modules=[VIDA],
@@ -14,10 +30,13 @@ makedocs(;
     pages=[
         "Home" => "index.md",
         "getting_started.md",
-        #"function_index.md",
+        "generated/introduction.md",
+        "generated/custom_filter.md",
+        "api/function_index.md",
     ],
 )
 
 deploydocs(;
     repo="github.com/ptiede/VIDA.jl",
+    push_preview=true
 )

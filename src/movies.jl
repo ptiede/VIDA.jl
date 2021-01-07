@@ -1,3 +1,7 @@
+"""
+    $(TYPEDEF)
+Creates an abstract movie class
+"""
 abstract type AbstractMovie end
 
 """
@@ -16,7 +20,7 @@ is assumed to be in the form DEC,RA,Time.
 `mjd` is the Modified Julian Date of the observation.
 `frames` is the interpolation object that hold the movie frames
 """
-struct EHTMovie{T<:Interpolations.AbstractExtrapolation} <: AbstractMovie
+struct EHTMovie{F,T<:Interpolations.AbstractExtrapolation{F}} <: AbstractMovie
     nx::Int #Number of pixel in x direction
     ny::Int #Number of pixels in y direction
     psize_x::Float64 #pixel size in μas
@@ -39,7 +43,7 @@ function EHTMovie(nx,
                   wavelength,
                   mjd,
                   times,
-                  images::T) where {T<:AbstractArray{Float64,3}}
+                  images::T) where {F,T<:AbstractArray{F,3}}
     #Create the interpolation object for the movie
     #This does not need equal times
     fimages = reshape(images, nx*ny, length(times))
@@ -97,15 +101,6 @@ function get_times(mov::EHTMovie)
     return mov.frames.itp.knots[2]
 end
 
-@doc """
-    $(SIGNATURES)
-Returns the flux of the `mov` at the times `time` in fractional hours
-"""
-function flux(mov, t)
-    img = get_image(mov, t)
-    return flux(img)
-end
-
 
 @doc """
     $(SIGNATURES)
@@ -132,23 +127,16 @@ Gets all the frames of the movie object `mov`. This returns a array of `EHTImage
 objects.
 """
 function get_frames(mov::EHTMovie)
-    images = sizehint!(EHTImage[], length(get_times(mov)))
-    for i in 1:length(get_times(mov))
-        imvec = @view mov.frames.itp.coefs[:,i]
-        img2 = reshape(imvec, mov.ny, mov.nx)
-        ehtimg = EHTImage(mov.nx,
-                        mov.ny,
-                        mov.psize_x,
-                        mov.psize_y,
-                        mov.source,
-                        mov.ra, mov.dec,
-                        mov.wavelength,
-                        mov.mjd,
-                        img2
-                      )
-        push!(images, ehtimg)
-    end
-    return images
+    return get_image.(Ref(mov), get_times(mov))
+end
+
+@doc """
+    $(SIGNATURES)
+Returns the flux of the `mov` at the times `time` in fractional hours
+"""
+function flux(mov, t)
+    img = get_image(mov, t)
+    return flux(img)
 end
 
 
@@ -169,9 +157,9 @@ function blur(mov::EHTMovie, fwhm)
 end
 
 @doc """
-    rescale(img::EHTMovie, npix, xlim, ylim)
+    rescale(mov::EHTMovie, npix, xlim, ylim)
 # Inputs
- - img::EHTImage : Image you want to rescale
+ - mov::EHTMovie : Movie you want to rescale
  - npix : Number of pixels in x and y direction
  - xlim : Tuple with the limits of the image in the RA
  - ylim : Tuple with the limits of the image in DEC
@@ -195,7 +183,7 @@ This reads in a hdf5 file and outputs and EHTMovie object.
 
 # Notes
 Currently this only works with movies created by *ehtim*. SMILI uses a different
-format, as does Illinois, and every other group.
+format, as does Illinois, and every other group...
 """
 function load_hdf5(filename; style=:ehtim)
     if style == :ehtim

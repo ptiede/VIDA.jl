@@ -1,3 +1,13 @@
+@doc """
+
+    $(SIGNATURES)
+Creates an EHTImage type from the filter type. The number
+of pixels in the image are given by `npix` and the field
+of view in μas in the x and y direction are given by `xlim`
+and `ylim`. The rest of the options are the default image
+characteristics
+
+"""
 function make_image(θ::AbstractFilter,
     npix::Int, xlim, ylim;
     intensity=1.0,
@@ -18,7 +28,15 @@ imgeht = EHTImage(npix, npix, psize_x, psize_y,
 return imgeht
 end
 
+@doc """
 
+    $(SIGNATURES)
+Creates an EHTImage type from the filter type. The number
+of pixels in the image are given by `npix` and the field
+of view in μas in the x and y direction are given by `xlim`
+and `ylim`. To define the source we use an `source_img`.
+
+"""
 function make_image(θ::AbstractFilter,
     npix::Int, xlim, ylim,
     source_img::EHTImage;

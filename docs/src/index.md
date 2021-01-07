@@ -10,14 +10,17 @@ similar to variational inferences where we pick a parametric family of distribut
 then try to find the filter that minimizes the divergence. For the filters that are currently implemented 
 please see the page.
 
-See the for the complete list of documented functions and types.
+See the [API](@ref) for the complete list of documented functions and types.
 
 
 ## Outline
+
 ```@contents
 Pages = [
   "index.md",
   "getting_started.md",
-  "function_index.md"
+  "generated/introduction.md",
+  "generated/custom_filter.md",
+  "api/function_index.md"
 ]
 ```

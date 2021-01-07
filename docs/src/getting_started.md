@@ -62,5 +62,3 @@ Currently we have two divergences implemented in `VIDA`
 Both divergences give very similar answers, although we found the BH to be easier to maximize.
 
 
-
-For an example of how all this all works is given in the examples folder.

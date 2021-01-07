@@ -6,7 +6,7 @@ classes below.
 """
 abstract type Optimizer end
 
-@doc """
+"""
     $(TYPEDEF)
 Defines the interface for the BlackBoxOptim interface.
 This requires that the user to have imported the BlackBoxOptim package.
@@ -22,24 +22,23 @@ This requires that the user to have imported the BlackBoxOptim package.
 This uses the default BlackBoxOptim optimizer i.e. adaptive_de_rand_1_bin_radiuslimited.
 Currently other options aren't implemented since I found that this version
 tended to work the best.
-
-# Fields
-$(FIELDS)
 """
 @with_kw struct BBO <: Optimizer
-    method=:adaptive_de_rand_1_bin_radiuslimited
+    method::Symbol =:adaptive_de_rand_1_bin_radiuslimited
     popsize::Int = 64
     maxevals::Int = 25_000
     tracemode::Symbol = :compact
 end
 
+
 @doc """
-    $(TYPEDEF)
+ $(TYPEDEF)
 Defines the interface for the LBFGS-B interface from the Optim.jl package.
 This requires that the user to have imported the **Optim package**.
 
-# Fields
-$(FIELDS)
+ # Fields
+  $(FIELDS)
+
 """
 @with_kw struct Opt{O<:Optim.AbstractConstrainedOptimizer} <: Optimizer
     opt::O

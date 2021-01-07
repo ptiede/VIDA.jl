@@ -1,8 +1,16 @@
 
 #Filter information and documentation
+
 """
     $(TYPEDEF)
-An absract type that will contain the filter information, such as the parameters.
+An abstract type that defines super filter type.
+"""
+abstract type AbstractFilter end
+
+"""
+    $(TYPEDEF)
+
+An abstract type that will contain the filter information, such as the parameters.
 Specific instanstantiations will need to be defined for you to use this.
 
 ### Details
@@ -10,7 +18,7 @@ Specific instanstantiations will need to be defined for you to use this.
     need to define a a couple of things
     1. The filter type <: AbstractFilter
     2. an functor of the type that computes the filter function
-    3. an `size` function that defines the number of parameters of the filter.
+    3. an `Base.size` function that defines the number of parameters of the filter.
 
 An example is given by:
 ```julia
@@ -27,10 +35,9 @@ end
 @fastmath @inline function (θ::Gaussian)(x,y)
     return 1.0/(2π*σ^2)*exp(-0.5*( (x-x0)^2+(y-y0)^2 ) )
 end
-size(::Type{Gaussian}) = 3
+Base.size(::Type{Gaussian}) = 3
 ```
 """
-abstract type AbstractFilter end
 abstract type AbstractImageFilter <: AbstractFilter end
 
 
@@ -66,8 +73,13 @@ function LogSpiral(p::Vector{T}) where {T<:Real}
     @assert length(p) == 7
     LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
-size(::Type{LogSpiral{T}}) where {T} = 7
+Base.size(::Type{LogSpiral{T}}) where {T} = 7
 
+"""
+    size(f::AbstractFilter)
+Get the number of parameters for the filter f
+"""
+Base.size(f::T) where {T<:AbstractFilter} = Base.size(T)
 
 @inline function (θ::LogSpiral)(x,y)
     @unpack κ, σ, r0, δϕ, ξ, x0, y0 = θ
@@ -79,7 +91,7 @@ size(::Type{LogSpiral{T}}) where {T} = 7
 
     r = hypot(x′,y′)
     α = (atan(y′,x′)) - ξ
-    
+
     #Now I need to find the distance from the closest spiral arm
     n = (log(r/a)/k - α)/(2π)
     nc = ceil(n)
@@ -99,7 +111,7 @@ size(::Type{LogSpiral{T}}) where {T} = 7
     return exp(-dist^2/(2*σ^2) -dtheta^2/(2*(δϕ/2)^2))
 end
 
-@doc """
+"""
     $(SIGNATURES)
 Type for an image filter. This takes an EHTImage or any image object
 and creates a filter out of it. The parameters of the image are
@@ -118,7 +130,7 @@ function ImageFilter(x0, y0, img::EHTImage; interp=BSpline(Cubic(Line(OnGrid()))
     return ImageFilter(float(x0), float(y0), itp)
 end
 
-@inline function size(::Type{ImageFilter{T}}) where {T<:Interpolations.AbstractInterpolation}
+@inline function Base.size(::Type{ImageFilter{T}}) where {T<:Interpolations.AbstractInterpolation}
     return 2
 end
 function (θ::ImageFilter{T})(x,y) where {T<:Interpolations.AbstractInterpolation}
@@ -145,7 +157,7 @@ function Base.fieldnames(::Type{ImageFilter})
 end
 
 #Load the filters
-"""
+@doc """
     $(TYPEDEF)
 An constant filter.
 
@@ -158,10 +170,10 @@ additional parameters.
 """
 struct Constant <: AbstractFilter end
 Constant(p) = Constant()
-size(::Type{Constant}) = 0
+Base.size(::Type{Constant}) = 0
 @inline (θ::Constant)(x,y) = 1
 
-"""
+@doc """
     $(TYPEDEF)
 A smoothed disk model
 
@@ -201,10 +213,10 @@ end
         return exp(-(r-r0)^2/(2.0*α^2)) + 1e-50
     end
 end
-size(::Type{Disk}) = 4
+Base.size(::Type{Disk}) = 4
 
 
-"""
+@doc """
     $(TYPEDEF)
 An asymmetric Gaussian blob.
 
@@ -250,10 +262,10 @@ end
     d2 = x′*x′/σx2 + y′*y′/σy2
     return exp(-0.5*d2) + 1e-50
 end
-size(::Type{AsymGaussian}) = 5
+Base.size(::Type{AsymGaussian}) = 5
 
 
-"""
+@doc """
     $(TYPEDEF)
 Symmetric gaussian ring filter. This is the most basic filter and just attempts
 to recover a location `x0`,`y0`, radius `r0` and thickness `σ` from some image.
@@ -284,7 +296,7 @@ function GaussianRing(p)
     GaussianRing(p[1],p[2],p[3],p[4])
 end
 
-size(::Type{GaussianRing}) = 4
+Base.size(::Type{GaussianRing}) = 4
 
 @fastmath @inline function (θ::GaussianRing)(x, y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
@@ -292,7 +304,7 @@ size(::Type{GaussianRing}) = 4
 end
 
 
-"""
+@doc """
     $(TYPEDEF)
 Implements the slashed gaussian ring filter, that uses a cosine
 to symmetrically implement the slash. While this is marginally more
@@ -328,7 +340,7 @@ function SlashedGaussianRing(p)
         @assert length(p)==6 "SlashedGaussianRing: Filter requires 6 parameters"
         SlashedGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
-size(::Type{SlashedGaussianRing}) = 6
+Base.size(::Type{SlashedGaussianRing}) = 6
 #Filter function
 @fastmath @inline function (θ::SlashedGaussianRing)(x,y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
@@ -343,7 +355,7 @@ size(::Type{SlashedGaussianRing}) = 6
 end
 
 
-"""
+@doc """
     $(TYPEDEF)
 Implements the elliptical gaussian ring filter. Where the ellipticity `tau` is defined
 as one minus ratio between the semi-minor and semi-major axis.
@@ -389,7 +401,7 @@ function EllipticalGaussianRing(p)
     @assert length(p)==6 "EllipticalGaussianRing: Filter requires 6 parameters"
     EllipticalGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
-size(::Type{EllipticalGaussianRing}) = 6
+Base.size(::Type{EllipticalGaussianRing}) = 6
 
 @fastmath @inline function (θ::EllipticalGaussianRing)(x,y)
     ex = x-θ.x0
@@ -401,7 +413,7 @@ size(::Type{EllipticalGaussianRing}) = 6
     return exp(-distance/(2.0*θ.σ^2)) + 1e-50
 end
 
-"""
+@doc """
     $(TYPEDEF)
 Creates the filter from the Paper I am writing. It is a combination of
 the elliptical and slashed gaussian ring. The slash and the semi-major axis
@@ -447,7 +459,7 @@ function TIDAGaussianRing(p)
     TIDAGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
 
-size(::Type{TIDAGaussianRing}) = 7
+Base.size(::Type{TIDAGaussianRing}) = 7
 
 #Filter function for the TIDAGaussianRing
 @fastmath @inline function (θ::TIDAGaussianRing)(x,y)
@@ -472,7 +484,7 @@ size(::Type{TIDAGaussianRing}) = 7
 end
 
 
-"""
+@doc """
     $(TYPEDEF)
 Creates the most general elliptical slashed gaussian ring model. It is a combination of
 the elliptical and slashed gaussian ring. The direction of the slash and the ellipticity are
@@ -518,7 +530,7 @@ function GeneralGaussianRing(p)
     @assert length(p)==8 "GeneralGaussianRing: Filter requires 8 parameters"
     GeneralGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8])
 end
-size(::Type{GeneralGaussianRing}) = 8
+Base.size(::Type{GeneralGaussianRing}) = 8
 
 @fastmath @inline function (θ::GeneralGaussianRing)(x,y)
     ex = x-θ.x0
@@ -548,7 +560,7 @@ end
 end
 
 
-"""
+@doc """
     $(TYPEDEF)
 Extrememly flexible ring model. The thickness is modeled as a cosine
 expansion with `N` terms and the slash by a expansion with `M` terms.
@@ -590,7 +602,7 @@ additional terms.
     end
 end
 
-"""
+@doc """
     CosineRing{N,M}(p::AbstractArray) where {N,M}
 Takes in a vector of paramters describing the filter.
 # Details
@@ -616,7 +628,7 @@ function CosineRing{N,M}(p::AbstractArray) where {N,M}
 end
 
 
-size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
+Base.size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
 
 @fastmath @inline function (θ::CosineRing{N,M})(x,y) where {N, M}
     ex = x-θ.x0
@@ -643,16 +655,16 @@ end
 
 
 
-"""
-    $(SIGNATURES)
-Find the minimum square distance between an ellipse centered at (0,0) with semi-major
-axis `a` and semi-minor axis `b` and the point (`x`, `y`).
-Uses an iterative method with accuracy `ϵ` which defaults to 1e-6.
-# Credit:
-Algorithm taken from
-https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823
-except written in Julia and using an adaptive termination condition for accuracy
-"""
+#
+#    $(SIGNATURES)
+#Find the minimum square distance between an ellipse centered at (0,0) with semi-major
+#axis `a` and semi-minor axis `b` and the point (`x`, `y`).
+#Uses an iterative method with accuracy `ϵ` which defaults to 1e-6.
+## Credit:
+#Algorithm taken from
+#https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823
+#except written in Julia and using an adaptive termination condition for accuracy
+#"""
 #@fastmath
 @fastmath @inline function ellipse_sqdist(x,y, a, b, ϵ=1e-6)
     #For simplicity we will only look at the positive quadrant
@@ -704,50 +716,9 @@ end
     return xx,yy
 end
 
-"""
-    $(SIGNATURES)
-Unpacks the parameters of the filter `θ`
 
 
-Returns the parameters in a vector.
-"""
-function unpack(θinit::T) where {T<:AbstractFilter}
-    n = size(T)
-    fields = fieldnames(T)
-    p = zeros(n)
-    for i in 1:n
-        p[i] = getfield(θinit,fields[i])
-    end
-    return p
-end
-
-function unpack(θ::CosineRing{N,M}) where {N,M}
-    n = size(typeof(θ))
-    p = zeros(n)
-    p[1] = θ.r0
-    p[2:(N+2)] = θ.σ
-    if N>0
-        p[(N+3):(2N+2)] = θ.ξσ
-    end
-    p[2N+3] = θ.τ
-    p[2N+4] = θ.ξτ
-    p[2N+5:2N+4+M] = θ.s
-    p[2N+5+M:2N+4+2M] = θ.ξs
-    p[2N+5+2M] = θ.x0
-    p[2N+6+2M] = θ.y0
-
-    return p
-end
-
-function unpack(θ::ImageFilter)
-    p = zeros(2)
-    p[1] = θ.x0
-    p[2] = θ.y0
-    return p
-end
-
-
-"""
+@doc """
     $(TYPEDEF)
 Combines two filters together into one object. Since addition is
 assoiciative this can actually we used to hold multiple different filters.
@@ -768,15 +739,15 @@ struct AddFilter{T1<:AbstractFilter,T2<:AbstractFilter} <: AbstractFilter
 end
 
 function AddFilter{T1,T2}(p) where {T1<:AbstractFilter,T2<:AbstractFilter}
-    p1 = @view p[1:size(T1)]
+    p1 = @view p[1:Base.size(T1)]
     θ1 = T1(p1)
-    p2 = @view p[(size(T1)+1):end]
+    p2 = @view p[(Base.size(T1)+1):end]
     θ2 = T2(p2)
     AddFilter{T1,T2}(θ1,θ2)
 end
 
-function size(::Type{AddFilter{T1,T2}}) where {T1<:AbstractFilter, T2<:AbstractFilter}
-    return size(T1) + size(T2)
+function Base.size(::Type{AddFilter{T1,T2}}) where {T1<:AbstractFilter, T2<:AbstractFilter}
+    return Base.size(T1) + Base.size(T2)
 end
 
 function Base.fieldnames(::Type{AddFilter{T1,T2}}) where {T1<:AbstractFilter, T2<:AbstractFilter}
@@ -788,14 +759,10 @@ function (θ::AddFilter)(x,y)
     return θ.θ1(x,y) + θ.θ2(x,y)
 end
 
-function unpack(θinit::AddFilter)
-    p1 = unpack(θinit.θ1)
-    p2 = unpack(θinit.θ2)
 
-    return append!(p1,p2)
-end
 
-"""
+
+@doc """
     $(TYPEDEF)
 Multiplies filter by a constant. This is useful when combining with
 AddFilter since it will change the relative weights of each filter.
@@ -828,7 +795,7 @@ function Base.fieldnames(::Type{MulFilter{T,S}}) where {T<:AbstractFilter, S<:Nu
     return [fieldnames(T)...,:Irel]
 end
 
-function size(::Type{MulFilter{T,S}}) where {T<:AbstractFilter, S<:Number}
+function Base.size(::Type{MulFilter{T,S}}) where {T<:AbstractFilter, S<:Number}
     return 1 + size(T)
 end
 
@@ -838,9 +805,7 @@ function (θ::MulFilter)(x,y)
     return θ.Irel*θ.θ(x,y)
 end
 
-function unpack(θinit::MulFilter)
-    return append!(unpack(θinit.θ), θinit.Irel)
-end
+
 
 function Base.getproperty(θmul::MulFilter{T,S}, field::Symbol) where {T<:AbstractFilter, S<:Number}
     if field == :θ
@@ -854,7 +819,7 @@ function Base.getproperty(θmul::MulFilter{T,S}, field::Symbol) where {T<:Abstra
     end
 end
 
-"""
+@doc """
     $(SIGNATURES)
 Stacks filters together so you can easily combine multiple filters.
 It does this by calling the :+ and :* method. Every filter added will
@@ -864,7 +829,7 @@ function stack(θ::T, θ1...) where {T<:AbstractFilter}
     return θ+mapreduce(x->1.0*x, + , θ1)
 end
 
-"""
+@doc """
     $(SIGNATURES)
 Splits the filter into an array with its subcomponents so you can easily access them.
 """
@@ -875,6 +840,59 @@ end
 function Base.split(θ::AddFilter)
     return [split(θ.θ1)..., split(θ.θ2)...]
 end
+
+@doc """
+    $(SIGNATURES)
+Unpacks the parameters of the filter `θ`
+
+Returns the parameters in a vector.
+"""
+function unpack(θinit::T) where {T<:AbstractFilter}
+    n = Base.size(T)
+    fields = fieldnames(T)
+    p = zeros(n)
+    for i in 1:n
+        p[i] = getproperty(θinit,fields[i])
+    end
+    return p
+end
+
+function unpack(θ::CosineRing{N,M}) where {N,M}
+    n = Base.size(typeof(θ))
+    p = zeros(n)
+    p[1] = θ.r0
+    p[2:(N+2)] = θ.σ
+    if N>0
+        p[(N+3):(2N+2)] = θ.ξσ
+    end
+    p[2N+3] = θ.τ
+    p[2N+4] = θ.ξτ
+    p[2N+5:2N+4+M] = θ.s
+    p[2N+5+M:2N+4+2M] = θ.ξs
+    p[2N+5+2M] = θ.x0
+    p[2N+6+2M] = θ.y0
+
+    return p
+end
+
+function unpack(θ::ImageFilter)
+    p = zeros(2)
+    p[1] = θ.x0
+    p[2] = θ.y0
+    return p
+end
+
+function unpack(θinit::MulFilter)
+    return append!(unpack(θinit.θ), θinit.Irel)
+end
+
+function unpack(θinit::AddFilter)
+    p1 = unpack(θinit.θ1)
+    p2 = unpack(θinit.θ2)
+
+    return append!(p1,p2)
+end
+
 
 
 """
@@ -911,4 +929,3 @@ function filter_image(θ::AbstractFilter,
     end
     return (xitr,yitr,img)
 end
- 
