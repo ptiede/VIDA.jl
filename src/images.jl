@@ -68,11 +68,11 @@ function image_interpolate(img::EHTImage, interp)
 end
 
 @doc """
-    get_radec(img::T) <: AbstractFitsImage
+    $(SIGNATURES)
 Returns two iterators (ra,dec) that give the locations
 of the `img` pixels.
 """
-function get_radec(img::T) where {T<: AbstractFitsImage}
+function pixelloc(img::T) where {T<: AbstractFitsImage}
     ra = range((-img.nx*img.psize_x + img.psize_x)/2.0,
                step=img.psize_x,
                length=img.nx
@@ -113,26 +113,6 @@ function clipimage(clip, im::EHTImage, mode=:relative)
 end
 
 
-
-function load_ehtimfits(fits_name::String)
-    #load the fits
-    f = FITS(fits_name)
-    @assert ndims(f[1]) == 2 "load_image: First element is expected to be an ImageHDU so ndims is expected to be 2"
-    header = read_header(f[1])
-    nx = Int(header["NAXIS1"])
-    ny = Int(header["NAXIS2"])
-    image = deepcopy(Matrix{Float64}(read(f[1])'))
-    source = string(header["OBJECT"])
-    ra = float(header["OBSRA"])
-    dec = float(header["OBSDEC"])
-    freq = float(header["FREQ"])
-    mjd = float(header["MJD"])
-    psize_x = -abs(float(header["CDELT1"])*3600*1e6)
-    psize_y = abs(float(header["CDELT2"]))*3600*1e6
-    close(f)
-
-    return EHTImage(nx, ny, psize_x, psize_y, source, ra, dec, C0/freq, mjd, image)
-end
 
 """
 $(SIGNATURES)
@@ -280,7 +260,6 @@ function save_fits(image::EHTImage, fname::String)
     close(hdu)
 end
 
-@deprecate load_ehtimfits load_fits
 
 """
     $(SIGNATURES)
@@ -359,7 +338,7 @@ function flux(img::EHTImage)
 end
 
 @doc """
-    field_of_view(img::EHTImage)
+    $(SIGNATURES)
 Finds the field of view of an EHTImage. Return a w element tuple with the
 field of view in the x and y direction
 """

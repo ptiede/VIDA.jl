@@ -18,7 +18,7 @@ end
     cimg = clipimage(0.1, img)
     cimg = clipimage(0.0, img, :absolute)
     rescale(img, npix, xlim, ylim)
-    ra,dec = get_radec(img)
+    ra,dec = pixelloc(img)
 end
 
 @testset "BlurImages" begin

@@ -57,7 +57,7 @@ load_fits
 save_fits
 centroid
 inertia
-get_radec
+pixelloc
 flux(::EHTImage)
 rescale(::EHTImage, ::Any, ::Any, ::Any)
 blur(::EHTImage, ::Any)
