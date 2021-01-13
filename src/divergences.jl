@@ -8,8 +8,8 @@ that computes the divergence of the image and a filter.
 
 For example
 ```julia
-    struct MyDiv{T,S} <: AbstractDivergence
-        img::EHTImage{T}
+    struct MyDiv{T,F,S} <: AbstractDivergence
+        img::EHTImage{T,F}
         flux::S
     end
     function (bh::MyDiv)(θ::AbstractFilter)
@@ -36,11 +36,11 @@ Bh(f_\\theta||\\hat{I}) = -\\log\\int \\sqrt{f_\\theta(x,y)\\hat{I}(x,y)}dxdy,
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 """
-struct Bhattacharyya{T,S} <: AbstractDivergence
+struct Bhattacharyya{T<:EHTImage,S} <: AbstractDivergence
     """
     Abstract image class
     """
-    img::EHTImage{T}
+    img::T
     flux::S
 end
 function Bhattacharyya(img::T) where {T<:EHTImage}
@@ -53,12 +53,12 @@ function (bh::Bhattacharyya)(θ::T) where {T<:AbstractFilter}
     xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
     ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
     for i in 1:img.nx
-        @simd for j in 1:img.ny
+        for j in 1:img.ny
             x = xstart + img.psize_x*(i-1)
             y = ystart + img.psize_y*(j-1)
-            filter_value = θ(x,y)+1e-50
-            @inbounds bsum += sqrt(abs(filter_value)*img.img[j,i])
-            filter_norm += abs(filter_value)
+            filter_value = abs(θ(x,y))
+            @inbounds bsum += sqrt(filter_value*img.img[j,i])
+            filter_norm += filter_value
         end
     end
     return -log(bsum/sqrt(filter_norm*flux))
@@ -91,7 +91,7 @@ struct KullbackLeibler{T,S} <: AbstractDivergence
     """
     Abstract image class
     """
-    img::EHTImage{T}
+    img::T
     flux::S
 end
 function KullbackLeibler(img::T) where {T<:EHTImage}
