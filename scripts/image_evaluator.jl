@@ -89,10 +89,10 @@ function main()
 end
 
 function make_problem(div, truthimg::EHTImage)
-    lower = ImageFilter(-80.0, -80.0, truthimg)
-    upper = ImageFilter(80.0, 80.0, truthimg)
-    filter = ImageFilter(0.0, 0.0, truthimg)
-    return ExtractProblem(div, filter, lower, upper)
+    lower = ImageTemplate(-80.0, -80.0, truthimg)
+    upper = ImageTemplate(80.0, 80.0, truthimg)
+    template = ImageTemplate(0.0, 0.0, truthimg)
+    return ExtractProblem(div, template, lower, upper)
 end
 
 function create_initial_df!(start_indx, times, restart, out_name)
@@ -101,7 +101,7 @@ function create_initial_df!(start_indx, times, restart, out_name)
     nfiles = length(times)
     if !restart
       #we want the keynames to match the model parameters
-      key_names = fieldnames(ImageFilter)
+      key_names = fieldnames(ImageTemplate)
       for i in 1:length(key_names)
         insertcols!(df, ncol(df)+1, Symbol(key_names[i]) => zeros(nfiles); makeunique=true)
       end

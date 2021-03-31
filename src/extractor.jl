@@ -79,15 +79,15 @@ end
 
 
 @doc """
-    ExtractProblem{T<:AbstractDivergence, S<:AbstractFilter}
+    ExtractProblem{T<:AbstractDivergence, S<:AbstractTemplate}
 Defines a feature extraction problem to minimize, with an abstract filte
 and an abstract divergence. This is needed to interface with the extractor
-minimizer, which will minimize the divergence to find the optimal filter.
+minimizer, which will minimize the divergence to find the optimal template.
 
 # Fields
 $(FIELDS)
 """
-struct ExtractProblem{T<:AbstractDivergence, S<:AbstractFilter}
+struct ExtractProblem{T<:AbstractDivergence, S<:AbstractTemplate}
     """ Divergence function to minimize """
     div::T
     """ Initial location of the optimizer """
@@ -105,7 +105,7 @@ instances of extractor, where the initial location of chosen uniformly within th
 bounds defined in `prob`.
 
 # Outputs
-This outputs the best filter and minimum divergence of all the extractors run.
+This outputs the best template and minimum divergence of all the extractors run.
 """
 function threaded_extractor(nstart::Int, prob::ExtractProblem{S1,S2}, optimizer::T) where {S1,S2,T<:Optimizer}
     lbounds, ubounds = _bounds(prob)
@@ -127,8 +127,8 @@ end
 
 @doc """
     extractor(prob::ExtractProblem, optimizer::Optimizer)
-This extracts the optimal filter defined by the `prob` problem.
-This will minimize the divergence in prob and return the optimal filter
+This extracts the optimal template defined by the `prob` problem.
+This will minimize the divergence in prob and return the optimal template
 and minimum divergence in a tuple.
 
 `optimizer` is one of VIDA's optimizer types. Typically I would recommend the BBO()

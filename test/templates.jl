@@ -3,7 +3,7 @@ using LinearAlgebra
 using Interpolations: Lanczos
 include("common.jl")
 
-@testset "FilterAsymGaussian" begin
+@testset "TemplateAsymGaussian" begin
     θ = AsymGaussian(σ, τ, ξτ, x0,y0)
     θ1 = AsymGaussian(x0=x0,σ=σ,y0=y0, τ=τ, ξ=ξτ)
     θ2 = AsymGaussian([σ,τ,ξτ,x0,y0])
@@ -27,7 +27,7 @@ include("common.jl")
 
 end
 
-@testset "FilterDisk" begin
+@testset "TemplateDisk" begin
     θ = Disk(r0, α, x0,y0)
     θ1 = Disk(r0=r0,α=α,y0=y0, x0=x0)
     θ2 = Disk([r0,α,x0,y0])
@@ -45,7 +45,7 @@ end
 end
 
 
-@testset "FilterGaussianRing" begin
+@testset "TemplateGaussianRing" begin
     θ = GaussianRing(r0,σ,x0,y0)
     θ1 = GaussianRing(r0=r0,x0=x0,σ=σ,y0=y0)
     θ2 = GaussianRing([r0,σ,x0,y0])
@@ -57,7 +57,7 @@ end
     @test length(fieldnames(GaussianRing)) == VIDA.size(GaussianRing)
 end
 
-@testset "FilterSlashedGaussianRing" begin
+@testset "TemplateSlashedGaussianRing" begin
     θ = SlashedGaussianRing(r0,σ,s, ξs, x0, y0)
     θ1 = SlashedGaussianRing(r0=r0,x0=x0,σ=σ,y0=y0, s=s, ξ=ξs)
     θ2 = SlashedGaussianRing([r0, σ, s, ξs, x0, y0])
@@ -70,7 +70,7 @@ end
 end
 
 
-@testset "FilterEllipticalGaussianRing" begin
+@testset "TemplateEllipticalGaussianRing" begin
     θ = EllipticalGaussianRing(r0,σ,τ, ξτ, x0, y0)
     θ1 = EllipticalGaussianRing(r0=r0,x0=x0,σ=σ,y0=y0, τ=τ, ξ=ξτ)
     θ2 = EllipticalGaussianRing([r0, σ, τ, ξτ, x0, y0])
@@ -83,7 +83,7 @@ end
 end
 
 
-@testset "FilterTIDAGaussianRing" begin
+@testset "TemplateTIDAGaussianRing" begin
     θ = TIDAGaussianRing(r0,σ,τ, s, ξτ, x0, y0)
     θ1 = TIDAGaussianRing(r0=r0,x0=x0,σ=σ,y0=y0,s=s, τ=τ, ξ=ξτ)
     θ2 = TIDAGaussianRing([r0, σ, τ, s, ξτ, x0, y0])
@@ -95,51 +95,51 @@ end
     @test length(fieldnames(TIDAGaussianRing)) == VIDA.size(TIDAGaussianRing)
 end
 
-@testset "FilterGeneralGaussianRing" begin
+@testset "TemplateGeneralGaussianRing" begin
     θ = GeneralGaussianRing(r0,σ,τ,ξτ, s, ξs, x0, y0)
     θ1 = GeneralGaussianRing(r0=r0,x0=x0,σ=σ,y0=y0,s=s,ξs=ξs, τ=τ, ξτ=ξτ)
     θ2 = GeneralGaussianRing([r0, σ, τ, ξτ, s, ξs, x0, y0])
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    fimg = VIDA.filter_image(θ,npix,xlim,ylim)
+    fimg = VIDA.template_image(θ,npix,xlim,ylim)
     @test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
     @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
-@testset "FilterLogSpiral" begin
+@testset "TemplateLogSpiral" begin
     θ = LogSpiral(r0, τ, σ, δϕ, ξs, x0, y0)
     θ1 = LogSpiral(r0=r0,x0=x0,σ=σ,y0=y0,κ=τ,ξ=ξs, δϕ=δϕ)
     θ2 = LogSpiral([r0, τ, σ, δϕ, ξs, x0, y0])
 
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    fimg = VIDA.filter_image(θ,npix,xlim,ylim)
+    fimg = VIDA.template_image(θ,npix,xlim,ylim)
     @test length(fieldnames(LogSpiral)) == VIDA.size(typeof(θ))
 end
 
 
-@testset "FilterImageFilter" begin
+@testset "TemplateImageTemplate" begin
     tmp = GaussianRing(r0, σ, x0, y0)
     img = VIDA.make_image(tmp, 60, (-60.0, 60.0), (-60.0, 60.0))
-    θ = ImageFilter(0.0, 0.0, img)
+    θ = ImageTemplate(0.0, 0.0, img)
     sitp = VIDA.image_interpolate(img, Lanczos())
-    θ2 = ImageFilter(0.0, 0.0, sitp)
+    θ2 = ImageTemplate(0.0, 0.0, sitp)
     bh = Bhattacharyya(img)
     @test bh(θ) < 1e-6
 end
 
-@testset "FilterConstant" begin
+@testset "TemplateConstant" begin
     θ = Constant()
     @test θ(1,1) == 1.0
     @test length(unpack(θ)) == VIDA.size(typeof(θ))
 end
 
-@testset "FilterCosineRing" begin
+@testset "TemplateCosineRing" begin
     θg = GeneralGaussianRing(r0,σ,τ, ξτ, s, ξs, x0, y0)
     θsg = CosineRing{0,1}([r0, σ, τ, ξτ, s, ξs, x0, y0])
-    _,_,fimg_g = VIDA.filter_image(θg, 64, xlim, ylim)
-    _,_,fimg_sg = VIDA.filter_image(θsg, 64, xlim, ylim)
+    _,_,fimg_g = VIDA.template_image(θg, 64, xlim, ylim)
+    _,_,fimg_sg = VIDA.template_image(θsg, 64, xlim, ylim)
     @test sum(fimg_g/sum(fimg_g) - fimg_sg/sum(fimg_sg)) < 1e-8
     θ = CosineRing{N-1,M}(r0,
                         [σ, σ_1],
@@ -168,12 +168,12 @@ end
     @test VIDA.size(typeof(θ)) == length(unpack(θ))
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
-    #fimg = VIDA.filter_image(θ,npix,xlim,ylim)
+    #fimg = VIDA.template_image(θ,npix,xlim,ylim)
     #@test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
     #@test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
-@testset "FilterMulAdd" begin
+@testset "TemplateMulAdd" begin
     θ1 = GaussianRing(r0,σ,x0,y0)
     θ2 = AsymGaussian(σ,τ,ξτ,x0,y0)
     θ = θ1+1.0*θ2

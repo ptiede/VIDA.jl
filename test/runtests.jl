@@ -5,7 +5,7 @@ using Plots
 @testset "VIDA.jl" begin
     # Write your own tests here.
     tests = [
-        "filters",
+        "templates",
         "images",
         "movies",
         "divergences",

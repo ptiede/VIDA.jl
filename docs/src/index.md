@@ -23,8 +23,8 @@ Pkg.add.(["Plots","ArgParse"])
 
 To extract features we use probability divergences to characterize differences between our image
 and some approximation. For the divergences implemented see the [Getting Started](@ref) page. The idea is then very 
-similar to variational inferences where we pick a parametric family of distributions which we call *filters* and
-then try to find the filter that minimizes the divergence. For the filters that are currently implemented 
+similar to variational inferences where we pick a parametric family of distributions which we call *templates* and
+then try to find the template that minimizes the divergence. For the templates that are currently implemented 
 please see the page.
 
 
@@ -39,7 +39,7 @@ Pages = [
   "getting_started.md",
   "interface.md",
   "generated/introduction.md",
-  "generated/custom_filter.md",
+  "generated/custom_template.md",
   "api/function_index.md"
 ]
 ```

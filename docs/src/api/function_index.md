@@ -18,14 +18,14 @@ Pages = ["function_index.md"]
 
 
 
-## Filters
+## Templates
 
-These are the various filter types and helper functions.
+These are the various template types and helper functions.
 
 ```@docs
-VIDA.AbstractFilter
-VIDA.AbstractImageFilter
-ImageFilter
+VIDA.AbstractTemplate
+VIDA.AbstractImageTemplate
+ImageTemplate
 LogSpiral
 Constant
 Disk
@@ -36,13 +36,13 @@ EllipticalGaussianRing
 TIDAGaussianRing
 GeneralGaussianRing
 CosineRing
-AddFilter
-MulFilter
-Base.size(f::T) where {T<:AbstractFilter}
+AddTemplate
+MulTemplate
+Base.size(f::T) where {T<:AbstractTemplate}
 unpack
 stack
 split
-VIDA.filter_image
+VIDA.template_image
 ```
 
 ## Images
@@ -97,7 +97,7 @@ KullbackLeibler
 ## Extractor
 
 This defines the interface to the optimizers that can find
-the optimal filter for a given image.
+the optimal template for a given image.
 
 ```@docs
 Optimizer

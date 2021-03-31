@@ -35,8 +35,8 @@ function parse_commandline()
             help = "Divergence type to be used in image reconstruction"
             arg_type = String
             default = "Bh"
-        "--filter"
-            help = "Filter to use for the image extraction.\nOptions are, Gen, TIDA, Slash, Ellip, Circ"
+        "--template"
+            help = "Template to use for the image extraction.\nOptions are, Gen, TIDA, Slash, Ellip, Circ"
             action = :append_arg
             nargs = '*'
             arg_type = String
@@ -77,8 +77,8 @@ function main()
     else
       error("$div_type not found! Must be Bh or KL")
     end
-    filter_type = vcat(parsed_args["filter"]...)
-    println("Filter type $filter_type")
+    template_type = vcat(parsed_args["template"]...)
+    println("Template type $template_type")
     restart = parsed_args["restart"]
     println("Using $(Threads.nthreads()) threads")
     println("Using options: ")
@@ -90,7 +90,7 @@ function main()
     println("divergence type $div_type")
     println("Checkpoint stride $stride")
 
-    #Read in a file and create list of images to filter
+    #Read in a file and create list of images to template
     #the last line is the termination of the file
     files = split(read(fitsfiles,String),"\n")
 
@@ -115,80 +115,80 @@ function main()
 
     #Now run on the files for real
     main_sub(files, out_name,
-             div_type,filter_type,
+             div_type,template_type,
              clip_percent, breg, seed,
              restart, stride)
     println("Done! Check $out_name for summary")
     return 0
 end
 
-function make_initial_filter(filter_type)
-    if filter_type == "TIDA"
+function make_initial_template(template_type)
+    if template_type == "TIDA"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
       lower = [5.0, 0.01, 1e-3, -0.999, -π, -50.0, -50.0]
       upper = [35.0, 20.0, 0.999, 0.999, π, 50.0, 50.0]
-      filter = TIDAGaussianRing(20.0, 5.0,
+      template = TIDAGaussianRing(20.0, 5.0,
                                 0.5, 0.5,
                                 0.0, 0.0, 0.0)
-      return (filter, lower, upper)
-    elseif filter_type == "Gen"
+      return (template, lower, upper)
+    elseif template_type == "Gen"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
       lower = [5.0, 0.01, 1e-3, 0.0, 1e-3,-π, -50.0, -50.0]
       upper = [35.0, 20.0, 0.999, π,  0.99, π, 50.0, 50.0]
-      filter = GeneralGaussianRing(20.0, 5.0,
+      template = GeneralGaussianRing(20.0, 5.0,
                                    0.5, 0.0,
                                    0.5, 0.0,
                                    0.0, 0.0)
-      return (filter, lower, upper)
-    elseif filter_type == "Slash"
+      return (template, lower, upper)
+    elseif template_type == "Slash"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
       lower = [5.0, 0.01, 1e-3, -π, -50.0, -50.0]
       upper = [35.0, 20.0, 0.999, π,  50.0, 50.0]
-      filter = SlashedGaussianRing(20.0, 5.0,
+      template = SlashedGaussianRing(20.0, 5.0,
                                    0.5, 0.0,
                                    0.0, 0.0)
-      return (filter, lower, upper)
-    elseif filter_type == "Ellip"
+      return (template, lower, upper)
+    elseif template_type == "Ellip"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
       lower = [5.0, 0.01, 1e-3, 0.0, -50.0, -50.0]
       upper = [35.0, 20.0, 0.999, π,  50.0, 50.0]
-      filter = EllipticalGaussianRing(20.0, 5.0,
+      template = EllipticalGaussianRing(20.0, 5.0,
                                       0.5, 0.0,
                                       0.0, 0.0)
-      return (filter, lower, upper)
-    elseif filter_type == "Circ"
+      return (template, lower, upper)
+    elseif template_type == "Circ"
       #parameter bounds, be aggressive with these. If they
       #are too small the optimizer can struggle
       lower = [5.0, 0.01, -40.0, -50.0]
       upper = [35.0, 20.0, 50.0, 50.0]
-      filter = GaussianRing(20.0, 5.0,0.0, 0.0)
-      return (filter, lower, upper)
-    elseif filter_type == "AsymG"
+      template = GaussianRing(20.0, 5.0,0.0, 0.0)
+      return (template, lower, upper)
+    elseif template_type == "AsymG"
         lower = [0.5, 0.001, 0.0, -60.0,-60.0]
         upper = [35.0, 0.999, π, 60.0, 60.0 ]
-        filter = AsymGaussian(5.0,0.001, 0.001, 0.0,0.0)
-        return (filter, lower, upper)
-    elseif filter_type == "Disk"
+        template = AsymGaussian(5.0,0.001, 0.001, 0.0,0.0)
+        return (template, lower, upper)
+    elseif template_type == "Disk"
         lower = [0.5 , 0.001, -60.0, -60.0]
         upper = [35.0, 20.0 ,  60.0,  60.0 ]
-        filter = Disk(5.0, 1.0, 0.0, 0.0)
-        return (filter, lower, upper)
+        template = Disk(5.0, 1.0, 0.0, 0.0)
+        return (template, lower, upper)
     else
-      error("$filter_type not found must be Circ, Ellip, Slash, TIDA, Gen, Disk, AsymG")
+      error("$template_type not found must be Circ, Ellip, Slash, TIDA, Gen, Disk, AsymG")
     end
 end
 
-function create_initial_df!(start_indx, fitsfiles, filter, restart, out_name)
+function create_initial_df!(start_indx, fitsfiles, template, restart, out_name)
     start_indx = 1
     df = DataFrame()
     nfiles = length(fitsfiles)
     if !restart
       #we want the keynames to match the model parameters
-      key_names = fieldnames(typeof(filter))
+      key_names = fieldnames(typeof(template))
       for i in 1:length(key_names)
         insertcols!(df, ncol(df)+1, Symbol(key_names[i]) => zeros(nfiles); makeunique=true)
       end
@@ -203,7 +203,7 @@ function create_initial_df!(start_indx, fitsfiles, filter, restart, out_name)
     return df, start_indx
 end
 
-function fit_func(filter,lower, upper, div_type, clip_percent, breg)
+function fit_func(template,lower, upper, div_type, clip_percent, breg)
     function (file)
         d_type = :none
         if (div_type == "KL")
@@ -220,7 +220,7 @@ function fit_func(filter,lower, upper, div_type, clip_percent, breg)
         if (d_type == :KL)
             div = VIDA.KullbackLeibler(cimage)
         end
-        prob = ExtractProblem(div, filter, lower, upper)
+        prob = ExtractProblem(div, template, lower, upper)
         θ,divmin = extractor(prob, BBO(tracemode=:silent, maxevals=50_000))
         prob_new = ExtractProblem(div, θ, lower, upper)
         θ,divmin = extractor(prob_new, CMAES(cov_scale=0.01, verbosity=0))
@@ -231,12 +231,12 @@ end
 
 
 function main_sub(fitsfiles, out_name,
-                  div_type, filter_type,
+                  div_type, template_type,
                   clip_percent, breg, seed,
                   restart, stride)
 
-    #"Define the filter I want to use and the var bounds"
-    matom = make_initial_filter.(filter_type)
+    #"Define the template I want to use and the var bounds"
+    matom = make_initial_template.(template_type)
     model = 1.0*matom[1][1]
     lower = [matom[1][2]...,1e-6]
     upper = [matom[1][3]...,1e2]

@@ -7,11 +7,11 @@ The interface is based off of using probability divergences to extract features 
 image = load_fits(file::String)
 #create the divergence we want (Bhattacharyya divergence)
 bh = Bhattacharyya(image)
-#Create the filter we want to use to extract for example an slashed elliptical Gaussian
-filter = GeneralGaussianRing(p::Array) <: AbstractFilter
+#Create the template we want to use to extract for example an slashed elliptical Gaussian
+template = GeneralGaussianRing(p::Array) <: AbstractTemplate
 #To extract the features we define the ExtractProblem and run extractor
-prob = ExtractProblem(divergence, filter::T, filter_lower::T, filter_upper::T) where {T<:AbstractFilter}
-opt_filter, divmin = extractor(prob, opt::Optimizer)
+prob = ExtractProblem(divergence, template::T, template_lower::T, template_upper::T) where {T<:AbstractTemplate}
+opt_template, divmin = extractor(prob, opt::Optimizer)
 ```
 
 Let's dive into what each piece means
@@ -27,9 +27,9 @@ Let's dive into what each piece means
 
 - There are an additional number of tools available for image processing, such as clipping flux and rescaling the image. For a list of such functions please refer to the [API](@ref) page.
 
-## Filter type `AbstractFilter`
+## Template type `AbstractTemplate`
 
-- This is the filter that will be used to extract an image feature. Basically it will find the filter that is the closest to. Currently there are 4 types of filters implemented, but each are a subset of the other:
+- This is the template that will be used to extract an image feature. Basically it will find the template that is the closest to. Currently there are 4 types of templates implemented, but each are a subset of the other:
 
 ```julia
     GaussianRing(p) #Gaussian circular ring
@@ -43,11 +43,11 @@ Let's dive into what each piece means
 
 The plotting is done through the recipes macros in Plots.jl. So it should
 just work! In addition to the plot function there is a new recipe called
-`triptic(img,θ)` that will produce a comparison between the filter and
-the true image. This can be useful when comparing the best filter to the
+`triptic(img,θ)` that will produce a comparison between the template and
+the true image. This can be useful when comparing the best template to the
 image.
 
-Additionally any other function that dispatches on the filter type should just work! One thing to note is that the weight between the two filters is relative. Namely, total intensity will always be normalized, so the above code says that θ2 has 5 times the relative flux compared to the first.
+Additionally any other function that dispatches on the template type should just work! One thing to note is that the weight between the two templates is relative. Namely, total intensity will always be normalized, so the above code says that θ2 has 5 times the relative flux compared to the first.
 
 ## Divergence `AbstractDivergence`
 
@@ -58,13 +58,13 @@ bh = Bhattacharyya(image) #make the Bh divergence
 kl = KullbackLeibler(image) #makes the KL divergence
 ```
 
-which creates a functor that depends on the image. The functor itself take a filter, e.g.,
+which creates a functor that depends on the image. The functor itself take a template, e.g.,
 
 ```julia
-bh(θ::AbstractFilter)
+bh(θ::AbstractTemplate)
 ```
 
-and `bh` will use multiple dispatch to figure out which filter function to use.
+and `bh` will use multiple dispatch to figure out which template function to use.
 
 
 ## Extract features `extractor` and `ExtractProblem` and `Optimizer`
@@ -72,15 +72,15 @@ and `bh` will use multiple dispatch to figure out which filter function to use.
 We then use the extractor function to extract the image feature. To call extractor you need to define a `ExtractProblem` type with the call
 
 ```julia
-prob = ExtractProblem(divergece, filter, filter_lower, filter_upper)
+prob = ExtractProblem(divergece, template, template_lower, template_upper)
 ```
 
-where `divergence` is your probability divergence, `filter` is the filter function and `filter_lower` and `filter_upper` are the filters that represent the
-lower and upper bounds you want to search over. Once you have your problem defined you can find the optimal filter and extract image features using the `extractor`
+where `divergence` is your probability divergence, `template` is the template function and `template_lower` and `template_upper` are the templates that represent the
+lower and upper bounds you want to search over. Once you have your problem defined you can find the optimal template and extract image features using the `extractor`
 function
 
 ```julia
-opt_filter, divmin = extractor(prob, BBO())
+opt_template, divmin = extractor(prob, BBO())
 ```
 
 Here `BBO()` used the [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) package to optimize. Currently, I have 3 packages that are incorporated with VIDA

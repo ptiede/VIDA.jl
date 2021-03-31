@@ -386,7 +386,7 @@ the NS direction.
 Returns the blurred image.
 """
 function blur(img::EHTImage, fwhm)
-    # Using image filter function which blurs on the pixel scale.
+    # Using image template function which blurs on the pixel scale.
     # So first transform from μas to pixel number and standard deviation
     σ_px = fwhm./(2*sqrt(2*log(2)))./abs(img.psize_x)
 

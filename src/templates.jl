@@ -1,59 +1,59 @@
 
-#Filter information and documentation
+#Template information and documentation
 
 """
     $(TYPEDEF)
-An abstract type that defines super filter type.
+An abstract type that defines super template type.
 """
-abstract type AbstractFilter end
+abstract type AbstractTemplate end
 
 """
     $(TYPEDEF)
 
-An abstract type that will contain the filter information, such as the parameters.
+An abstract type that will contain the template information, such as the parameters.
 Specific instanstantiations will need to be defined for you to use this.
 
 ### Details
-    This defined the highest function type. If you wish to implement your own filter you
+    This defined the highest function type. If you wish to implement your own template you
     need to define a a couple of things
-    1. The filter type <: AbstractFilter
-    2. an functor of the type that computes the filter function
-    3. an `Base.size` function that defines the number of parameters of the filter.
+    1. The template type <: AbstractTemplate
+    2. an functor of the type that computes the template function
+    3. an `Base.size` function that defines the number of parameters of the template.
 
 An example is given by:
 ```julia
 #All of our composite type are defined using the Paramters.jl package to you
 can directly refer to the struct parameters when creating it, although this isn't
 actually used anywhere in the code.
-@with_kw struct Gaussian <: AbstractFilter
+@with_kw struct Gaussian <: AbstractTemplate
     σ::Float64
     x0::Float64
     y0::Float64
 end
 
 #Typically we inline and force the function to use fastmath
-@fastmath @inline function (θ::Gaussian)(x,y)
+ @inline function (θ::Gaussian)(x,y)
     return 1.0/(2π*σ^2)*exp(-0.5*( (x-x0)^2+(y-y0)^2 ) )
 end
 Base.size(::Type{Gaussian}) = 3
 ```
 """
-abstract type AbstractImageFilter <: AbstractFilter end
+abstract type AbstractImageTemplate <: AbstractTemplate end
 
 
-function _update(θ::AbstractFilter, p)
+function _update(θ::AbstractTemplate, p)
     return typeof(θ)(p)
 end
 
 
 @doc """
     $(SIGNATURES)
-Filter type for a logarithmic spiral segment
+Template type for a logarithmic spiral segment
 
 ## Fields
 $(FIELDS)
 """
-@with_kw struct LogSpiral{T<:Real} <: AbstractImageFilter
+@with_kw struct LogSpiral{T<:Real} <: AbstractImageTemplate
     """ Radius of the spiral peak brightness """
     r0::T
     """ Unit curvature of the logarithmic spiral """
@@ -76,10 +76,10 @@ end
 Base.size(::Type{LogSpiral{T}}) where {T} = 7
 
 """
-    size(f::AbstractFilter)
-Get the number of parameters for the filter f
+    size(f::AbstractTemplate)
+Get the number of parameters for the template f
 """
-Base.size(f::T) where {T<:AbstractFilter} = Base.size(T)
+Base.size(f::T) where {T<:AbstractTemplate} = Base.size(T)
 
 @inline function (θ::LogSpiral)(x,y)
     @unpack κ, σ, r0, δϕ, ξ, x0, y0 = θ
@@ -113,62 +113,62 @@ end
 
 """
     $(SIGNATURES)
-Type for an image filter. This takes an EHTImage or any image object
-and creates a filter out of it. The parameters of the image are
+Type for an image template. This takes an EHTImage or any image object
+and creates a template out of it. The parameters of the image are
 the center of the image `x0`, `y0`.
 
 # Fields
 $(FIELDS)
 """
-@with_kw struct ImageFilter{T} <: AbstractImageFilter
+@with_kw struct ImageTemplate{T} <: AbstractImageTemplate
     x0::Float64
     y0::Float64
     itp::T
 end
-function ImageFilter(x0, y0, img::EHTImage; interp=BSpline(Cubic(Line(OnGrid()))))
+function ImageTemplate(x0, y0, img::EHTImage; interp=BSpline(Cubic(Line(OnGrid()))))
     itp = image_interpolate(img, interp)
-    return ImageFilter(float(x0), float(y0), itp)
+    return ImageTemplate(float(x0), float(y0), itp)
 end
 
-@inline function Base.size(::Type{ImageFilter{T}}) where {T<:Interpolations.AbstractInterpolation}
+@inline function Base.size(::Type{ImageTemplate{T}}) where {T<:Interpolations.AbstractInterpolation}
     return 2
 end
-function (θ::ImageFilter{T})(x,y) where {T<:Interpolations.AbstractInterpolation}
+function (θ::ImageTemplate{T})(x,y) where {T<:Interpolations.AbstractInterpolation}
     @unpack x0, y0 = θ
     itp = getfield(θ, :itp)
     return itp(y-y0, x-x0)
 end
 
-function _update(θ::ImageFilter, p)
+function _update(θ::ImageTemplate, p)
     return typeof(θ)(p[1], p[2], getfield(θ, :itp))
 end
 
-function Base.getproperty(θ::ImageFilter, symbol::Symbol)
-    names = fieldnames(ImageFilter)
+function Base.getproperty(θ::ImageTemplate, symbol::Symbol)
+    names = fieldnames(ImageTemplate)
     if symbol ∈ names
         return getfield(θ, symbol)
     end
-    throw("type ImageFilter has no field $symbol")
+    throw("type ImageTemplate has no field $symbol")
 end
 
 
-function Base.fieldnames(::Type{ImageFilter})
+function Base.fieldnames(::Type{ImageTemplate})
     return (:x0, :y0)
 end
 
-#Load the filters
+#Load the templates
 @doc """
     $(TYPEDEF)
-An constant filter.
+An constant template.
 
 ### Details
 Defines an image that just has constant flux. This is very useful for soaking up
 low levels of flux in image reconstructions that can bias the results.
 
-Since images or normalized to unity, this means the `Constant` filter has no
+Since images or normalized to unity, this means the `Constant` template has no
 additional parameters.
 """
-struct Constant <: AbstractFilter end
+struct Constant <: AbstractTemplate end
 Constant(p) = Constant()
 Base.size(::Type{Constant}) = 0
 @inline (θ::Constant)(x,y) = 1
@@ -178,11 +178,11 @@ Base.size(::Type{Constant}) = 0
 A smoothed disk model
 
 ### Details
-Defines a filter for an image that has a smoothed disk model.
+Defines a template for an image that has a smoothed disk model.
 
 
 """
-@with_kw struct Disk <: AbstractFilter
+@with_kw struct Disk <: AbstractTemplate
     """
     Radius of the disk
     """
@@ -201,10 +201,10 @@ Defines a filter for an image that has a smoothed disk model.
     y0::Float64
 end
 function Disk(p)
-    @assert length(p) == 4 "There are 4 parameters for the Disk filter."
+    @assert length(p) == 4 "There are 4 parameters for the Disk template."
     Disk(p[1],p[2],p[3],p[4])
 end
-@fastmath @inline function (θ::Disk)(x,y)
+ @inline function (θ::Disk)(x,y)
     @unpack r0, α, x0, y0 = θ
     r = sqrt((x-x0)^2 + (y-y0)^2)
     if ( r < r0 )
@@ -234,7 +234,7 @@ how the asymmetry for the `EllipticalGaussianRing`.
 ### Fields
 $(FIELDS)
 """
-@with_kw struct AsymGaussian <: AbstractFilter
+@with_kw struct AsymGaussian <: AbstractTemplate
     """Gaussian size in μas"""
     σ::Float64
     """Gaussian asymmetry"""
@@ -251,11 +251,11 @@ $(FIELDS)
     end
 end
 function AsymGaussian(p)
-    @assert length(p) == 5 "There are 5 parameters for the AsymGaussian filter."
+    @assert length(p) == 5 "There are 5 parameters for the AsymGaussian template."
     AsymGaussian(p[1],p[2],p[3],p[4],p[5])
 end
 
-@fastmath @inline function (θ::AsymGaussian)(x,y)
+ @inline function (θ::AsymGaussian)(x,y)
     x′,y′ = rotate(x-θ.x0,y-θ.y0,θ.ξ)
     σx2 = θ.σ *θ.σ/(1.0-θ.τ)
     σy2 = θ.σ*θ.σ*(1.0-θ.τ)
@@ -267,7 +267,7 @@ Base.size(::Type{AsymGaussian}) = 5
 
 @doc """
     $(TYPEDEF)
-Symmetric gaussian ring filter. This is the most basic filter and just attempts
+Symmetric gaussian ring template. This is the most basic template and just attempts
 to recover a location `x0`,`y0`, radius `r0` and thickness `σ` from some image.
 ### Fields
     $(FIELDS)
@@ -276,7 +276,7 @@ to recover a location `x0`,`y0`, radius `r0` and thickness `σ` from some image.
 GaussianRing(r0=20.0,σ=5.0,x0=0.0,y0=-10.0)
 ```
 """
-@with_kw struct GaussianRing <: AbstractFilter
+@with_kw struct GaussianRing <: AbstractTemplate
     """Radius of Gaussian ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -292,13 +292,13 @@ GaussianRing(r0=20.0,σ=5.0,x0=0.0,y0=-10.0)
     end
 end
 function GaussianRing(p)
-    @assert length(p)==4 "GaussianRing: Filter requires 4 parameters"
+    @assert length(p)==4 "GaussianRing: Template requires 4 parameters"
     GaussianRing(p[1],p[2],p[3],p[4])
 end
 
 Base.size(::Type{GaussianRing}) = 4
 
-@fastmath @inline function (θ::GaussianRing)(x, y)
+ @inline function (θ::GaussianRing)(x, y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
     return exp( -(r - θ.r0)^2/(2*θ.σ^2)) + 1e-50
 end
@@ -306,7 +306,7 @@ end
 
 @doc """
     $(TYPEDEF)
-Implements the slashed gaussian ring filter, that uses a cosine
+Implements the slashed gaussian ring template, that uses a cosine
 to symmetrically implement the slash. While this is marginally more
 complicated that a linear slash, it has a number of benefits such as
 mainting the azimuthal and smooth structure of the image.
@@ -315,7 +315,7 @@ mainting the azimuthal and smooth structure of the image.
     $(FIELDS)
 
 """
-@with_kw struct SlashedGaussianRing <: AbstractFilter
+@with_kw struct SlashedGaussianRing <: AbstractTemplate
     """Radius of the ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -337,12 +337,12 @@ mainting the azimuthal and smooth structure of the image.
 end
 
 function SlashedGaussianRing(p)
-        @assert length(p)==6 "SlashedGaussianRing: Filter requires 6 parameters"
+        @assert length(p)==6 "SlashedGaussianRing: Template requires 6 parameters"
         SlashedGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
 Base.size(::Type{SlashedGaussianRing}) = 6
-#Filter function
-@fastmath @inline function (θ::SlashedGaussianRing)(x,y)
+#Template function
+ @inline function (θ::SlashedGaussianRing)(x,y)
     r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
 
     #rotate the image so slash is on the x axis
@@ -357,7 +357,7 @@ end
 
 @doc """
     $(TYPEDEF)
-Implements the elliptical gaussian ring filter. Where the ellipticity `tau` is defined
+Implements the elliptical gaussian ring template. Where the ellipticity `tau` is defined
 as one minus ratio between the semi-minor and semi-major axis.
 
 ### Details
@@ -377,7 +377,7 @@ normalize analytically. In fact the distance from the ellipse is implemented
 numerically using an algorithm adapted from
 [git](https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823)
 """
-@with_kw struct EllipticalGaussianRing <: AbstractFilter
+@with_kw struct EllipticalGaussianRing <: AbstractTemplate
     """Radius of the Gaussian ring"""
     r0::Float64 #geometric mean of the semi-major, a, and semi-minor axis, b, r0=√ab
     """Standard deviation of the width of the Gaussian ring"""
@@ -398,12 +398,12 @@ numerically using an algorithm adapted from
     end
 end
 function EllipticalGaussianRing(p)
-    @assert length(p)==6 "EllipticalGaussianRing: Filter requires 6 parameters"
+    @assert length(p)==6 "EllipticalGaussianRing: Template requires 6 parameters"
     EllipticalGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6])
 end
 Base.size(::Type{EllipticalGaussianRing}) = 6
 
-@fastmath @inline function (θ::EllipticalGaussianRing)(x,y)
+ @inline function (θ::EllipticalGaussianRing)(x,y)
     ex = x-θ.x0
     ey = y-θ.y0
     ex′,ey′ = rotate(ex,ey,θ.ξ)
@@ -415,7 +415,7 @@ end
 
 @doc """
     $(TYPEDEF)
-Creates the filter from the Paper I am writing. It is a combination of
+Creates the template from the Paper I am writing. It is a combination of
 the elliptical and slashed gaussian ring. The slash and the semi-major axis
 are either aligned if the slash parameter `s`>0 or antialigned if `s`<0.
 
@@ -431,7 +431,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 $(FIELDS)
 
 """
-@with_kw struct TIDAGaussianRing <: AbstractFilter
+@with_kw struct TIDAGaussianRing <: AbstractTemplate
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
@@ -455,14 +455,14 @@ $(FIELDS)
     end
 end
 function TIDAGaussianRing(p)
-    @assert length(p)==7 "TIDAGaussianRing: Filter requires 7 parameters"
+    @assert length(p)==7 "TIDAGaussianRing: Template requires 7 parameters"
     TIDAGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
 
 Base.size(::Type{TIDAGaussianRing}) = 7
 
-#Filter function for the TIDAGaussianRing
-@fastmath @inline function (θ::TIDAGaussianRing)(x,y)
+#Template function for the TIDAGaussianRing
+ @inline function (θ::TIDAGaussianRing)(x,y)
     ex = x-θ.x0
     ey = y-θ.y0
     ex′,ey′ = rotate(ex,ey,θ.ξ)
@@ -501,7 +501,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 ### Fields
 $(FIELDS)
 """
-@with_kw struct GeneralGaussianRing <: AbstractFilter
+@with_kw struct GeneralGaussianRing <: AbstractTemplate
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
@@ -527,12 +527,12 @@ $(FIELDS)
     end
 end
 function GeneralGaussianRing(p)
-    @assert length(p)==8 "GeneralGaussianRing: Filter requires 8 parameters"
+    @assert length(p)==8 "GeneralGaussianRing: Template requires 8 parameters"
     GeneralGaussianRing(p[1],p[2],p[3],p[4],p[5],p[6],p[7],p[8])
 end
 Base.size(::Type{GeneralGaussianRing}) = 8
 
-@fastmath @inline function (θ::GeneralGaussianRing)(x,y)
+ @inline function (θ::GeneralGaussianRing)(x,y)
     ex = x-θ.x0
     ey = y-θ.y0
     ex′,ey′ = rotate(ex,ey,θ.ξτ)
@@ -551,7 +551,7 @@ end
 
 
 #Rotates our points. Note that we use astronomer conventions
-@fastmath @inline function rotate(x,y,ξ)
+ @inline function rotate(x,y,ξ)
     s,c = sincos(π-ξ)
     x′ = c*x - s*y
     y′ = s*x + c*y
@@ -576,7 +576,7 @@ Here the zero order term is forced to be unity, so `M` defines the `M`
 additional terms.
 
 """
-@with_kw struct CosineRing{N,M} <: AbstractFilter
+@with_kw struct CosineRing{N,M} <: AbstractTemplate
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviations (length N+1) of the width of the Gaussian ring"""
@@ -604,7 +604,7 @@ end
 
 @doc """
     CosineRing{N,M}(p::AbstractArray) where {N,M}
-Takes in a vector of paramters describing the filter.
+Takes in a vector of paramters describing the template.
 # Details
 The order of the vector must be
  - p[1] = `r0`
@@ -630,7 +630,7 @@ end
 
 Base.size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
 
-@fastmath @inline function (θ::CosineRing{N,M})(x,y) where {N, M}
+ @inline function (θ::CosineRing{N,M})(x,y) where {N, M}
     ex = x-θ.x0
     ey = y-θ.y0
     ϕ = atan(-ey,-ex)
@@ -665,8 +665,8 @@ end
 #https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823
 #except written in Julia and using an adaptive termination condition for accuracy
 #"""
-#@fastmath
-@fastmath @inline function ellipse_sqdist(x,y, a, b, ϵ=1e-6)
+#@
+ @inline function ellipse_sqdist(x,y, a, b, ϵ=1e-6)
     #For simplicity we will only look at the positive quadrant
     px = abs(x)
     py = abs(y)
@@ -689,8 +689,8 @@ end
 
 #Finds the closest point on the ellipse. This is an internal function
 #used for ellipse_distance.
-#@fastmath
-@fastmath @inline function dist_ellipse_unit(px, py, tx, ty, a, b)
+#
+ @inline function dist_ellipse_unit(px, py, tx, ty, a, b)
     x′ = a*tx
     y′ = b*ty
 
@@ -720,11 +720,11 @@ end
 
 @doc """
     $(TYPEDEF)
-Combines two filters together into one object. Since addition is
-assoiciative this can actually we used to hold multiple different filters.
+Combines two templates together into one object. Since addition is
+assoiciative this can actually we used to hold multiple different templates.
 
 ### Details
-Overloads the Base.:+ function so you can easily add two filters together.
+Overloads the Base.:+ function so you can easily add two templates together.
 
 ### Example
 ```julia
@@ -733,29 +733,29 @@ Overloads the Base.:+ function so you can easily add two filters together.
 θ12 = θ1+θ2
 ```
 """
-struct AddFilter{T1<:AbstractFilter,T2<:AbstractFilter} <: AbstractFilter
+struct AddTemplate{T1<:AbstractTemplate,T2<:AbstractTemplate} <: AbstractTemplate
     θ1::T1
     θ2::T2
 end
 
-function AddFilter{T1,T2}(p) where {T1<:AbstractFilter,T2<:AbstractFilter}
+function AddTemplate{T1,T2}(p) where {T1<:AbstractTemplate,T2<:AbstractTemplate}
     p1 = @view p[1:Base.size(T1)]
     θ1 = T1(p1)
     p2 = @view p[(Base.size(T1)+1):end]
     θ2 = T2(p2)
-    AddFilter{T1,T2}(θ1,θ2)
+    AddTemplate{T1,T2}(θ1,θ2)
 end
 
-function Base.size(::Type{AddFilter{T1,T2}}) where {T1<:AbstractFilter, T2<:AbstractFilter}
+function Base.size(::Type{AddTemplate{T1,T2}}) where {T1<:AbstractTemplate, T2<:AbstractTemplate}
     return Base.size(T1) + Base.size(T2)
 end
 
-function Base.fieldnames(::Type{AddFilter{T1,T2}}) where {T1<:AbstractFilter, T2<:AbstractFilter}
+function Base.fieldnames(::Type{AddTemplate{T1,T2}}) where {T1<:AbstractTemplate, T2<:AbstractTemplate}
     return [fieldnames(T1)...,fieldnames(T2)...]
 end
 
-Base.:+(x1::T1,x2::T2) where {T1<:AbstractFilter,T2<:AbstractFilter} = AddFilter(x1,x2)
-function (θ::AddFilter)(x,y)
+Base.:+(x1::T1,x2::T2) where {T1<:AbstractTemplate,T2<:AbstractTemplate} = AddTemplate(x1,x2)
+function (θ::AddTemplate)(x,y)
     return θ.θ1(x,y) + θ.θ2(x,y)
 end
 
@@ -764,11 +764,11 @@ end
 
 @doc """
     $(TYPEDEF)
-Multiplies filter by a constant. This is useful when combining with
-AddFilter since it will change the relative weights of each filter.
+Multiplies template by a constant. This is useful when combining with
+AddTemplate since it will change the relative weights of each template.
 
 ### Details
-Overloads the Base.:* function so you can easily multiple a filter by a number.
+Overloads the Base.:* function so you can easily multiple a template by a number.
 
 ### Example
 ```julia
@@ -776,38 +776,38 @@ Overloads the Base.:* function so you can easily multiple a filter by a number.
 2*θ
 ```
 """
-struct MulFilter{T<:AbstractFilter,S<:Number} <: AbstractFilter
+struct MulTemplate{T<:AbstractTemplate,S<:Number} <: AbstractTemplate
     θ::T
     Irel::S
 end
-function Base.show(io::IO,θ::MulFilter{T,S}) where {T<:AbstractFilter, S<:Number}
-    println(io,"VIDA.MulFilter{$T,$S}")
+function Base.show(io::IO,θ::MulTemplate{T,S}) where {T<:AbstractTemplate, S<:Number}
+    println(io,"VIDA.MulTemplate{$T,$S}")
     print(io,"θ: ")
     show(io,θ.θ)
     println(io,"Irel: $S $(θ.Irel)")
 end
 
-function MulFilter{T,S}(p) where {T<:AbstractFilter, S<:Number}
-    MulFilter{T,S}(T(@view p[1:end-1]), p[end])
+function MulTemplate{T,S}(p) where {T<:AbstractTemplate, S<:Number}
+    MulTemplate{T,S}(T(@view p[1:end-1]), p[end])
 end
 
-function Base.fieldnames(::Type{MulFilter{T,S}}) where {T<:AbstractFilter, S<:Number}
+function Base.fieldnames(::Type{MulTemplate{T,S}}) where {T<:AbstractTemplate, S<:Number}
     return [fieldnames(T)...,:Irel]
 end
 
-function Base.size(::Type{MulFilter{T,S}}) where {T<:AbstractFilter, S<:Number}
+function Base.size(::Type{MulTemplate{T,S}}) where {T<:AbstractTemplate, S<:Number}
     return 1 + size(T)
 end
 
-Base.:*(a,x::T) where {T<:AbstractFilter} = MulFilter(x,a)
-Base.:*(x::T,a) where {T<:AbstractFilter} = MulFilter(x,a)
-function (θ::MulFilter)(x,y)
+Base.:*(a,x::T) where {T<:AbstractTemplate} = MulTemplate(x,a)
+Base.:*(x::T,a) where {T<:AbstractTemplate} = MulTemplate(x,a)
+function (θ::MulTemplate)(x,y)
     return θ.Irel*θ.θ(x,y)
 end
 
 
 
-function Base.getproperty(θmul::MulFilter{T,S}, field::Symbol) where {T<:AbstractFilter, S<:Number}
+function Base.getproperty(θmul::MulTemplate{T,S}, field::Symbol) where {T<:AbstractTemplate, S<:Number}
     if field == :θ
         return getfield(θmul,:θ)
     elseif field == :Irel
@@ -821,33 +821,33 @@ end
 
 @doc """
     $(SIGNATURES)
-Stacks filters together so you can easily combine multiple filters.
-It does this by calling the :+ and :* method. Every filter added will
-include an additional parameter that controls the relative weight of each filter.
+Stacks templates together so you can easily combine multiple templates.
+It does this by calling the :+ and :* method. Every template added will
+include an additional parameter that controls the relative weight of each template.
 """
-function stack(θ::T, θ1...) where {T<:AbstractFilter}
+function stack(θ::T, θ1...) where {T<:AbstractTemplate}
     return θ+mapreduce(x->1.0*x, + , θ1)
 end
 
 @doc """
     $(SIGNATURES)
-Splits the filter into an array with its subcomponents so you can easily access them.
+Splits the template into an array with its subcomponents so you can easily access them.
 """
-function Base.split(θ::AbstractFilter)
+function Base.split(θ::AbstractTemplate)
     return [θ]
 end
 
-function Base.split(θ::AddFilter)
+function Base.split(θ::AddTemplate)
     return [split(θ.θ1)..., split(θ.θ2)...]
 end
 
 @doc """
     $(SIGNATURES)
-Unpacks the parameters of the filter `θ`
+Unpacks the parameters of the template `θ`
 
 Returns the parameters in a vector.
 """
-function unpack(θinit::T) where {T<:AbstractFilter}
+function unpack(θinit::T) where {T<:AbstractTemplate}
     n = Base.size(T)
     fields = fieldnames(T)
     p = zeros(n)
@@ -875,18 +875,18 @@ function unpack(θ::CosineRing{N,M}) where {N,M}
     return p
 end
 
-function unpack(θ::ImageFilter)
+function unpack(θ::ImageTemplate)
     p = zeros(2)
     p[1] = θ.x0
     p[2] = θ.y0
     return p
 end
 
-function unpack(θinit::MulFilter)
+function unpack(θinit::MulTemplate)
     return append!(unpack(θinit.θ), θinit.Irel)
 end
 
-function unpack(θinit::AddFilter)
+function unpack(θinit::AddTemplate)
     p1 = unpack(θinit.θ1)
     p2 = unpack(θinit.θ2)
 
@@ -897,7 +897,7 @@ end
 
 """
     $(SIGNATURES)
-Creates an npix×npix rasterized image of the filter `θ` with
+Creates an npix×npix rasterized image of the template `θ` with
 limits `xlim` and `ylim`
 
 Returns the tuple (xitr,yitr,image) where xitr,yitr are the iterators
@@ -911,7 +911,7 @@ at the pixel centers.
 We also use the astronomer orientation and ordering.
 
 """
-function filter_image(θ::AbstractFilter,
+function template_image(θ::AbstractTemplate,
                       npix::Int, xlim, ylim)
     fovx = xlim[2]-xlim[1]
     fovy = ylim[2]-ylim[1]

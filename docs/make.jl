@@ -11,7 +11,7 @@ using Plots
 using Literate
 
 EXAMPLE1 = joinpath(@__DIR__, "..", "example", "introduction.jl")
-EXAMPLE2 = joinpath(@__DIR__, "..", "example", "custom_filter.jl")
+EXAMPLE2 = joinpath(@__DIR__, "..", "example", "custom_template.jl")
 OUTPUT = joinpath(@__DIR__, "src/generated")
 
 Literate.markdown(EXAMPLE1, OUTPUT, documenter=true)
@@ -32,7 +32,7 @@ makedocs(;
         "getting_started.md",
         "interface.md",
         "generated/introduction.md",
-        "generated/custom_filter.md",
+        "generated/custom_template.md",
         "api/function_index.md",
     ],
 )

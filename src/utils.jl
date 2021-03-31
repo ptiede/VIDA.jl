@@ -1,14 +1,14 @@
 @doc """
 
     $(SIGNATURES)
-Creates an EHTImage type from the filter type. The number
+Creates an EHTImage type from the template type. The number
 of pixels in the image are given by `npix` and the field
 of view in μas in the x and y direction are given by `xlim`
 and `ylim`. The rest of the options are the default image
 characteristics
 
 """
-function make_image(θ::AbstractFilter,
+function make_image(θ::AbstractTemplate,
     npix::Int, xlim, ylim;
     intensity=1.0,
     source="M87", wavelength=0.001320260,
@@ -16,7 +16,7 @@ function make_image(θ::AbstractFilter,
     dec = 12.391123223919932,
     mjd=57854.0
     )
-xitr,yitr,img = filter_image(θ, npix, xlim, ylim)
+xitr,yitr,img = template_image(θ, npix, xlim, ylim)
 scale_norm = intensity/sum(img)
 X = collect(xitr)
 Y = collect(yitr)
@@ -31,18 +31,18 @@ end
 @doc """
 
     $(SIGNATURES)
-Creates an EHTImage type from the filter type. The number
+Creates an EHTImage type from the template type. The number
 of pixels in the image are given by `npix` and the field
 of view in μas in the x and y direction are given by `xlim`
 and `ylim`. To define the source we use an `source_img`.
 
 """
-function make_image(θ::AbstractFilter,
+function make_image(θ::AbstractTemplate,
     npix::Int, xlim, ylim,
     source_img::EHTImage;
     intensity=1.0
     )
-xitr,yitr,img = filter_image(θ, npix, xlim, ylim)
+xitr,yitr,img = template_image(θ, npix, xlim, ylim)
 scale_norm = 1.0/sum(img)
 X = collect(xitr)
 Y = collect(yitr)

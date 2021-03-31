@@ -1,5 +1,5 @@
 
-#Filter parameters
+#Template parameters
 const r0 = 15.0
 const α = 1.0
 const σ = 5.0

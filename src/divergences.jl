@@ -4,7 +4,7 @@
 An abstract class for a divergence of a function. This expects
 that a subtype has a field with an EHTImage object and a flux type.
 The struct is then assumed to be a **functor** and have a function
-that computes the divergence of the image and a filter.
+that computes the divergence of the image and a template.
 
 For example
 ```julia
@@ -12,7 +12,7 @@ For example
         img::EHTImage{T,F}
         flux::S
     end
-    function (bh::MyDiv)(θ::AbstractFilter)
+    function (bh::MyDiv)(θ::AbstractTemplate)
         ...
     end
 ```
@@ -46,22 +46,22 @@ end
 function Bhattacharyya(img::T) where {T<:EHTImage}
     Bhattacharyya(img, flux(img))
 end
-function (bh::Bhattacharyya)(θ::T) where {T<:AbstractFilter}
+function (bh::Bhattacharyya)(θ::T) where {T<:AbstractTemplate}
     @unpack img, flux = bh
     bsum = zero(eltype(img.img))
-    filter_norm = zero(eltype(img.img))
+    template_norm = zero(eltype(img.img))
     xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
     ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
     for i in 1:img.nx
         for j in 1:img.ny
             x = xstart + img.psize_x*(i-1)
             y = ystart + img.psize_y*(j-1)
-            filter_value = abs(θ(x,y))
-            @inbounds bsum += sqrt(filter_value*img.img[j,i])
-            filter_norm += filter_value
+            template_value = abs(θ(x,y))
+            @inbounds bsum += sqrt(template_value*img.img[j,i])
+            template_norm += template_value
         end
     end
-    return -log(bsum/sqrt(filter_norm*flux))
+    return -log(bsum/sqrt(template_norm*flux))
 end
 
 
@@ -99,10 +99,10 @@ function KullbackLeibler(img::T) where {T<:EHTImage}
 end
 
 
-function (kl::KullbackLeibler)(θ::T) where {T<:AbstractFilter}
+function (kl::KullbackLeibler)(θ::T) where {T<:AbstractTemplate}
     @unpack img, flux = kl
     klsum = zero(eltype(img.img))
-    filter_norm = zero(eltype(img.img))
+    template_norm = zero(eltype(img.img))
     xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
     ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
 
@@ -110,10 +110,10 @@ function (kl::KullbackLeibler)(θ::T) where {T<:AbstractFilter}
         @simd for j in 1:img.ny
             x = xstart + img.psize_x*(i-1)
             y = ystart + img.psize_y*(j-1)
-            filter_value = θ(x,y)+1e-12
-            klsum += filter_value*log(filter_value/(img.img[j,i]+1e-12))
-            filter_norm += filter_value
+            template_value = θ(x,y)+1e-12
+            klsum += template_value*log(template_value/(img.img[j,i]+1e-12))
+            template_norm += template_value
         end
     end
-    return (klsum/filter_norm - log(filter_norm/flux))
+    return (klsum/template_norm - log(template_norm/flux))
 end

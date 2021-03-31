@@ -59,25 +59,25 @@ Note that is does not save the figure.
 end
 
 @doc """
-    triptic(img::EHTImage, filter)
+    triptic(img::EHTImage, template)
 Plots a triptic where the left panel is the `img` middle
-the `filter` and the right a two cross-sections of the image
-and filter
+the `template` and the right a two cross-sections of the image
+and template
 """
 function triptic end
 
 @userplot Triptic
 """
-    triptic(image::EHTImage, θ::T) where {T<:AbstractFilter}
-A plot recipe for a triptic plot with the `image`, i.e. an EHT image and the filter `\theta`
-used for parameter estimate. The first two panels are the image and filter and
-the third are RA and DEC cross-sections of both the filter and image centered at the
+    triptic(image::EHTImage, θ::T) where {T<:AbstractTemplate}
+A plot recipe for a triptic plot with the `image`, i.e. an EHT image and the template `\theta`
+used for parameter estimate. The first two panels are the image and template and
+the third are RA and DEC cross-sections of both the template and image centered at the
 center of light.
 """
 @recipe function f(h::Triptic)
     if length(h.args) != 2 || !(typeof(h.args[1]) <: EHTImage) ||
-        !(typeof(h.args[2]) <: AbstractFilter)
-        error("Triptic should be given a image and filter.  Got: $(typeof(h.args))")
+        !(typeof(h.args[2]) <: AbstractTemplate)
+        error("Triptic should be given a image and template.  Got: $(typeof(h.args))")
     end
     image, θ = h.args
     #link := :both
@@ -102,10 +102,10 @@ center of light.
     yitr = range(-fovy/2, fovy/2; length=image.ny)
     dataim = @view(image.img[:,end:-1:1])/sum(image.img)
 
-    #Construct the filter image
-    filter_img = make_image(θ, image.nx, [-fovx/2,fovx/2], [-fovy/2,fovy/2], image;
+    #Construct the template image
+    template_img = make_image(θ, image.nx, [-fovx/2,fovx/2], [-fovy/2,fovy/2], image;
                                     intensity=1)
-    fimg = filter_img.img
+    fimg = template_img.img
 
 
     #Get scale bar and slice data.
@@ -117,7 +117,7 @@ center of light.
     #Finally the slices
     xx = collect(xitr)
     yy = collect(yitr)
-    xcol,ycol = centroid(filter_img)
+    xcol,ycol = centroid(template_img)
     imin = argmin(abs.(xx .- xcol))
     jmin = argmin(abs.(yy .- ycol))
 
@@ -191,7 +191,7 @@ center of light.
         x,y
     end
 
-    #Now we move onto the filter Image
+    #Now we move onto the template Image
     @series begin
         widen := false
         xflip --> true
@@ -247,7 +247,7 @@ center of light.
         linewidth := 1
         aspect_ratio := 1
         annotations := [(startx-size/2,starty-4, "40 μas", font(10, color=:white)),
-                        (startx-size/4, -starty+4, "Filter", font(10, color=:white))]
+                        (startx-size/4, -starty+4, "Template", font(10, color=:white))]
         fontcolor := :white
         xlims = (-fovx/2,fovx/2)
         ylims = (-fovy/2,fovy/2)
@@ -312,12 +312,12 @@ center of light.
 end
 
 """
-    plot(θ::AbstractFilter)
-    plot(θ::AbstractFilter; npix, fovx, fovy)
-Plots the filter `θ` using the usual EHT conventions.
+    plot(θ::AbstractTemplate)
+    plot(θ::AbstractTemplate; npix, fovx, fovy)
+Plots the template `θ` using the usual EHT conventions.
 The default image will use 128x128 pixels with a 120x120 field of view.
 """
-@recipe function f(θ::AbstractFilter; npix=128, fovx=120, fovy=120)
+@recipe function f(θ::AbstractTemplate; npix=128, fovx=120, fovy=120)
 
     tickfontsize --> 11
     guidefontsize --> 14
@@ -329,7 +329,7 @@ The default image will use 128x128 pixels with a 120x120 field of view.
     bar_width --> 0
     xlims --> (-fovx/2,fovx/2)
     ylims --> (-fovy/2,fovy/2)
-    xitr,yitr,img = filter_image(θ, npix, [-fovx/2,fovx/2],[-fovy/2,fovy/2])
+    xitr,yitr,img = template_image(θ, npix, [-fovx/2,fovx/2],[-fovy/2,fovy/2])
     #left_margin --> -2mm
     right_margin --> 5mm
     x = collect(reverse(xitr))

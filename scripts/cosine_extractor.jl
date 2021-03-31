@@ -32,8 +32,8 @@ function parse_commandline()
             help = "Divergence type to be used in image reconstruction"
             arg_type = String
             default = "Bh"
-        "--filter"
-            help = "Cosine filter to use for feature extraction. Expects two numbers"
+        "--template"
+            help = "Cosine template to use for feature extraction. Expects two numbers"
             action = :store_arg
             nargs = 2
             required=true
@@ -72,8 +72,8 @@ function main()
     else
       error("$div_type not found! Must be Bh or KL")
     end
-    filter_type = parse.(Int, parsed_args["filter"])
-    println("Filter type $filter_type")
+    template_type = parse.(Int, parsed_args["template"])
+    println("Template type $template_type")
     restart = parsed_args["restart"]
     println("Using options: ")
     println("list of files: $fitsfiles, ")
@@ -83,7 +83,7 @@ function main()
     println("divergence type $div_type")
     println("Checkpoint stride $stride")
 
-    #Read in a file and create list of images to filter
+    #Read in a file and create list of images to template
     #the last line is the termination of the file
     files = split(read(fitsfiles,String),"\n")
 
@@ -108,27 +108,27 @@ function main()
 
     #Now run on the files for real
     main_sub(files, out_name,
-             div_type,filter_type,
+             div_type,template_type,
              clip_percent, seed,
              restart, stride)
     println("Done! Check $out_name for summary")
     return 0
 end
 
-function make_initial_filter(filter_type)
-    @show filter_type
-    lower_σ = [0.01, [ -2.0 for i in 1:filter_type[1]]... ]
-    upper_σ = [15.0, [ 2.0 for i in 1:filter_type[1]]... ]
+function make_initial_template(template_type)
+    @show template_type
+    lower_σ = [0.01, [ -2.0 for i in 1:template_type[1]]... ]
+    upper_σ = [15.0, [ 2.0 for i in 1:template_type[1]]... ]
     lower_ξσ = Float64[]
     upper_ξσ = Float64[]
-    if filter_type[1] > 0
-        lower_ξσ = Float64[-π for i in 1:filter_type[1] ]
-        upper_ξσ = Float64[ π for i in 1:filter_type[1] ]
+    if template_type[1] > 0
+        lower_ξσ = Float64[-π for i in 1:template_type[1] ]
+        upper_ξσ = Float64[ π for i in 1:template_type[1] ]
     end
-    lower_s = [0.001, [-0.99 for i in 2:filter_type[2]]...]
-    upper_s = [0.999, [0.99 for i in 2:filter_type[2]]...]
-    lower_ξs = [-π for i in 1:filter_type[2] ]
-    upper_ξs = [π for i in 1:filter_type[2] ]
+    lower_s = [0.001, [-0.99 for i in 2:template_type[2]]...]
+    upper_s = [0.999, [0.99 for i in 2:template_type[2]]...]
+    lower_ξs = [-π for i in 1:template_type[2] ]
+    upper_ξs = [π for i in 1:template_type[2] ]
 
     lower = [5.0 ,
              lower_σ..., lower_ξσ...,
@@ -142,19 +142,19 @@ function make_initial_filter(filter_type)
               upper_s..., upper_ξs...,
               60.0, 60.0
             ]
-    filter = CosineRing{filter_type[1],filter_type[2]}(lower)
-    return (filter, lower, upper)
+    template = CosineRing{template_type[1],template_type[2]}(lower)
+    return (template, lower, upper)
 end
 
-function create_initial_df!(start_indx, fitsfiles, filter, restart, out_name)
+function create_initial_df!(start_indx, fitsfiles, template, restart, out_name)
     start_indx = 1
     df = DataFrame()
     nfiles = length(fitsfiles)
     if !restart
       #we want the keynames to match the model parameters
-      key_names = fieldnames(typeof(filter))
-      n = length(filter.θ1.σ)
-      m = length(filter.θ1.s)
+      key_names = fieldnames(typeof(template))
+      n = length(template.θ1.σ)
+      m = length(template.θ1.s)
       key_names = [:r0,
                     [:σ for i in 1:n]...,
                     [:ξσ for i in 2:n]...,
@@ -181,7 +181,7 @@ function create_initial_df!(start_indx, fitsfiles, filter, restart, out_name)
     return df, start_indx
 end
 
-@everywhere function fit_func(filter,lower, upper, div_type, clip_percent)
+@everywhere function fit_func(template,lower, upper, div_type, clip_percent)
     function (file)
         d_type = :none
         if (div_type == "KL")
@@ -198,7 +198,7 @@ end
         if (d_type == :KL)
             div = VIDA.KullbackLeibler(cimage)
         end
-        prob = ExtractProblem(div, filter, lower, upper)
+        prob = ExtractProblem(div, template, lower, upper)
         θ,divmin = extractor(prob, BBO(tracemode=:silent, maxevals=50_000))
         prob_new = ExtractProblem(div, θ, lower, upper)
         θ,divmin = extractor(prob_new, CMAES(cov_scale=0.01, verbosity=0))
@@ -208,12 +208,12 @@ end
 
 
 function main_sub(fitsfiles, out_name,
-                  div_type, filter_type,
+                  div_type, template_type,
                   clip_percent, seed,
                   restart, stride)
 
-    #"Define the filter I want to use and the var bounds"
-    matom = make_initial_filter(filter_type)
+    #"Define the template I want to use and the var bounds"
+    matom = make_initial_template(template_type)
     model = matom[1] + 1.0*Constant()
     lower = typeof(model)([matom[2]...,1e-8])
     upper = typeof(model)([matom[3]...,1])

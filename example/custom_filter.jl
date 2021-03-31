@@ -1,14 +1,14 @@
-# # Adding a Custom Filter
+# # Adding a Custom Template
 
-# If you want to add your own filter you just need to define a new:
-# - filter type
+# If you want to add your own template you just need to define a new:
+# - template type
 # - size method
-# - imagefilter method for that type of filter.
+# - imagetemplate method for that type of template.
 #
-# For example to add a symmetric gaussian filter we can use:
+# For example to add a symmetric gaussian template we can use:
 using VIDA
 
-Base.@kwdef struct SymGaussian <: VIDA.AbstractFilter
+Base.@kwdef struct SymGaussian <: VIDA.AbstractTemplate
    σ::Float64 #standard deviation of the Gaussian
    x0::Float64 #x location of mean
    y0::Float64 #y location of mean
@@ -26,10 +26,10 @@ end
 # Then you can simply call the same optimizing functions and
 # plotting functions. For example lets create a fake image and fit it
 
-filter = SymGaussian(σ=20.0, x0=0.0, y0=0.0)
+template = SymGaussian(σ=20.0, x0=0.0, y0=0.0)
 
-# Now I will use a utility function to convert a filter to an EHTImage
-img = VIDA.make_image(filter, 64, (-60.0,60.0), (-60.0,60.0));
+# Now I will use a utility function to convert a template to an EHTImage
+img = VIDA.make_image(template, 64, (-60.0,60.0), (-60.0,60.0));
 
 
 # Now lets see if we can get the correct parameters
@@ -48,4 +48,4 @@ prob = ExtractProblem(bh, start, lower, upper)
 
 # Let's also plot the results
 
-triptic(img, filter)
+triptic(img, template)
