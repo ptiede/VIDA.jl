@@ -27,4 +27,5 @@ end
     bimg = blur(img, σ*2*sqrt(2*log(2)))
     s2 = sqrt(inertia(bimg)[1])
     @test isapprox(s2,sqrt(2)*σ, rtol=1e-3)
+    @test size(img) == (1024,1024)
 end

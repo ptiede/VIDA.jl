@@ -3,6 +3,7 @@ using LinearAlgebra
 using Interpolations: Lanczos
 include("common.jl")
 
+
 @testset "TemplateAsymGaussian" begin
     θ = AsymGaussian(σ, τ, ξτ, x0,y0)
     θ1 = AsymGaussian(x0=x0,σ=σ,y0=y0, τ=τ, ξ=ξτ)
@@ -13,6 +14,7 @@ include("common.jl")
 
     @test θ(x0,y0) == 1.0
     @test length(propertynames(θ)) == VIDA.size(AsymGaussian)
+    @test size(θ) == VIDA.size(AsymGaussian)
     img = VIDA.make_image(θ, npix, xlim, ylim)
     @test isapprox(flux(img), 1.0, atol=ϵ)
     xcent,ycent = centroid(img)
