@@ -1,50 +1,122 @@
+@doc """
+    $(SIGNATURES)
+Unpacks the parameters of the template `θ`
 
-#Template information and documentation
-
+Returns the parameters in a vector.
 """
+function unpack(θinit::T) where {T<:AbstractImageTemplate}
+    n = Base.size(T)
+    fields = propertynames(θinit)
+    p = zeros(n)
+    for i in 1:n
+        p[i] = getproperty(θinit,fields[i])
+    end
+    return p
+end
+
+
+@inline function imagecenter(θ::AbstractImageTemplate)
+    return θ.x0, θ.y0
+end
+
+
+@doc """
     $(TYPEDEF)
-An abstract type that defines super template type.
-"""
-abstract type AbstractTemplate end
+Extrememly flexible symmetric ring model. The thickness is modeled as a cosine
+expansion with `N` terms and the slash by a expansion with `M` terms.
+
+
+# Details
+The ring is forced to be symmetric for a significant speed boost over CosineRing.
+The thickness of the ring is modeled by a cosine expansion in azimuthal
+angle. `N` specifies the number of cosine modes to fit, where the first
+mode is the constant thickness portion and so has no corresponding angle.
+The slash is modeled as a separate cosine expansion, with `M` terms.
+Here the zero order term is forced to be unity, so `M` defines the `M`
+additional terms.
 
 """
-    $(TYPEDEF)
-
-An abstract type that will contain the template information, such as the parameters.
-Specific instanstantiations will need to be defined for you to use this.
-
-### Details
-    This defined the highest function type. If you wish to implement your own template you
-    need to define a a couple of things
-    1. The template type <: AbstractTemplate
-    2. an functor of the type that computes the template function
-    3. an `Base.size` function that defines the number of parameters of the template.
-
-An example is given by:
-```julia
-#All of our composite type are defined using the Paramters.jl package to you
-can directly refer to the struct parameters when creating it, although this isn't
-actually used anywhere in the code.
-@with_kw struct Gaussian <: AbstractTemplate
-    σ::Float64
+@with_kw struct SymCosineRing{N,M} <: AbstractImageTemplate
+    """Radius of the Gaussian ring"""
+    r0::Float64
+    """Standard deviations (length N+1) of the width of the Gaussian ring"""
+    σ::Vector{Float64}
+    """Orientations of the cosine expansion width (length N)"""
+    ξσ::Vector{Float64}
+    """Slash of Gaussian ring (length M)."""
+    s::Vector{Float64}
+    """Slash orientations (length M) in radians measured north of east"""
+    ξs::Vector{Float64}
+    """x position of the center of the ring in μas"""
     x0::Float64
+    """y position of the center of the ring in μas"""
     y0::Float64
+    function SymCosineRing{N,M}(r0,σ, ξσ, s, ξs,x0,y0) where {N, M}
+        #@assert N isa Integer
+        #@assert M isa Integer
+        new{N,M}(float(r0),σ, ξσ, s, ξs,float(x0),float(y0))
+    end
 end
-
-#Typically we inline and force the function to use fastmath
- @inline function (θ::Gaussian)(x,y)
-    return 1.0/(2π*σ^2)*exp(-0.5*( (x-x0)^2+(y-y0)^2 ) )
-end
-Base.size(::Type{Gaussian}) = 3
-```
+@doc """
+    CosineRing{N,M}(p::AbstractArray) where {N,M}
+Takes in a vector of paramters describing the template.
+# Details
+The order of the vector must be
+ - p[1] = `r0`
+ - p[2:(N+1)] = `σ`
+ - p[(N+2):(2N)] = `ξσ`
+ - p[2N+1] = `τ`
+ - p[2N+2] = `ξτ`
+ - p[2N+3:2N+M+2] = `s`
+ - p[2N+3+M:2N+2+2M] = `ξs`
+ - p[2N+3+2M] = `x0`
+ - p[2N+4+2M] = `y0`
 """
-abstract type AbstractImageTemplate <: AbstractTemplate end
+function SymCosineRing{N,M}(p::AbstractArray) where {N,M}
+    #@assert length(p) == size(CosineRing{N,M})
+    SymCosineRing{N,M}(p[1], p[2:(N+2)],
+                    p[(N+3):(2N+2)],
+                    p[2N+3:2N+2+M], p[2N+3+M:2N+2+2M],
+                    p[2N+3+2M], p[2N+4+2M]
+    )
+end
+Base.size(::Type{SymCosineRing{N,M}}) where {N, M} = 3 + N+1 + N + 2*M
 
+@inline function (θ::SymCosineRing{N,M})(x,y) where {N, M}
+    ex = x-θ.x0
+    ey = y-θ.y0
+    ϕ = atan(-ey,-ex)
+    r = sqrt(ex^2 + ey^2)
+    dr2 = (r-θ.r0)^2
+    #construct the slash
+    n = one(θ.r0)
+    @inbounds for i in 1:M
+        n -= θ.s[i]*cos(i*(ϕ - θ.ξs[i]))
+    end
 
-function _update(θ::AbstractTemplate, p)
-    return typeof(θ)(p)
+    σ = θ.σ[1]
+    @inbounds for i in 1:N
+        σ += θ.σ[i+1]*cos(i*(ϕ - θ.ξσ[i]))
+    end
+
+    return abs(n)*exp(-dr2/(2.0*σ^2+1e-2))
 end
 
+function unpack(θ::SymCosineRing{N,M}) where {N,M}
+    n = Base.size(typeof(θ))
+    p = zeros(n)
+    p[1] = θ.r0
+    p[2:(N+2)] = θ.σ
+    if N>0
+        p[(N+3):(2N+2)] = θ.ξσ
+    end
+    p[2N+3:2N+2+M] = θ.s
+    p[2N+3+M:2N+2+2M] = θ.ξs
+    p[2N+3+2M] = θ.x0
+    p[2N+4+2M] = θ.y0
+
+    return p
+end
 
 @doc """
     $(SIGNATURES)
@@ -75,11 +147,6 @@ function LogSpiral(p::Vector{T}) where {T<:Real}
 end
 Base.size(::Type{LogSpiral{T}}) where {T} = 7
 
-"""
-    size(f::AbstractTemplate)
-Get the number of parameters for the template f
-"""
-Base.size(f::T) where {T<:AbstractTemplate} = Base.size(T)
 
 @inline function (θ::LogSpiral)(x,y)
     @unpack κ, σ, r0, δϕ, ξ, x0, y0 = θ
@@ -144,7 +211,7 @@ function _update(θ::ImageTemplate, p)
 end
 
 function Base.getproperty(θ::ImageTemplate, symbol::Symbol)
-    names = fieldnames(ImageTemplate)
+    names = propertynames(θ)
     if symbol ∈ names
         return getfield(θ, symbol)
     end
@@ -152,8 +219,15 @@ function Base.getproperty(θ::ImageTemplate, symbol::Symbol)
 end
 
 
-function Base.fieldnames(::Type{ImageTemplate})
+function Base.propertynames(::ImageTemplate)
     return (:x0, :y0)
+end
+
+function unpack(θ::ImageTemplate)
+    p = zeros(2)
+    p[1] = θ.x0
+    p[2] = θ.y0
+    return p
 end
 
 #Load the templates
@@ -168,7 +242,7 @@ low levels of flux in image reconstructions that can bias the results.
 Since images or normalized to unity, this means the `Constant` template has no
 additional parameters.
 """
-struct Constant <: AbstractTemplate end
+struct Constant <: AbstractImageTemplate end
 Constant(p) = Constant()
 Base.size(::Type{Constant}) = 0
 @inline (θ::Constant)(x,y) = 1
@@ -182,7 +256,7 @@ Defines a template for an image that has a smoothed disk model.
 
 
 """
-@with_kw struct Disk <: AbstractTemplate
+@with_kw struct Disk <: AbstractImageTemplate
     """
     Radius of the disk
     """
@@ -234,7 +308,7 @@ how the asymmetry for the `EllipticalGaussianRing`.
 ### Fields
 $(FIELDS)
 """
-@with_kw struct AsymGaussian <: AbstractTemplate
+@with_kw struct AsymGaussian <: AbstractImageTemplate
     """Gaussian size in μas"""
     σ::Float64
     """Gaussian asymmetry"""
@@ -276,7 +350,7 @@ to recover a location `x0`,`y0`, radius `r0` and thickness `σ` from some image.
 GaussianRing(r0=20.0,σ=5.0,x0=0.0,y0=-10.0)
 ```
 """
-@with_kw struct GaussianRing <: AbstractTemplate
+@with_kw struct GaussianRing <: AbstractImageTemplate
     """Radius of Gaussian ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -315,7 +389,7 @@ mainting the azimuthal and smooth structure of the image.
     $(FIELDS)
 
 """
-@with_kw struct SlashedGaussianRing <: AbstractTemplate
+@with_kw struct SlashedGaussianRing <: AbstractImageTemplate
     """Radius of the ring in μas"""
     r0::Float64
     """Standard deviation of Gaussian ring in μas"""
@@ -343,13 +417,15 @@ end
 Base.size(::Type{SlashedGaussianRing}) = 6
 #Template function
  @inline function (θ::SlashedGaussianRing)(x,y)
-    r = sqrt((x - θ.x0)^2 + (y - θ.y0)^2)
+    ex = x - θ.x0
+    ey = y - θ.y0
+    r = sqrt((ex)^2 + (ey)^2)
 
     #rotate the image so slash is on the x axis
-    xrot,yrot = rotate(x-θ.x0,y-θ.y0,θ.ξ)
+    #xrot,yrot = rotate(x-θ.x0,y-θ.y0,θ.ξ)
     #construct the slash
-    ϕ = atan(yrot,xrot)
-    n = (1-θ.s*cos(ϕ))/(θ.s + 1)
+    ϕ = atan(-ey,-ex)
+    n = (1-θ.s*cos(θ.ξ-ϕ))/(θ.s + 1)
 
     return n*exp(-(r-θ.r0)^2/(2*θ.σ^2)) + 1e-50
 end
@@ -377,7 +453,7 @@ normalize analytically. In fact the distance from the ellipse is implemented
 numerically using an algorithm adapted from
 [git](https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823)
 """
-@with_kw struct EllipticalGaussianRing <: AbstractTemplate
+@with_kw struct EllipticalGaussianRing <: AbstractImageTemplate
     """Radius of the Gaussian ring"""
     r0::Float64 #geometric mean of the semi-major, a, and semi-minor axis, b, r0=√ab
     """Standard deviation of the width of the Gaussian ring"""
@@ -431,7 +507,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 $(FIELDS)
 
 """
-@with_kw struct TIDAGaussianRing <: AbstractTemplate
+@with_kw struct TIDAGaussianRing <: AbstractImageTemplate
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
@@ -501,7 +577,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
 ### Fields
 $(FIELDS)
 """
-@with_kw struct GeneralGaussianRing <: AbstractTemplate
+@with_kw struct GeneralGaussianRing <: AbstractImageTemplate
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviation of the width of the Gaussian ring"""
@@ -550,16 +626,6 @@ end
 
 
 
-#Rotates our points. Note that we use astronomer conventions
- @inline function rotate(x,y,ξ)
-    s,c = sincos(π-ξ)
-    x′ = c*x - s*y
-    y′ = s*x + c*y
-
-    return (x′ ,y′)
-end
-
-
 @doc """
     $(TYPEDEF)
 Extrememly flexible ring model. The thickness is modeled as a cosine
@@ -576,7 +642,7 @@ Here the zero order term is forced to be unity, so `M` defines the `M`
 additional terms.
 
 """
-@with_kw struct CosineRing{N,M} <: AbstractTemplate
+@with_kw struct CosineRing{N,M} <: AbstractImageTemplate
     """Radius of the Gaussian ring"""
     r0::Float64
     """Standard deviations (length N+1) of the width of the Gaussian ring"""
@@ -653,210 +719,6 @@ Base.size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
     return abs(n)*exp(-d2/(2.0*σ^2+1e-2))
 end
 
-
-
-#
-#    $(SIGNATURES)
-#Find the minimum square distance between an ellipse centered at (0,0) with semi-major
-#axis `a` and semi-minor axis `b` and the point (`x`, `y`).
-#Uses an iterative method with accuracy `ϵ` which defaults to 1e-6.
-## Credit:
-#Algorithm taken from
-#https://github.com/0xfaded/ellipse_demo/issues/1#issuecomment-405078823
-#except written in Julia and using an adaptive termination condition for accuracy
-#"""
-#@
- @inline function ellipse_sqdist(x,y, a, b, ϵ=1e-6)
-    #For simplicity we will only look at the positive quadrant
-    px = abs(x)
-    py = abs(y)
-
-    #initial guess
-    tx = 0.707
-    ty = 0.707
-    err = 1.0
-    n = 0
-    while err > ϵ && n < 10
-        tx′, ty′ = dist_ellipse_unit(px,py,tx,ty,a,b)
-        #err = hypot((tx′-tx), ty′-ty)
-        err = sqrt((tx-tx′)*(tx-tx′) + (ty-ty′)*(ty-ty′))
-        tx = tx′
-        ty = ty′
-        n+=1
-    end
-    return (a*tx-px)*(a*tx-px) + (b*ty-py)*(b*ty-py)
-end
-
-#Finds the closest point on the ellipse. This is an internal function
-#used for ellipse_distance.
-#
- @inline function dist_ellipse_unit(px, py, tx, ty, a, b)
-    x′ = a*tx
-    y′ = b*ty
-
-    ex = (a*a - b*b)*tx*tx*tx/a
-    ey = (b*b - a*a)*ty*ty*ty/b
-
-    rx = x′ - ex
-    ry = y′ - ey
-
-    qx = px - ex
-    qy = py - ey
-
-    r = sqrt(rx*rx + ry*ry)
-    q = sqrt(qx*qx + qy*qy)
-
-    xx = min(1.0, max(0.0, (qx*r/q + ex)/a) )
-    yy = min(1.0, max(0.0, (qy*r/q + ey)/b) )
-    #t = hypot(xx,yy)
-    t = sqrt(xx*xx + yy*yy)
-    xx /= t
-    yy /= t
-
-    return xx,yy
-end
-
-
-
-@doc """
-    $(TYPEDEF)
-Combines two templates together into one object. Since addition is
-assoiciative this can actually we used to hold multiple different templates.
-
-### Details
-Overloads the Base.:+ function so you can easily add two templates together.
-
-### Example
-```julia
-θ1 = GaussianRing(10,5,0,0)
-θ2 = SlashedGaussianRing(15,5,0.5,π/4,0,0)
-θ12 = θ1+θ2
-```
-"""
-struct AddTemplate{T1<:AbstractTemplate,T2<:AbstractTemplate} <: AbstractTemplate
-    θ1::T1
-    θ2::T2
-end
-
-function AddTemplate{T1,T2}(p) where {T1<:AbstractTemplate,T2<:AbstractTemplate}
-    p1 = @view p[1:Base.size(T1)]
-    θ1 = T1(p1)
-    p2 = @view p[(Base.size(T1)+1):end]
-    θ2 = T2(p2)
-    AddTemplate{T1,T2}(θ1,θ2)
-end
-
-function Base.size(::Type{AddTemplate{T1,T2}}) where {T1<:AbstractTemplate, T2<:AbstractTemplate}
-    return Base.size(T1) + Base.size(T2)
-end
-
-function Base.fieldnames(::Type{AddTemplate{T1,T2}}) where {T1<:AbstractTemplate, T2<:AbstractTemplate}
-    return [fieldnames(T1)...,fieldnames(T2)...]
-end
-
-Base.:+(x1::T1,x2::T2) where {T1<:AbstractTemplate,T2<:AbstractTemplate} = AddTemplate(x1,x2)
-function (θ::AddTemplate)(x,y)
-    return θ.θ1(x,y) + θ.θ2(x,y)
-end
-
-
-
-
-@doc """
-    $(TYPEDEF)
-Multiplies template by a constant. This is useful when combining with
-AddTemplate since it will change the relative weights of each template.
-
-### Details
-Overloads the Base.:* function so you can easily multiple a template by a number.
-
-### Example
-```julia
-θ = GaussianRing(15,5,0.0,0.0)
-2*θ
-```
-"""
-struct MulTemplate{T<:AbstractTemplate,S<:Number} <: AbstractTemplate
-    θ::T
-    Irel::S
-end
-function Base.show(io::IO,θ::MulTemplate{T,S}) where {T<:AbstractTemplate, S<:Number}
-    println(io,"VIDA.MulTemplate{$T,$S}")
-    print(io,"θ: ")
-    show(io,θ.θ)
-    println(io,"Irel: $S $(θ.Irel)")
-end
-
-function MulTemplate{T,S}(p) where {T<:AbstractTemplate, S<:Number}
-    MulTemplate{T,S}(T(@view p[1:end-1]), p[end])
-end
-
-function Base.fieldnames(::Type{MulTemplate{T,S}}) where {T<:AbstractTemplate, S<:Number}
-    return [fieldnames(T)...,:Irel]
-end
-
-function Base.size(::Type{MulTemplate{T,S}}) where {T<:AbstractTemplate, S<:Number}
-    return 1 + size(T)
-end
-
-Base.:*(a,x::T) where {T<:AbstractTemplate} = MulTemplate(x,a)
-Base.:*(x::T,a) where {T<:AbstractTemplate} = MulTemplate(x,a)
-function (θ::MulTemplate)(x,y)
-    return θ.Irel*θ.θ(x,y)
-end
-
-
-
-function Base.getproperty(θmul::MulTemplate{T,S}, field::Symbol) where {T<:AbstractTemplate, S<:Number}
-    if field == :θ
-        return getfield(θmul,:θ)
-    elseif field == :Irel
-        return getfield(θmul, :Irel)
-    elseif field in fieldnames(T)
-        return getfield(θmul.θ, field)
-    else
-        throw(KeyError(field))
-    end
-end
-
-@doc """
-    $(SIGNATURES)
-Stacks templates together so you can easily combine multiple templates.
-It does this by calling the :+ and :* method. Every template added will
-include an additional parameter that controls the relative weight of each template.
-"""
-function stack(θ::T, θ1...) where {T<:AbstractTemplate}
-    return θ+mapreduce(x->1.0*x, + , θ1)
-end
-
-@doc """
-    $(SIGNATURES)
-Splits the template into an array with its subcomponents so you can easily access them.
-"""
-function Base.split(θ::AbstractTemplate)
-    return [θ]
-end
-
-function Base.split(θ::AddTemplate)
-    return [split(θ.θ1)..., split(θ.θ2)...]
-end
-
-@doc """
-    $(SIGNATURES)
-Unpacks the parameters of the template `θ`
-
-Returns the parameters in a vector.
-"""
-function unpack(θinit::T) where {T<:AbstractTemplate}
-    n = Base.size(T)
-    fields = fieldnames(T)
-    p = zeros(n)
-    for i in 1:n
-        p[i] = getproperty(θinit,fields[i])
-    end
-    return p
-end
-
 function unpack(θ::CosineRing{N,M}) where {N,M}
     n = Base.size(typeof(θ))
     p = zeros(n)
@@ -873,59 +735,4 @@ function unpack(θ::CosineRing{N,M}) where {N,M}
     p[2N+6+2M] = θ.y0
 
     return p
-end
-
-function unpack(θ::ImageTemplate)
-    p = zeros(2)
-    p[1] = θ.x0
-    p[2] = θ.y0
-    return p
-end
-
-function unpack(θinit::MulTemplate)
-    return append!(unpack(θinit.θ), θinit.Irel)
-end
-
-function unpack(θinit::AddTemplate)
-    p1 = unpack(θinit.θ1)
-    p2 = unpack(θinit.θ2)
-
-    return append!(p1,p2)
-end
-
-
-
-"""
-    $(SIGNATURES)
-Creates an npix×npix rasterized image of the template `θ` with
-limits `xlim` and `ylim`
-
-Returns the tuple (xitr,yitr,image) where xitr,yitr are the iterators
-defining the pixel locations (which are centered) and the rasterized image,
- in Jy/μas^2.
-
-# Note
-I use the pixel size definition field_of_view/npix, but the image is evaluated
-at the pixel centers.
-
-We also use the astronomer orientation and ordering.
-
-"""
-function template_image(θ::AbstractTemplate,
-                      npix::Int, xlim, ylim)
-    fovx = xlim[2]-xlim[1]
-    fovy = ylim[2]-ylim[1]
-
-    px = fovx/(npix)
-    py = fovy/(npix)
-
-    xitr = (fovx/2-px/2):-px:(-fovx/2)
-    yitr = (-fovy/2+py/2):py:(fovy/2)
-    img = Matrix{Float64}(undef,npix,npix)
-    for (i,x) in enumerate(xitr)
-        for (j,y) in enumerate(yitr)
-            img[j,i] = θ(x,y)
-        end
-    end
-    return (xitr,yitr,img)
 end

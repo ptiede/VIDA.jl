@@ -46,7 +46,7 @@ end
 function Bhattacharyya(img::T) where {T<:EHTImage}
     Bhattacharyya(img, flux(img))
 end
-function (bh::Bhattacharyya)(θ::T) where {T<:AbstractTemplate}
+@fastmath function (bh::Bhattacharyya)(θ::T) where {T<:AbstractTemplate}
     @unpack img, flux = bh
     bsum = zero(eltype(img.img))
     template_norm = zero(eltype(img.img))

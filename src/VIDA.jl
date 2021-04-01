@@ -32,7 +32,8 @@ export
     #Templates
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    CosineRing,Disk,ImageTemplate,LogSpiral,
+    SymCosineRing, CosineRing, Disk, ImageTemplate, LogSpiral,
+    stretch, rotate, stretchrotate,
     #Template helper functions
     stack,split,unpack,
     #Image functions
@@ -56,7 +57,7 @@ include("images.jl")
 #Load the movies
 include("movies.jl")
 #Load the visualization stuff
-include("templates.jl")
+include("templates/templates.jl")
 #Load the divergence functions
 include("divergences.jl")
 #Visualization tools

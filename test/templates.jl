@@ -12,7 +12,7 @@ include("common.jl")
     @test unpack(θ1) == unpack(θ2)
 
     @test θ(x0,y0) == 1.0
-    @test length(fieldnames(AsymGaussian)) == VIDA.size(AsymGaussian)
+    @test length(propertynames(θ)) == VIDA.size(AsymGaussian)
     img = VIDA.make_image(θ, npix, xlim, ylim)
     @test isapprox(flux(img), 1.0, atol=ϵ)
     xcent,ycent = centroid(img)
@@ -36,7 +36,7 @@ end
     @test unpack(θ1) == unpack(θ2)
 
     @test θ(x0,y0) == 1.0
-    @test length(fieldnames(Disk)) == VIDA.size(Disk)
+    @test length(propertynames(θ)) == VIDA.size(Disk)
     img = VIDA.make_image(θ, npix, xlim, ylim)
     @test isapprox(flux(img), 1.0, atol=ϵ)
     xcent,ycent = centroid(img)
@@ -54,7 +54,7 @@ end
     @test unpack(θ1) == unpack(θ2)
 
     @test θ(r0+x0,y0) == 1.0
-    @test length(fieldnames(GaussianRing)) == VIDA.size(GaussianRing)
+    @test length(propertynames(θ)) == VIDA.size(GaussianRing)
 end
 
 @testset "TemplateSlashedGaussianRing" begin
@@ -66,7 +66,7 @@ end
     @test unpack(θ1) == unpack(θ2)
     xrot,yrot = VIDA.rotate(r0,0, π-ξs)
     @test θ(xrot+x0,yrot+y0) == 1.0
-    @test length(fieldnames(SlashedGaussianRing)) == VIDA.size(SlashedGaussianRing)
+    @test length(propertynames(θ)) == VIDA.size(SlashedGaussianRing)
 end
 
 
@@ -79,7 +79,7 @@ end
     @test unpack(θ1) == unpack(θ2)
     xrot,yrot = VIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
     @test θ(xrot+x0,yrot+y0) == 1.0
-    @test length(fieldnames(EllipticalGaussianRing)) == VIDA.size(EllipticalGaussianRing)
+    @test length(propertynames(θ)) == VIDA.size(EllipticalGaussianRing)
 end
 
 
@@ -92,7 +92,7 @@ end
     @test unpack(θ1) == unpack(θ2)
     xrot,yrot = VIDA.rotate(r0/sqrt(1-τ),0, π-ξτ)
     @test θ(xrot+x0,yrot+y0) == 1.0
-    @test length(fieldnames(TIDAGaussianRing)) == VIDA.size(TIDAGaussianRing)
+    @test length(propertynames(θ)) == VIDA.size(TIDAGaussianRing)
 end
 
 @testset "TemplateGeneralGaussianRing" begin
@@ -104,7 +104,7 @@ end
     @test unpack(θ1) == unpack(θ2)
     fimg = VIDA.template_image(θ,npix,xlim,ylim)
     @test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
-    @test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
+    @test length(propertynames(θ)) == VIDA.size(GeneralGaussianRing)
 end
 
 @testset "TemplateLogSpiral" begin
@@ -115,7 +115,7 @@ end
     @test unpack(θ) == unpack(θ1)
     @test unpack(θ1) == unpack(θ2)
     fimg = VIDA.template_image(θ,npix,xlim,ylim)
-    @test length(fieldnames(LogSpiral)) == VIDA.size(typeof(θ))
+    @test length(propertynames(θ)) == VIDA.size(typeof(θ))
 end
 
 
@@ -133,6 +133,39 @@ end
     θ = Constant()
     @test θ(1,1) == 1.0
     @test length(unpack(θ)) == VIDA.size(typeof(θ))
+end
+
+@testset "TemplateSymCosineRing" begin
+    θg = SlashedGaussianRing(r0,σ, s, ξs, x0, y0)
+    θsg = SymCosineRing{0,1}([r0, σ, s, ξs, x0, y0])
+    _,_,fimg_g = VIDA.template_image(θg, 64, xlim, ylim)
+    _,_,fimg_sg = VIDA.template_image(θsg, 64, xlim, ylim)
+    @test sum(fimg_g/sum(fimg_g) - fimg_sg/sum(fimg_sg)) < 1e-8
+    θ = SymCosineRing{N-1,M}(r0,
+                        [σ, σ_1],
+                        [ξσ],
+                        [s,s_1,s_2],
+                        [ξs, ξs_1, ξs_2],
+                        x0, y0)
+    θ1 = SymCosineRing{N-1,M}(r0=r0,
+                        σ=[σ, σ_1],
+                        ξσ=[ξσ],
+                        s=[s,s_1,s_2],
+                        ξs = [ξs, ξs_1, ξs_2],
+                        x0=x0, y0=y0)
+    θ2 = SymCosineRing{N-1,M}([r0,
+                         σ, σ_1,
+                         ξσ,
+                         s,s_1,s_2,
+                         ξs, ξs_1, ξs_2,
+                         x0, y0])
+    @inferred θ2(1.0, 1.0)
+    @test VIDA.size(typeof(θ)) == length(unpack(θ))
+    @test unpack(θ) == unpack(θ1)
+    @test unpack(θ1) == unpack(θ2)
+    #fimg = VIDA.template_image(θ,npix,xlim,ylim)
+    #@test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
+    #@test length(propertynames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
 @testset "TemplateCosineRing" begin
@@ -170,7 +203,7 @@ end
     @test unpack(θ1) == unpack(θ2)
     #fimg = VIDA.template_image(θ,npix,xlim,ylim)
     #@test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
-    #@test length(fieldnames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
+    #@test length(propertynames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
 end
 
 @testset "TemplateMulAdd" begin
@@ -181,8 +214,8 @@ end
     θs = stack(θ1,θ2)
     println(1.0*θ2)
 
-    @test fieldnames(typeof(1.0*θ2)) == [fieldnames(typeof(θ2))..., :Irel]
-    @test fieldnames(typeof(θ1+θ2)) == [fieldnames(typeof(θ1))...,fieldnames(typeof(θ2))...]
+    @test propertynames(1.0*θ2) == (propertynames(θ2)..., :Irel)
+    @test propertynames(θ1+θ2) == (propertynames(θ1)...,propertynames(θ2)...)
 
     @test VIDA.size(typeof(1.0*θ2)) == length(unpack(1.0*θ2))
     @test VIDA.size(typeof(θ1+θ2)) == length(unpack(θ1+θ2))
@@ -194,4 +227,33 @@ end
     @test unpack(θ) == unpack(θs)
     @test θ1(x0,y0) + θ2(x0,y0) == θ(x0,y0)
     @test θ1(x0,y0) + θ2(x0,y0) == θs(x0,y0)
+end
+
+@testset "TemplateMods" begin
+    θ = SlashedGaussianRing(r0, σ, s, ξs, -20.0, 10.0)
+    θ0 = SlashedGaussianRing(r0, σ, s, 0.0,-20.0, 10.0)
+    rθ = VIDA.rotate(θ, -ξs)
+    rimg = VIDA.make_image(rθ, 512, (-160.0, 160.0), (-160.0, 160.0))
+    img0 = VIDA.make_image(θ0, 512, (-160.0, 160.0), (-160.0, 160.0))
+    @test rimg.img ≈ img0.img
+    @test propertynames(rθ) == (propertynames(θ)..., :ξ)
+    @test VIDA.size(typeof(rθ)) == length(unpack(rθ))
+
+    #Check if the stretch is equivalent to just stretching second moment
+    θs = stretch(θ0, τ)
+    imgs = VIDA.make_image(θs, 512, (-160.0, 160.0), (-160.0, 160.0))
+    i0 = VIDA.inertia(img0)
+    is = VIDA.inertia(imgs)
+    tmp = i0./is
+    @test propertynames(θs) == (propertynames(θ)..., :τ)
+    @test VIDA.size(typeof(θs)) == length(unpack(θs))
+
+    @test isapprox(tmp[1,1], τ; atol=1e-5)
+    @test isapprox(tmp[2,2], 1/τ; atol=1e-5)
+    @test isapprox(tmp[1,2], 1.0; atol=1e-5)
+    @test isapprox(tmp[2,1], 1.0; atol=1e-5)
+
+    #stretchrotate
+    θsr = stretchrotate(θ0, τ, ξs)
+    imgsr = VIDA.make_image(θsr, 512, (-160.0, 160.0), (-160.0, 160.0))
 end

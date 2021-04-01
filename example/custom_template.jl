@@ -8,7 +8,7 @@
 # For example to add a symmetric gaussian template we can use:
 using VIDA
 
-Base.@kwdef struct SymGaussian <: VIDA.AbstractTemplate
+Base.@kwdef struct SymGaussian <: VIDA.AbstractImageTemplate
    σ::Float64 #standard deviation of the Gaussian
    x0::Float64 #x location of mean
    y0::Float64 #y location of mean

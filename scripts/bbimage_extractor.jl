@@ -189,7 +189,7 @@ function create_initial_df!(start_indx, fitsfiles, template, restart, out_name)
     nfiles = length(fitsfiles)
     if !restart
       #we want the keynames to match the model parameters
-      key_names = fieldnames(typeof(template))
+      key_names = propertynames(template)
       for i in 1:length(key_names)
         insertcols!(df, ncol(df)+1, Symbol(key_names[i]) => zeros(nfiles); makeunique=true)
       end

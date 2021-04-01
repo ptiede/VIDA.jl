@@ -67,15 +67,15 @@ The templates implemented are:
 - `SlashedGaussianRing` which is a circular Gaussian ring with a flux gradient across its emission.
 - `EllipticalGaussianRing` symmetric Gaussian elliptical ring, where the emission is constant across the ring, unlike with the SlashedGaussianRing.
 - `GeneralGaussianRing` A combination of the two above where the ring is allowed to be elliptical and have a intensity gradient.
-- `TIDAGaussianRing` The GeneralGaussianRing, but where the asymmetry and flux orienation are fixed relative to one another.
+- `TIDAGaussianRing` The GeneralGaussianRing, but where the asymmetry and flux orientation are fixed relative to one another.
 - `AsymGaussian` A asymmetric Gaussian blob. This can be useful if you image has a strong non-ring component in it.
 - `Constant` Adds a constant flux floor to the image. This is very helpful for image reconstructions that tend to add small scale flux everywhere in the image.
 
 ### Divergences
 
-In order to extract features we first need a cost function that penalized our parameterized distributions ``f_\theta(x,y)``. Since we are considering the image as a probability distribution, one cost function would be the distance or **divergence** between two distributions. A probability divergence is just a functional that takes in two probability distributions p,q and is minimized iff ``p\equiv q``. 
+In order to extract features we first need a cost function that penalized our parameterized distributions ``f_\theta(x,y)``. Since we are considering the image as a probability distribution, one cost function would be the distance or **divergence** between two distributions. A probability divergence is just a functional that takes in two probability distributions p,q and is minimized iff ``p\equiv q``.
 
-Divergences are defined by the abstract type `AbstractDivergence`. Implementations of the this type are also expected to implement a functor that evaluates the divergence on some template. For an example see the implementation of the divergences in 
+Divergences are defined by the abstract type `AbstractDivergence`. Implementations of the this type are also expected to implement a functor that evaluates the divergence on some template.
 
 Currently we have two divergences implemented in `VIDA`
 
@@ -92,5 +92,3 @@ Currently we have two divergences implemented in `VIDA`
 ```
 
 Both divergences give very similar answers, although we found the Bh to be easier to maximize.
-
-

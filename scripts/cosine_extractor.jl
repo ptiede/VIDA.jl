@@ -152,7 +152,7 @@ function create_initial_df!(start_indx, fitsfiles, template, restart, out_name)
     nfiles = length(fitsfiles)
     if !restart
       #we want the keynames to match the model parameters
-      key_names = fieldnames(typeof(template))
+      key_names = propertynames(typeof(template))
       n = length(template.θ1.σ)
       m = length(template.θ1.s)
       key_names = [:r0,

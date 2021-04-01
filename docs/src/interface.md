@@ -51,7 +51,7 @@ Additionally any other function that dispatches on the template type should just
 
 ## Divergence `AbstractDivergence`
 
-In order to extract a feature you need to create a probability divergence function. Currently the divergences are defined using a AbstractDivergence type. Currently we have two divergences implemented [Bhattacharyya divergence (Bh)](https://en.wikipedia.org/wiki/Bhattacharyya_distance) and the [Kullback-Leiber divergence (KL)](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). In order to construct the divergence we first need to specify the `image` that we are trying to fit.
+In order to extract a feature you need to create a probability divergence function. Currently the divergences are defined using a AbstractDivergence type. Currently we have two divergences implemented [Bhattacharyya divergence (Bh)](https://en.wikipedia.org/wiki/Bhattacharyya_distance) and the [Kullback-Leibler divergence (KL)](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence). In order to construct the divergence we first need to specify the `image` that we are trying to fit.
 
 ```julia
 bh = Bhattacharyya(image) #make the Bh divergence
@@ -66,13 +66,12 @@ bh(θ::AbstractTemplate)
 
 and `bh` will use multiple dispatch to figure out which template function to use.
 
-
 ## Extract features `extractor` and `ExtractProblem` and `Optimizer`
 
 We then use the extractor function to extract the image feature. To call extractor you need to define a `ExtractProblem` type with the call
 
 ```julia
-prob = ExtractProblem(divergece, template, template_lower, template_upper)
+prob = ExtractProblem(divergence, template, template_lower, template_upper)
 ```
 
 where `divergence` is your probability divergence, `template` is the template function and `template_lower` and `template_upper` are the templates that represent the

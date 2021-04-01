@@ -101,7 +101,7 @@ function create_initial_df!(start_indx, times, restart, out_name)
     nfiles = length(times)
     if !restart
       #we want the keynames to match the model parameters
-      key_names = fieldnames(ImageTemplate)
+      key_names = propertynames(ImageTemplate)
       for i in 1:length(key_names)
         insertcols!(df, ncol(df)+1, Symbol(key_names[i]) => zeros(nfiles); makeunique=true)
       end

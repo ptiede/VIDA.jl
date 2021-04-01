@@ -16,8 +16,6 @@ Pages = ["function_index.md"]
 Pages = ["function_index.md"]
 ```
 
-
-
 ## Templates
 
 These are the various template types and helper functions.
@@ -25,6 +23,8 @@ These are the various template types and helper functions.
 ```@docs
 VIDA.AbstractTemplate
 VIDA.AbstractImageTemplate
+VIDA.AbstractModifierTemplate
+VIDA.AbstractCompositeTemplate
 ImageTemplate
 LogSpiral
 Constant
@@ -35,9 +35,15 @@ SlashedGaussianRing
 EllipticalGaussianRing
 TIDAGaussianRing
 GeneralGaussianRing
+SymCosineRing
 CosineRing
 AddTemplate
 MulTemplate
+StretchMod
+stretch
+RotateMod
+rotate
+stretchrotate
 Base.size(f::T) where {T<:AbstractTemplate}
 unpack
 stack
@@ -92,7 +98,6 @@ AbstractDivergence
 Bhattacharyya
 KullbackLeibler
 ```
-
 
 ## Extractor
 
