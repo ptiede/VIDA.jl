@@ -4,7 +4,7 @@ An abstact type that acts as a wrapper for image objects used in astronomy.
 This is the top of the castle for images and will be rarely touched. Basically
 unless you don't want to use fits images this will not be used
 """
-abstract type AbstractImage{F<:Number} end
+abstract type AbstractImage{F<:Number} <: AbstractMatrix{F} end
 
 
 """
@@ -15,6 +15,12 @@ The defines an interface to the FITS image methods below. In the future
 I may change this to use the traits interfaces.
 """
 abstract type AbstractFitsImage{F<:Number,T<:AbstractArray{F,2}} <: AbstractImage{F} end
+Base.IndexStyle(::Type{<:AbstractFitsImage{T,S}}) where {T,S} = Base.IndexStyle(S)
+Base.size(im::AbstractFitsImage) = size(im.img)
+Base.getindex(im::AbstractFitsImage, i::Int) = getindex(im.img, i)
+Base.setindex!(im::AbstractFitsImage, x, i::Int) = setindex!(im.img, x, i)
+
+
 
 @doc """
     $(TYPEDEF)
@@ -47,6 +53,65 @@ struct EHTImage{F,T<:AbstractArray{F,2}} <: AbstractFitsImage{F,T}
     img::T
 end
 
+function Base.similar(img::EHTImage, ::Type{T}) where{T}
+    sim = similar(img.img, T)
+    return EHTImage(img.nx, img.ny,
+                    img.psize_x, img.psize_y,
+                    img.source,
+                    img.ra, img.dec,
+                    img.wavelength, img.mjd,
+                    sim)
+end
+
+function Base.similar(img::EHTImage, ::Type{T}, dims::Dims) where {T}
+    fovx = img.psize_x*last(dims)
+    fovy = img.psize_y*first(dims)
+    sim = similar(img.img, T, dims)
+    return EHTImage(dims[2],dims[1],
+                    img.psize_x, img.psize_y,
+                    img.source,
+                    img.ra, img.dec,
+                    img.wavelength, img.mjd,
+                    sim)
+end
+
+struct FitsImageStyle <: Broadcast.AbstractArrayStyle{2} end
+FitsImageStyle(::Val{2}) = FitsImageStyle()
+
+Base.BroadcastStyle(::Type{<:AbstractFitsImage}) = FitsImageStyle()
+function Base.similar(bc::Broadcast.Broadcasted{FitsImageStyle}, ::Type{ElType}) where ElType
+    #Scan inputs for StokesImage
+    #print(bc.args)
+    img = _find_sim(bc)
+    #print(Im)
+    #fovxs = getproperty.(Ims, Ref(:fovx))
+    #fovys = getproperty.(Ims, Ref(:fovy))
+    #@assert all(i->i==first(fovxs), fovxs) "StokesImage fov must be equal to add"
+    #@assert all(i->i==first(fovys), fovys) "StokesImage fov must be equal to add"
+    return EHTImage(img.nx, img.ny,
+                    img.psize_x, img.psize_y,
+                    img.source,
+                    img.ra, img.dec,
+                    img.wavelength, img.mjd,
+                    similar(Array{ElType}, axes(bc)))
+end
+
+#Finds the first StokesImage and uses that as the base
+#TODO: If multiple StokesImages maybe I should make sure they are consistent?
+_find_sim(bc::Base.Broadcast.Broadcasted) = _find_sim(bc.args)
+_find_sim(args::Tuple) = _find_sim(_find_sim(args[1]), Base.tail(args))
+_find_sim(x) = x
+_find_sim(::Tuple{}) = nothing
+_find_sim(a::EHTImage, rest) = a
+_find_sim(::Any, rest) = _find_sim(rest)
+
+#Guards to prevent someone from adding two Images with different FOV's
+function Base.:+(x::AbstractFitsImage, y::AbstractFitsImage)
+    @assert field_of_view(x) == field_of_view(y) "EHTImage must share same field of view"
+    return x .+ y
+end
+
+
 
 
 @doc """
@@ -61,7 +126,7 @@ function image_interpolate(img::EHTImage, interp)
     fovx, fovy = field_of_view(img)
     x_itr = (fovx/2 - img.psize_x/2):-img.psize_x:(-fovx/2 + img.psize_x/2)
 	y_itr = (-fovy/2 + img.psize_y/2):img.psize_y:(fovy/2 - img.psize_y/2)
-    itp = interpolate(img.img[:,end:-1:1], interp)
+    itp = interpolate(img[:,end:-1:1], interp)
     etp = extrapolate(itp, 0)
     sitp = scale(etp, x_itr, y_itr)
     return sitp
@@ -95,21 +160,21 @@ There are two modes for image clipping:
     - `:relative` which zeros the pixels whose intensity are below `clip` relative to the max.
     - `:absolute` which zeros the pixels whose intensity is below `clip` in Jy/pixel
 """
-function clipimage(clip, im::EHTImage, mode=:relative)
-    image = im.img
+function clipimage(clip, image::EHTImage, mode=:relative)
+    cimg = copy(image)
+    return clipimage!(clip, cimg, mode)
+end
+
+function clipimage!(clip, image::EHTImage, mode=:relative)
     if mode == :absolute
-        image = map(x->clipvalue(clip,x), image)
+        map!(x->clipvalue(clip,x),image, image)
     elseif mode == :relative
         maxim = maximum(image)
-        image = map(x->clipvalue(clip*maxim,x), image)
+        map!(x->clipvalue(clip*maxim,x),image, image)
     else
         @assert false "clipimage: Mode must be one of :absolute or :relative where :absolute cuts on value and :relative on fraction of maximum intensity"
     end
-    return EHTImage(im.nx, im.ny,
-                    im.psize_x, im.psize_y,
-                    im.source, im.ra, im.dec,
-                    im.wavelength, im.mjd,
-                    image)
+    return image
 end
 
 
@@ -188,7 +253,13 @@ function load_fits(fits_name::String)
 
     close(f)
 
-    return EHTImage(nx, ny, psize_x, psize_y, source, ra, dec, C0/freq, mjd, image)
+    return EHTImage(nx, ny,
+                    psize_x, psize_y,
+                    source,
+                    ra, dec,
+                    C0/freq,
+                    mjd,
+                    image)
 end
 
 @doc  """
@@ -279,9 +350,9 @@ function centroid(img::EHTImage)
         @inbounds for j in 1:img.ny
             x = xstart - dx*(i-1)
             y = ystart + dy*(j-1)
-            xcent += x*img.img[j,i]
-            ycent += y*img.img[j,i]
-            inorm += img.img[j,i]
+            xcent += x*img[j,i]
+            ycent += y*img[j,i]
+            inorm += img[j,i]
         end
     end
     return xcent/inorm,ycent/inorm
@@ -311,10 +382,10 @@ function inertia(img::EHTImage, center=false)
         @inbounds for j in 1:img.ny
             x = xstart - dx*(i-1)
             y = ystart + dy*(j-1)
-            xx += x*x*img.img[j,i]
-            yy += y*y*img.img[j,i]
-            xy += x*y*img.img[j,i]
-            inorm += img.img[j,i]
+            xx += x*x*img[j,i]
+            yy += y*y*img[j,i]
+            xy += x*y*img[j,i]
+            inorm += img[j,i]
         end
     end
     if center
@@ -334,7 +405,7 @@ end
 Finds the image flux of an EHTImage `img`
 """
 function flux(img::EHTImage)
-    return sum(img.img)
+    return sum(img)
 end
 
 @doc """
@@ -394,26 +465,13 @@ function blur(img::EHTImage, fwhm)
     # gaussian kernel. I have to add one for the convolution to play nice
     nkern = Int(floor(σ_px)*10 + 1)
     # Note I tried to use IIRGaussian but it wasn't accurate enough for us.
-    bimg = imfilter(img.img,
+    bimg = imfilter(img,
                     gaussian((σ_px, σ_px),(nkern,nkern)),
-                    Fill(0.0, img.img),
+                    Fill(0.0, img),
                     FFT()
                 )
 
     #Now return the updated image
     #TODO can I find a way to do this without having to allocate a new image?
-    return EHTImage(img.nx, img.ny,
-                    img.psize_x, img.psize_y,
-                    img.source,
-                    img.ra, img.dec,
-                    img.wavelength, img.mjd,
-                    bimg)
+    return bimg
 end
-
-@doc """
-    size(img::EHTImage)
-Finds the size of the image, i.e. the number of pixels in the y and x directions
-
-Returns: (npix_y, npix_x)
-"""
-Base.size(img::EHTImage) = (img.ny, img.nx)
