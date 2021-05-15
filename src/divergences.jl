@@ -117,3 +117,35 @@ function (kl::KullbackLeibler)(θ::T) where {T<:AbstractTemplate}
     end
     return (klsum/template_norm - log(template_norm/flux))
 end
+
+
+
+struct LeastSquares{T,S,V} <: AbstractDivergence
+    img::T
+    flux::S
+    template::V
+end
+
+function LeastSquares(img::T) where {T<:EHTImage}
+    LeastSquares(img, flux(img), zeros(size(img)))
+end
+
+
+function (ls::LeastSquares)(θ::AbstractTemplate)
+    @unpack img, flux, template = ls
+    template_norm = zero(eltype(img.img))
+    xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
+    ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
+
+    @inbounds for i in 1:img.nx
+        @simd for j in 1:img.ny
+            x = xstart + img.psize_x*(i-1)
+            y = ystart + img.psize_y*(j-1)
+            template_value = θ(x,y)+1e-12
+            template[j,i] = template_value
+            template_norm += template_value
+        end
+    end
+
+    return sum(abs2, template./template_norm .- img./flux)
+end

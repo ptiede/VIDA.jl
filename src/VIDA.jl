@@ -28,11 +28,12 @@ using SpecialFunctions:erf
 
 export
     #make the divergences to use for optimization
-    Bhattacharyya, KullbackLeibler,
+    Bhattacharyya, KullbackLeibler, LeastSquares,
     #Templates
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
     SymCosineRing, CosineRing, Disk, ImageTemplate, LogSpiral,
+    DiffuseBack,
     stretch, rotate, stretchrotate,
     #Template helper functions
     stack,split,unpack,
