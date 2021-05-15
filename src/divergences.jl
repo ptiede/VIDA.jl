@@ -119,7 +119,24 @@ function (kl::KullbackLeibler)(θ::T) where {T<:AbstractTemplate}
 end
 
 
+"""
+    $(TYPEDEF)
+Type for the least squares divergence. It constructed from an `EHTImage` i.e. data.
+Additionally to evaluate the divergence we use a functor approach where if θ
+is your
+### Details
+This computes the squared 2 norm between your image and template, both of which
+are normalized to unit flux.
 
+To construct this just pass it an image object
+```julia
+ls = LeastSquares(img::EHTImage)
+```
+
+# Notes
+We have a template internal matrix the prevents internal allocations during computation
+This is a internal feature that the user does not need to worry about.
+"""
 struct LeastSquares{T,S,V} <: AbstractDivergence
     img::T
     flux::S
@@ -146,6 +163,6 @@ function (ls::LeastSquares)(θ::AbstractTemplate)
             template_norm += template_value
         end
     end
-
-    return sum(abs2, template./template_norm .- img./flux)
+    template .= template./template_norm .- img./flux
+    return sum(abs2, template)
 end

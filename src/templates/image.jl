@@ -378,7 +378,29 @@ Base.size(::Type{GaussianRing}) = 4
 end
 
 
+"""
+    ($TYPEDEF)
+Diffuse background template. This consists of a number of Gaussians at
+fixed grid locations based on the field of view passed during construction.
 
+There are two ways to construct a DiffuseBack template
+```julia
+fovx,fovy = 80.0, 90.0
+θ = DiffuseBack(10.0, zeros(6,6), fovx, fovy)
+```
+which construct a 6x6 Gaussian grid over a field of view given by fovx and fovy.
+
+The other way build the fovx based off of an EHTImage object
+```julia
+θ = DiffuseBack(10.0, zeros(6,6), img)
+```
+This construct the background to match the field of view of the image object.
+
+# Internals
+The Px and Py parameters in the struct are the pixel sizes in the x and y direction,
+and passed through constant propogation thanks to Julia.
+
+"""
 @with_kw struct DiffuseBack{N,M,Px,Py} <: AbstractImageTemplate
     width::Float64
     intensities::Matrix{Float64}
