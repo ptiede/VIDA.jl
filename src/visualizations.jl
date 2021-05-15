@@ -247,7 +247,7 @@ center of light.
         linewidth := 1
         aspect_ratio := 1
         annotations := [(startx-size/2,starty-4, "40 μas", font(10, color=:white)),
-                        (startx-size/4, -starty+4, "Template", font(10, color=:white))]
+                        (startx-size/4-2.5, -starty+4, "Template", font(10, color=:white))]
         fontcolor := :white
         xlims = (-fovx/2,fovx/2)
         ylims = (-fovy/2,fovy/2)

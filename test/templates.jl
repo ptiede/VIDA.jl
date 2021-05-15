@@ -231,6 +231,14 @@ end
     @test θ1(x0,y0) + θ2(x0,y0) == θs(x0,y0)
 end
 
+@testset "TemplateDiffuseBack" begin
+    θ = GaussianRing(r0, σ, x0, y0)
+    θB = DiffuseBack(10.0, zeros(3,3), 80.0, 80.0)
+    img = VIDA.make_image(θ+θB, 64, (-40.0,40.0), (-40.0,40.0))
+    DiffuseBack(10.0, zeros(3,3), img)
+
+end
+
 @testset "TemplateMods" begin
     θ = SlashedGaussianRing(r0, σ, s, ξs, -20.0, 10.0)
     θ0 = SlashedGaussianRing(r0, σ, s, 0.0,-20.0, 10.0)

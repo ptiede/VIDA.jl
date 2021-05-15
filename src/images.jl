@@ -427,22 +427,20 @@ end
  - ylim : Tuple with the limits of the image in DEC in μas
 """
 function rescale(img::EHTImage, npix, xlim, ylim)
-    fovx, fovy = field_of_view(img)
-    x_itr = (fovx/2 - img.psize_x/2):-img.psize_x:(-fovx/2 + img.psize_x/2)
-	y_itr = (-fovy/2 + img.psize_y/2):img.psize_y:(fovy/2 - img.psize_y/2)
-	itp = interpolate(img.img, BSpline(Cubic(Line(OnGrid()))))
-	etp = extrapolate(itp, 0)
-	sitp = scale(etp, x_itr, y_itr)
+    x_itr,y_itr = pixelloc(img)
+    itp = interpolate(img.img/(-step(x_itr)*step(y_itr)), BSpline(Cubic(Line(OnGrid()))))
+	sitp = scale(itp, reverse(x_itr), y_itr)
+    etp = extrapolate(sitp, 0)
 
     #Create grid for new image
     fovy_new = (ylim[2]-ylim[1])
-    psize_y = fovy_new/npix
+    psize_y = fovy_new/(npix)
     fovx_new = (xlim[2]-xlim[1])
-    psize_x = fovx_new/npix
+    psize_x = fovx_new/(npix)
     x_itr_new = (fovx_new/2 - psize_x/2):-psize_x:(-fovx_new/2 + psize_x/2)
     y_itr_new = (-fovy_new/2 + psize_y/2):psize_y:(fovy_new/2 - psize_y/2)
     #Create new image
-    img_new = sitp(reverse(x_itr_new), y_itr_new)
+    img_new = etp(reverse(x_itr_new), y_itr_new)*psize_x*psize_y
     return EHTImage(npix, npix, -psize_x, psize_y, img.source, img.ra, img.dec,
                     img.wavelength, img.mjd, img_new)
 end

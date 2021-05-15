@@ -26,6 +26,8 @@ y-direction by sqrt(1-τ). Typically call the stretch function instead.
 end
 
 
+
+
 function imagecenter(θ::AbstractModifierTemplate)
     return imagecenter(basetemplate(θ))
 end

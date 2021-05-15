@@ -378,6 +378,69 @@ Base.size(::Type{GaussianRing}) = 4
 end
 
 
+
+@with_kw struct DiffuseBack{N,M,Px,Py} <: AbstractImageTemplate
+    width::Float64
+    intensities::Matrix{Float64}
+end
+
+function DiffuseBack(width, intensity::Matrix{Float64}, fovx, fovy)
+    N,M = size(intensity)
+    dx = abs(fovx/max(M-1,1))
+    dy = fovy/max(N-1,1)
+    return DiffuseBack{N,M,dx,dy}(width, intensity)
+end
+
+function DiffuseBack(width, intensity::Matrix{Float64}, img::EHTImage)
+    fovx,fovy = field_of_view(img)
+    N,M = size(intensity)
+    dx = abs(fovx/max(M-1,1))
+    dy = fovy/max(N-1,1)
+    return DiffuseBack{N,M,dx,dy}(width, intensity)
+end
+Base.size(::Type{DiffuseBack{N,M,dx,dy}}) where {N,M,dx,dy} = N*M+1
+
+
+function DiffuseBack{N,M,Px,Py}(p) where {N,M,Px,Py}
+    return DiffuseBack{N,M,Px,Py}(p[1],reshape(@view(p[2:end]),N,M))
+end
+
+function _update(θ::DiffuseBack{N,M,dx,dy}, p) where {N,M,dx,dy}
+    w = first(p)
+    impix = @view p[2:end]
+    DiffuseBack{N,M,dx,dy}(w, reshape(impix, N, M))
+end
+
+@inline function (θ::DiffuseBack{N,M,Px,Py})(x,y) where {N,M,Px,Py}
+    sum = zero(eltype(θ.intensities))
+    width = θ.width
+    intensities = θ.intensities
+    xstart = (-M*Px + Px)/2.0
+    ystart = (-N*Py + Py)/2.0
+
+    for i in 1:M
+        for j in 1:N
+            x0 = xstart + Px*(i-1)
+            y0 = ystart + Py*(j-1)
+            dr = (x-x0)^2 + (y-y0)^2
+            sum += exp(-dr/(2*width^2))*intensities[j,i]
+        end
+    end
+    return sum
+end
+
+function unpack(θ::DiffuseBack{N,M,Px,Py}) where {N,M,Px,Py}
+    p = zeros(N*M+1)
+    p[1] = θ.width
+    p[2:end] = θ.intensities
+    return p
+end
+
+
+
+
+
+
 @doc """
     $(TYPEDEF)
 Implements the slashed gaussian ring template, that uses a cosine
