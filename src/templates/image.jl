@@ -58,7 +58,7 @@ additional terms.
     end
 end
 @doc """
-    CosineRing{N,M}(p::AbstractArray) where {N,M}
+    SymCosineRing{N,M}(p::AbstractArray) where {N,M}
 Takes in a vector of paramters describing the template.
 # Details
 The order of the vector must be
@@ -141,9 +141,9 @@ $(FIELDS)
     """ y location of disk center in μas """
     y0::T
 end
-function LogSpiral(p::Vector{T}) where {T<:Real}
+function LogSpiral{T}(p) where {T}
     @assert length(p) == 7
-    LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
+    LogSpiral{Float64}(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
 Base.size(::Type{LogSpiral{T}}) where {T} = 7
 
@@ -408,7 +408,7 @@ end
 
 function DiffuseBack(width, intensity::Matrix{Float64}, fovx, fovy)
     N,M = size(intensity)
-    dx = abs(fovx/max(M-1,1))
+    dx = fovx/max(M-1,1)
     dy = fovy/max(N-1,1)
     return DiffuseBack{N,M,dx,dy}(width, intensity)
 end
@@ -440,15 +440,13 @@ end
     xstart = (-M*Px + Px)/2.0
     ystart = (-N*Py + Py)/2.0
 
-    for i in 1:M
-        for j in 1:N
+    @inbounds for i in 1:M, j in 1:N
             x0 = xstart + Px*(i-1)
             y0 = ystart + Py*(j-1)
             dr = (x-x0)^2 + (y-y0)^2
             sum += exp(-dr/(2*width^2))*intensities[j,i]
-        end
     end
-    return sum
+    return sum/width
 end
 
 function unpack(θ::DiffuseBack{N,M,Px,Py}) where {N,M,Px,Py}
@@ -792,12 +790,12 @@ Base.size(::Type{CosineRing{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
 
     #construct the slash
     n = one(θ.r0)
-    for i in 1:M
+    @inbounds for i in 1:M
         n -= θ.s[i]*cos(i*(ϕ - θ.ξs[i]))
     end
 
     σ = θ.σ[1]
-    for i in 1:N
+    @inbounds for i in 1:N
         σ += θ.σ[i+1]*cos(i*(ϕ - θ.ξσ[i]))
     end
 

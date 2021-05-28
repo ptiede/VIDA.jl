@@ -53,7 +53,7 @@ function (bh::Bhattacharyya)(θ::T) where {T<:AbstractTemplate}
     xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
     ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
     for i in 1:img.nx
-        for j in 1:img.ny
+        @simd for j in 1:img.ny
             x = xstart + img.psize_x*(i-1)
             y = ystart + img.psize_y*(j-1)
             template_value = abs(θ(x,y))
