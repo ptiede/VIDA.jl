@@ -113,7 +113,6 @@ end
 
 
 
-
 @doc """
     $(SIGNATURES)
 Creates an image interpolation functor from an `img` and

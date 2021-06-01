@@ -143,8 +143,14 @@ $(FIELDS)
 end
 function LogSpiral{T}(p) where {T}
     @assert length(p) == 7
-    LogSpiral{Float64}(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
+    LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
 end
+
+function LogSpiral(p::AbstractVector{T}) where {T}
+    @assert length(p) == 7
+    LogSpiral{T}(p[1],p[2],p[3],p[4],p[5],p[6],p[7])
+end
+
 Base.size(::Type{LogSpiral{T}}) where {T} = 7
 
 

@@ -19,7 +19,6 @@ using HDF5
 using ImageFiltering: imfilter, Kernel.gaussian, Fill, Algorithm.FFT
 using Interpolations
 using LaTeXStrings
-using LoopVectorization: @avx
 using Optim
 using Parameters
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
