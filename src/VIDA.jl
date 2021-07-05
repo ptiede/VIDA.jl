@@ -32,7 +32,7 @@ export
     #Templates
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    SymCosineRing, CosineRing, Disk, ImageTemplate, LogSpiral,
+    SymCosineRing, SymCosineRingwFloor, CosineRing, Disk, ImageTemplate, LogSpiral,
     DiffuseBack,
     stretch, rotate, stretchrotate,
     #Template helper functions
