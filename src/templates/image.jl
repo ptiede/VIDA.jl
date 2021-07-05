@@ -208,7 +208,7 @@ Base.size(::Type{SymCosineRingwFloor{N,M}}) where {N, M} = 4 + N+1 + N + 2*M
         floor = θ.floor*exp(-(r- θ.r0)^2/(2.0*θ.σ[1]^2))
     end
 
-    return abs(n)*exp(-dr2/(2.0*σ^2+1e-2))*(1-floor) + floor
+    return abs(n)*exp(-dr2/(2.0*σ^2+1e-2)) + floor
 end
 
 function unpack(θ::SymCosineRingwFloor{N,M}) where {N,M}
