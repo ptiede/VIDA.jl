@@ -6,8 +6,6 @@
 [![Coverage](https://codecov.io/gh/ptiede/VIDA.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ptiede/VIDA.jl)
 
 
-**Warning v0.9 features a breaking change for all scripts. If upgrading from a previous version your scripts WILL break**
-
 `VIDA.jl` or the *Variational Image Domain Analysis* provides a interface to extracting features from fits images created for the EHT, using the notion of probability divergences similar to variational inference, hence the name. The currently implemented divergences are the Bhattacharyya distance/divergence as well as the Kullback-Leibler divergence. These are used to extract ring-like features from image reconstructions of black holes such as from M87. 
 
 For more information on how to use VIDA please refer to the [documentation](https://ptiede.github.io/VIDA.jl/stable)
