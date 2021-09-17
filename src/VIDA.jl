@@ -28,7 +28,7 @@ using SpecialFunctions:erf
 
 export
     #make the divergences to use for optimization
-    Bhattacharyya, KullbackLeibler, LeastSquares,
+    Bhattacharyya, KullbackLeibler, LeastSquares,Renyi,
     #Templates
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
     TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
@@ -38,7 +38,7 @@ export
     #Template helper functions
     stack,split,unpack,
     #Image functions
-    EHTImage, load_ehtimfits, load_fits, clipimage, save_fits,
+    EHTImage, load_fits, clipimage, save_fits,
     flux, centroid, inertia, rescale_image, pixelloc,
     rescale, blur,
     #Movie functions
