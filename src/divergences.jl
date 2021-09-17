@@ -118,6 +118,68 @@ function (kl::KullbackLeibler)(θ::T) where {T<:AbstractTemplate}
     return (klsum/template_norm - log(template_norm/flux))
 end
 
+struct Renyi{T,S} <: AbstractDivergence
+    """
+    Abstract image class
+    """
+    img::T
+    flux::S
+    α::Float64
+end
+
+"""
+    Renyi(img::EHTImage, α)
+Construct the Renyi divergence with parameter α. It constructed from an `EHTImage` i.e. data.
+
+### Details
+This computes the KL divergence which is related to Hellinger distance between
+two distributions. In fact, they are both minimized at the same point. The Bhattacharyya
+divergence is defined as
+
+```math
+Ry(f_\\theta||\\hat{I}) = \\frac{1}{α-1}\\log\\int log
+        \\left(\\frac{f_{\\theta}(x,y)^\\alpha}{\\hat{I}(x,y)^{\\alpha-1}}\\right)dxdy,
+```
+where ``\\hat{I}`` is defined as the image normalized to unit flux.
+
+This is a very flexible divergence that reduces to many of the other divergences implemented.
+ - `α = 1` corresponds to the KL divergence
+ - `α = 1/2` corresponds to the Bhattacharyya divergence up to a multiplicative factor of 2
+
+Typically we find that `α=1.5` works well, as it focusses on the bright regions of the images
+moreso than the Bh and KL divergence. For `α>2` the measure tends to devolve in something
+akin the to sup norm and fails to match the image structure.
+"""
+function Renyi(img::T, α) where {T<:EHTImage}
+    @assert !(α-1 ≈ 0) "α=1 is the KL divergence use that instead"
+    f = flux(img)
+    Renyi{T,typeof(f)}(img, f, α)
+end
+
+function (div::Renyi)(θ::AbstractTemplate)
+    @unpack img, flux, α = div
+    dsum = zero(eltype(img.img))
+    template_norm = zero(eltype(img.img))
+    xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
+    ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
+
+    @inbounds for i in 1:img.nx
+        @simd for j in 1:img.ny
+            x = xstart + img.psize_x*(i-1)
+            y = ystart + img.psize_y*(j-1)
+            template_value = θ(x,y)+1e-12
+            imI = img.img[j,i] + eps(eltype(img.img))
+            dsum += imI*(template_value/imI)^α
+            template_norm += template_value
+        end
+    end
+    return inv(α-1)*log(dsum*(flux/template_norm)^α/flux)
+
+
+end
+
+
+
 
 """
     $(TYPEDEF)
