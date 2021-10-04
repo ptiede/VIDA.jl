@@ -207,6 +207,44 @@ end
 end
 
 
+@testset "TemplateSymCosineRingwGFloor" begin
+    θg = SlashedGaussianRing(r0,σ, s, ξs, x0, y0)
+    θsg = SymCosineRingwGFloor{0,1}([r0, σ, s, ξs, 0.0, 30.0, x0, y0])
+    _,_,fimg_g = VIDA.template_image(θg, 64, xlim, ylim)
+    _,_,fimg_sg = VIDA.template_image(θsg, 64, xlim, ylim)
+    @test sum(fimg_g/sum(fimg_g) - fimg_sg/sum(fimg_sg)) < 1e-8
+    θ = SymCosineRingwGFloor{N-1,M}(r0,
+                        [σ, σ_1],
+                        [ξσ],
+                        [s,s_1,s_2],
+                        [ξs, ξs_1, ξs_2],
+                        0.1, 30.0,
+                        x0, y0)
+    θ1 = SymCosineRingwGFloor{N-1,M}(r0=r0,
+                        σ=[σ, σ_1],
+                        ξσ=[ξσ],
+                        s=[s,s_1,s_2],
+                        ξs = [ξs, ξs_1, ξs_2],
+                        floor = 0.1, σg=30.0,
+                        x0=x0, y0=y0)
+    θ2 = SymCosineRingwGFloor{N-1,M}([r0,
+                         σ, σ_1,
+                         ξσ,
+                         s,s_1,s_2,
+                         ξs, ξs_1, ξs_2,
+                         0.1, 30.0,
+                         x0, y0])
+    @inferred θ2(1.0, 1.0)
+    @test VIDA.size(typeof(θ)) == length(unpack(θ))
+    @test unpack(θ) == unpack(θ1)
+    @test unpack(θ1) == unpack(θ2)
+    #fimg = VIDA.template_image(θ,npix,xlim,ylim)
+    #@test (abs(sum(fimg[3])*step(fimg[1])*step(fimg[2]))-730.1726987113645) < ϵ
+    #@test length(propertynames(GeneralGaussianRing)) == VIDA.size(GeneralGaussianRing)
+end
+
+
+
 @testset "TemplateCosineRing" begin
     θg = GeneralGaussianRing(r0,σ,τ, ξτ, s, ξs, x0, y0)
     θsg = CosineRing{0,1}([r0, σ, τ, ξτ, s, ξs, x0, y0])

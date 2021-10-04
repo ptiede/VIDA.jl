@@ -229,6 +229,119 @@ function unpack(θ::SymCosineRingwFloor{N,M}) where {N,M}
 end
 
 
+
+@doc """
+    $(TYPEDEF)
+Extrememly flexible symmetric ring model. The thickness is modeled as a cosine
+expansion with `N` terms and the slash by a expansion with `M` terms.
+This also adds a central floor to the model.
+
+# Details
+The ring is forced to be symmetric for a significant speed boost over CosineRing.
+The thickness of the ring is modeled by a cosine expansion in azimuthal
+angle. `N` specifies the number of cosine modes to fit, where the first
+mode is the constant thickness portion and so has no corresponding angle.
+The slash is modeled as a separate cosine expansion, with `M` terms.
+Here the zero order term is forced to be unity, so `M` defines the `M`
+additional terms.
+
+"""
+@with_kw struct SymCosineRingwGFloor{N,M} <: AbstractImageTemplate
+    """Radius of the Gaussian ring"""
+    r0::Float64
+    """Standard deviations (length N+1) of the width of the Gaussian ring"""
+    σ::Vector{Float64}
+    """Orientations of the cosine expansion width (length N)"""
+    ξσ::Vector{Float64}
+    """Slash of Gaussian ring (length M)."""
+    s::Vector{Float64}
+    """Slash orientations (length M) in radians measured north of east"""
+    ξs::Vector{Float64}
+    """Central floor flux"""
+    floor::Float64
+    """σ of Gaussian floor"""
+    σg::Float64
+    """x position of the center of the ring in μas"""
+    x0::Float64
+    """y position of the center of the ring in μas"""
+    y0::Float64
+    function SymCosineRingwGFloor{N,M}(r0,σ, ξσ, s, ξs,floor, σg, x0, y0) where {N, M}
+        #@assert N isa Integer
+        #@assert M isa Integer
+        new{N,M}(float(r0),σ, ξσ, s, ξs, float(floor), float(σg), float(x0),float(y0))
+    end
+end
+
+@doc """
+    SymCosineRingwGFloor{N,M}(p::AbstractArray) where {N,M}
+Takes in a vector of paramters describing the template.
+# Details
+The order of the vector must be
+ - p[1] = `r0`
+ - p[2:(N+1)] = `σ`
+ - p[(N+2):(2N)] = `ξσ`
+ - p[2N+1] = `τ`
+ - p[2N+2] = `ξτ`
+ - p[2N+3:2N+M+2] = `s`
+ - p[2N+3+M:2N+2+2M] = `ξs`
+ - p[2N+3+2M] = `floor`
+ - p[2N+4+2M] = `σg`
+ - p[2N+5+2M] = `x0`
+ - p[2N+6+2M] = `y0`
+"""
+function SymCosineRingwGFloor{N,M}(p::AbstractArray) where {N,M}
+    #@assert length(p) == size(CosineRing{N,M})
+    SymCosineRingwGFloor{N,M}(p[1], p[2:(N+2)],
+                    p[(N+3):(2N+2)],
+                    p[2N+3:2N+2+M], p[2N+3+M:2N+2+2M],
+                    p[2N+3+2M], p[2N+4+2M],
+                    p[2N+5+2M], p[2N+6+2M]
+    )
+end
+Base.size(::Type{SymCosineRingwGFloor{N,M}}) where {N, M} = 5 + N+1 + N + 2*M
+
+@inline function (θ::SymCosineRingwGFloor{N,M})(x,y) where {N, M}
+    ex = x-θ.x0
+    ey = y-θ.y0
+    ϕ = atan(-ey,-ex)
+    r = sqrt(ex^2 + ey^2)
+    dr2 = (r-θ.r0)^2
+    #construct the slash
+    n = one(θ.r0)
+    @inbounds for i in 1:M
+        n -= θ.s[i]*cos(i*(ϕ - θ.ξs[i]))
+    end
+
+    σ = θ.σ[1]
+    @inbounds for i in 1:N
+        σ += θ.σ[i+1]*cos(i*(ϕ - θ.ξσ[i]))
+    end
+
+    floor = θ.floor*exp(-(ex^2+ey^2)/(2.0*θ.σg^2))
+
+    return abs(n)*exp(-dr2/(2.0*σ^2+1e-2)) + floor
+end
+
+function unpack(θ::SymCosineRingwGFloor{N,M}) where {N,M}
+    n = Base.size(typeof(θ))
+    p = zeros(n)
+    p[1] = θ.r0
+    p[2:(N+2)] = θ.σ
+    if N>0
+        p[(N+3):(2N+2)] = θ.ξσ
+    end
+    p[2N+3:2N+2+M] = θ.s
+    p[2N+3+M:2N+2+2M] = θ.ξs
+    p[2N+3+2M] = θ.floor
+    p[2N+4+2M] = θ.σg
+    p[2N+5+2M] = θ.x0
+    p[2N+6+2M] = θ.y0
+
+    return p
+end
+
+
+
 @doc """
     $(SIGNATURES)
 Template type for a logarithmic spiral segment
