@@ -39,7 +39,7 @@ export
     #Template helper functions
     stack,split,unpack,
     #Image functions
-    EHTImage, load_fits, clipimage, save_fits,
+    EHTImage, load_image, load_fits, clipimage, save_fits,
     flux, centroid, inertia, rescale_image, pixelloc,
     rescale, blur,
     #Movie functions
@@ -58,6 +58,8 @@ const KB = 1.38064852e-23
 include("images.jl")
 #Load the movies
 include("movies.jl")
+#io stuff
+include("io.jl")
 #Load the visualization stuff
 include("templates/templates.jl")
 #Load the divergence functions

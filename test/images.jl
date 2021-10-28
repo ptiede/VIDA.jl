@@ -4,6 +4,7 @@ include("common.jl")
 
 @testset "ReadWriteImage" begin
     img = VIDA.load_fits("../example/data/example_image.fits")
+    _ = VIDA.load_image("../example/data/example_image.fits")
     xcent,ycent = centroid(img)
     @test xcent == -1.7307380406643236
     @test ycent == 0.5182951434801205
