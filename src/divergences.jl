@@ -36,7 +36,7 @@ Bh(f_\\theta||\\hat{I}) = -\\log\\int \\sqrt{f_\\theta(x,y)\\hat{I}(x,y)}dxdy,
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 """
-struct Bhattacharyya{T<:EHTImage,S} <: AbstractDivergence
+struct Bhattacharyya{T<:AbstractIntensityMap,S} <: AbstractDivergence
     """
     Abstract image class
     """

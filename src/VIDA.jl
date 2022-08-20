@@ -11,6 +11,7 @@ module VIDA
 
 
 using BlackBoxOptim
+import ComradeBase as CB
 using CMAEvolutionStrategy
 using DataFrames
 using DocStringExtensions

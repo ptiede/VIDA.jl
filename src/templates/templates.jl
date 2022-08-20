@@ -5,7 +5,15 @@
     $(TYPEDEF)
 An abstract type that defines super template type.
 """
-abstract type AbstractTemplate end
+abstract type AbstractTemplate <: CB.AbstractModel end
+
+# Hook into ComradeBase interface
+CB.visanalytic(::Type{<:AbstractTemplate}) = CB.NotAnalytic()
+CB.imanalytic(::Type{<:AbstractTemplate}) = CB.IsAnalytic()
+CB.isprimitive(::Type{<:AbstractTemplate}) = CB.IsPrimitive()
+
+CB.flux(::AbstractTemplate) = 1.0
+
 
 """
     size(f::AbstractTemplate)
