@@ -16,7 +16,7 @@ end
 
 
 @inline function imagecenter(θ::AbstractImageTemplate)
-    return θ.x0, θ.y0
+    return 0.0, 0.0
 end
 
 
@@ -36,45 +36,32 @@ Here the zero order term is forced to be unity, so `M` defines the `M`
 additional terms.
 
 """
-@with_kw struct SymCosineRing{N,M} <: AbstractImageTemplate
-    """Radius of the Gaussian ring"""
-    r0::Float64
+@with_kw struct SymCosineRing{N,M,T,V1,V2,V3,V4} <: AbstractImageTemplate
     """Standard deviations (length N+1) of the width of the Gaussian ring"""
-    σ::Vector{Float64}
+    σ::V1
     """Orientations of the cosine expansion width (length N)"""
-    ξσ::Vector{Float64}
+    ξσ::V2
     """Slash of Gaussian ring (length M)."""
-    s::Vector{Float64}
+    s::V3
     """Slash orientations (length M) in radians measured north of east"""
-    ξs::Vector{Float64}
-    """x position of the center of the ring in μas"""
-    x0::Float64
-    """y position of the center of the ring in μas"""
-    y0::Float64
-    function SymCosineRing{N,M}(r0,σ, ξσ, s, ξs,x0,y0) where {N, M}
-        #@assert N isa Integer
-        #@assert M isa Integer
-        new{N,M}(float(r0),σ, ξσ, s, ξs,float(x0),float(y0))
-    end
+    ξs::V4
 end
+
 @doc """
     SymCosineRing{N,M}(p::AbstractArray) where {N,M}
 Takes in a vector of paramters describing the template.
 # Details
 The order of the vector must be
- - p[1] = `r0`
- - p[2:(N+1)] = `σ`
- - p[(N+2):(2N)] = `ξσ`
+ - p[1:N] = `σ`
+ - p[(N+1):(2N)] = `ξσ`
  - p[2N+1] = `τ`
  - p[2N+2] = `ξτ`
  - p[2N+3:2N+M+2] = `s`
  - p[2N+3+M:2N+2+2M] = `ξs`
- - p[2N+3+2M] = `x0`
- - p[2N+4+2M] = `y0`
 """
 function SymCosineRing{N,M}(p::AbstractArray) where {N,M}
     #@assert length(p) == size(CosineRing{N,M})
-    SymCosineRing{N,M}(p[1], p[2:(N+2)],
+    SymCosineRing{N,M}(p[1:N],
                     p[(N+3):(2N+2)],
                     p[2N+3:2N+2+M], p[2N+3+M:2N+2+2M],
                     p[2N+3+2M], p[2N+4+2M]
