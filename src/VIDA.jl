@@ -26,6 +26,8 @@ using RecipesBase
 using Requires
 using SpecialFunctions:erf
 
+import DataFrames: stack  # ensure two exports don't clash; also exported by Base julia 1.9.
+
 export
     #make the divergences to use for optimization
     Bhattacharyya, KullbackLeibler, LeastSquares,Renyi,
