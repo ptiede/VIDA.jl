@@ -1,7 +1,7 @@
 using Test,VIDA
 using LinearAlgebra
 using Interpolations: Lanczos
-include("common.jl")
+include(joinpath(@__DIR__, "common.jl"))
 
 
 @testset "TemplateAsymGaussian" begin
