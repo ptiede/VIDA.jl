@@ -433,7 +433,7 @@ end
 function (θ::ImageTemplate)(x,y)
     @unpack x0, y0 = θ
     itp = getfield(θ, :itp)
-    return itp(x-x0, y-y0)
+    return itp(y-y0, -(x-x0))
 end
 
 function _update(θ::ImageTemplate, p)

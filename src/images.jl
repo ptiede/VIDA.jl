@@ -128,7 +128,7 @@ function image_interpolate(img::EHTImage, interp=BSpline(Cubic(Line(OnGrid()))))
     itp = interpolate(img./(abs(img.psize_x)*abs(img.psize_y)), interp)
     etp = extrapolate(itp, 0)
     sitp = scale(etp, y_itr, x_itr)
-    return (x,y)->sitp(y,x)
+    return sitp
 end
 
 @doc """

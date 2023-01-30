@@ -22,6 +22,14 @@ end
     ra,dec = pixelloc(img)
 end
 
+@testset "ImageModifiers Asymmetric" begin
+    img = VIDA.load_fits("../example/data/asymetric_image.fits")
+    cimg = clipimage(0.1, img)
+    cimg = clipimage(0.0, img, :absolute)
+    rescale(img, npix, xlim, ylim)
+    ra,dec = pixelloc(img)
+end
+
 @testset "BlurImages" begin
     filt = AsymGaussian(σ=σ, τ=0.0, ξ=0.0, x0=0.0, y0=0.0)
     img = VIDA.make_image(filt, 1024, [-100.0, 100.0], [-100.0, 100.0])
