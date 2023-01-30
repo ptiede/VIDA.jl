@@ -5,7 +5,6 @@ if haskey(ENV, "GITHUB_ACTIONS")
 end
 
 
-Documenter.post_status(; type="pending", repo="github.com/ptiede/VIDA.jl.git")
 using VIDA
 using Plots
 using Literate

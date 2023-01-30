@@ -67,7 +67,6 @@ pixelloc
 flux(::EHTImage)
 rescale(::EHTImage, ::Any, ::Any, ::Any)
 blur(::EHTImage, ::Any)
-Base.size(img::EHTImage)
 clipimage
 field_of_view
 ```

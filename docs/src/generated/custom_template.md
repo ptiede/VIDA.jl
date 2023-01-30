@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/example/custom_template.jl"
+EditURL = "<unknown>/../example/custom_template.jl"
 ```
 
 # Adding a Custom Template
@@ -11,7 +11,7 @@ If you want to add your own template you just need to define a new:
 
 For example to add a symmetric gaussian template we can use:
 
-```@example custom_template
+````@example custom_template
 using VIDA
 
 Base.@kwdef struct SymGaussian <: VIDA.AbstractImageTemplate
@@ -28,32 +28,32 @@ function (θ::SymGaussian)(x,y)
   z2 = ((x-θ.x0)^2 + (y-θ.y0)^2)/(2.0*θ.σ^2)
   return 1.0/(2.0*π*θ.σ^2)*exp(-z2)
 end
-```
+````
 
 Then you can simply call the same optimizing functions and
 plotting functions. For example lets create a fake image and fit it
 
-```@example custom_template
+````@example custom_template
 template = SymGaussian(σ=20.0, x0=0.0, y0=0.0)
-```
+````
 
 Now I will use a utility function to convert a template to an EHTImage
 
-```@example custom_template
+````@example custom_template
 img = VIDA.make_image(template, 64, (-60.0,60.0), (-60.0,60.0));
 nothing #hide
-```
+````
 
 Now lets see if we can get the correct parameters
 
-```@example custom_template
+````@example custom_template
 bh = Bhattacharyya(img);
 nothing #hide
-```
+````
 
 Define the starting point for the optimization and the bounds
 
-```@example custom_template
+````@example custom_template
 start = SymGaussian(rand(3))
 upper = SymGaussian(σ=40.0, x0=60.0, y0=60.0)
 lower = SymGaussian(σ=0.001, x0=-60.0, y0=-60.0)
@@ -63,13 +63,13 @@ prob = ExtractProblem(bh, start, lower, upper)
 θopt, divmin = extractor(prob, CMAES())
 
 @show θopt
-```
+````
 
 Let's also plot the results
 
-```@example custom_template
+````@example custom_template
 triptic(img, template)
-```
+````
 
 ---
 
