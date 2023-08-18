@@ -15,20 +15,8 @@ CB.isprimitive(::Type{<:AbstractTemplate}) = CB.IsPrimitive()
 CB.flux(::AbstractTemplate) = 1.0
 
 
-"""
-    size(f::AbstractTemplate)
-Get the number of parameters for the template f
-"""
-Base.size(f::T) where {T<:AbstractTemplate} = Base.size(T)
-
-
-# Updates the paramters for a given template even though they are immutable
-function _update(θ::AbstractTemplate, p)
-    return typeof(θ)(p)
-end
-
 #Load the variety of utils needed
-include(joinpath(@__DIR__, "utils.jl"))
+# include(joinpath(@__DIR__, "utils.jl"))
 
 
 """
@@ -63,20 +51,8 @@ Base.size(::Type{Gaussian}) = 3
 ```
 """
 abstract type AbstractImageTemplate <: AbstractTemplate end
+@inline function (θ::AbstractImageTemplate)(x,y)
+    return CB.intensity_point(θ, (X=x, Y=y))
+end
+
 include(joinpath(@__DIR__, "image.jl"))
-
-"""
-    $(TYPEDEF)
-Meta-template that accepts a abstract template and modifies it through
-some analytic transformation. This is useful for model composability.
-"""
-abstract type AbstractModifierTemplate <: AbstractTemplate end
-include(joinpath(@__DIR__, "modifiers.jl"))
-
-"""
-    $(TYPEDEF)
-Abstract type for taking two templates composing them in some manner
-and returning a new template.
-"""
-abstract type AbstractCompositeTemplate <: AbstractTemplate end
-include(joinpath(@__DIR__,"composite.jl"))

@@ -33,7 +33,7 @@ with [`get_image(vida_movie, time)`](@ref).
 """
 function VIDAMovie(
     mov::IntensityMap{T, 3}
-    ) where {F,T<:SpatialIntensityMap{F,3}}
+    ) where {T<:Real}
     #Create the interpolation object for the movie
     #This does not need equal times
     @assert propertynames(mov) == (:X, :Y, :T) "Array must have dimension X, Y, T"
