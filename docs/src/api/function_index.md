@@ -65,7 +65,7 @@ centroid
 inertia
 pixelloc
 flux(::EHTImage)
-rescale(::EHTImage, ::Any, ::Any, ::Any)
+regrid(::EHTImage, ::Any, ::Any, ::Any)
 blur(::EHTImage, ::Any)
 Base.size(img::EHTImage)
 clipimage
@@ -88,7 +88,7 @@ get_frames
 get_image
 flux(::EHTMovie, ::Any)
 blur(::EHTMovie, ::Any)
-rescale(::EHTMovie,::Any,::Any,::Any)
+regrid(::EHTMovie,::Any,::Any,::Any)
 ```
 
 ## Divergences

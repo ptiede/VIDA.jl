@@ -1,10 +1,3 @@
-
-
-
-
-
-
-
 clipvalue(c,x) = x < c ? zero(eltype(x)) : x
 
 @doc """
@@ -14,12 +7,12 @@ There are two modes for image clipping:
     - `:relative` which zeros the pixels whose intensity are below `clip` relative to the max.
     - `:absolute` which zeros the pixels whose intensity is below `clip` in Jy/pixel
 """
-function clipimage(clip, image::IntensityMap, mode=:relative)
+function clipimage(clip, image::SpatialIntensityMap, mode=:relative)
     cimg = copy(image)
     return clipimage!(clip, cimg, mode)
 end
 
-function clipimage!(clip, image::IntensityMap, mode=:relative)
+function clipimage!(clip, image::SpatialIntensityMap, mode=:relative)
     if mode == :absolute
         map!(x->clipvalue(clip,x),image, image)
     elseif mode == :relative
@@ -34,30 +27,16 @@ end
 
 
 @doc """
-    rescale(img::EHTImage, nx, ny, xlim, ylim)
+    regrid(img::EHTImage, nx, ny, xlim, ylim)
 # Inputs
- - img::EHTImage : Image you want to rescale
+ - img::EHTImage : Image you want to regrid
  - npix : Number of pixels in x and y direction
  - xlim : Tuple with the limits of the image in the RA in μas
  - ylim : Tuple with the limits of the image in DEC in μas
 """
-function rescale(img::IntensityMap, nx, ny, xlim, ylim)
-    x_itr,y_itr = imagepixels(img)
-    itp = interpolate(img.im/(-step(x_itr)*step(y_itr)), BSpline(Cubic(Line(OnGrid()))))
-	sitp = scale(itp, reverse(x_itr), y_itr)
-    etp = extrapolate(sitp, 0)
-
-    #Create grid for new image
-    fovy_new = (ylim[2]-ylim[1])
-    psize_y = fovy_new/(npix)
-    fovx_new = (xlim[2]-xlim[1])
-    psize_x = fovx_new/(npix)
-    x_itr_new = (fovx_new/2 - psize_x/2):-psize_x:(-fovx_new/2 + psize_x/2)
-    y_itr_new = (-fovy_new/2 + psize_y/2):psize_y:(fovy_new/2 - psize_y/2)
-    #Create new image
-    img_new = etp(reverse(x_itr_new), y_itr_new)*psize_x*psize_y
-    return EHTImage(npix, npix, -psize_x, psize_y, img.source, img.ra, img.dec,
-                    img.wavelength, img.mjd, img_new)
+function regrid(img::SpatialIntensityMap, g::GriddedKeys)
+    fimg = VLBISkyModels.InterpolatedImage(img)
+    return intensitymap(fimg, g)
 end
 
 @doc """

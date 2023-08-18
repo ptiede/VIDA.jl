@@ -23,36 +23,34 @@ abstract type AbstractDivergence end
 
 
 @inline function divergence(d::AbstractDivergence, m::M) where {M<:AbstractModel}
-    _divergence(imanalytic(typeof(m)), d, m)
+    _divergence(d, m)
 end
 
-@inline function _divergence(::IsAnalytic, d::AbstractDivergence, m::AbstractModel)
-    return divergence_analytic(d, m)
-end
+# @inline function _divergence(::IsAnalytic, d::AbstractDivergence, m::AbstractModel)
+#     return divergence_analytic(d, m)
+# end
 
-@inline function _divergence(::NotAnalytic, d::AbstractDivergence, m::AbstractModel)
-    return divergence_numeric(d, m)
-end
+# @inline function _divergence(::NotAnalytic, d::AbstractDivergence, m::AbstractModel)
+#     return divergence_numeric(d, m)
+# end
 
 
-function divergence_analytic(d::AbstractDivergence, m::AbstractModel)
+# function _divergence(d::AbstractDivergence, m::AbstractModel)
+#     (;img) = d
+#     g = CB.imagegrid(img)
+#     div, fm = mapreduce(.+, zip(g, img)) do (p, I)
+#         Imod = CB.intensity_point(m, p)
+#         return divergence_point(d, I, Imod), Imod
+#     end
+#     return normalize_div(d, div, fm)
+# end
+
+function _divergence(d::AbstractDivergence, m::AbstractModel)
     (;img) = d
-    g = CB.imagegrid(img)
-    fm = flux(m)
-    mf = modify(m, Renormalize(inv(fm)))
-    div = mapreduce(+, zip(g, img)) do (p, I)
-        Imod = CB.intensity_point(mf, p)
-        return divergence_point(d, I, Imod)
-    end
-    return div
-end
-
-function divergence_numeric(d::AbstractDivergence, m::AbstractModel)
-    (;img) = d
-    g = CB.imagegrid(img)
-    img_model = CB.intensitymap(m, g)./fI
-    div  = sum(zip(img, img_model)) do (ii, im)
-        return divergence_point(ii, im)
+    img_model = CB.intensitymap!(d.mimg, m)
+    fm = flux(img_model)
+    div  = sum(zip(img, mimg)) do (ii, im)
+        return divergence_point(d, ii, im/fm)
     end
     return div
 end
@@ -75,14 +73,12 @@ Bh(f_\\theta||\\hat{I}) = -\\log\\int \\sqrt{f_\\theta(x,y)\\hat{I}(x,y)}dxdy,
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 """
-struct Bhattacharyya{T<:AbstractIntensityMap,S} <: AbstractDivergence
-    """
-    Abstract image class
-    """
+struct Bhattacharyya{T<:IntensityMap} <: AbstractDivergence
     img::T
+    mimg::T
 end
 function Bhattacharyya(img::T) where {T<:IntensityMap}
-    Bhattacharyya(img,./flux(img))
+    Bhattacharyya(img./flux(img), copy(mimg))
 end
 
 
@@ -90,7 +86,7 @@ end
     return sqrt(p*abs(q)), q
 end
 
-@inline normalize_div(::Bhattacharyya, div, fm, flux) = -log(div/sqrt(fm*flux))
+# @inline normalize_div(::Bhattacharyya, div, fm) = -log(div/sqrt(fm))
 
 
 """
@@ -111,19 +107,16 @@ where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 This struct is also a functor.
 """
-struct KullbackLeibler{T,S} <: AbstractDivergence
-    """
-    Abstract image class
-    """
+struct KullbackLeibler{T<:IntensityMap} <: AbstractDivergence
     img::T
-    flux::S
+    mimg::T
 end
 function KullbackLeibler(img::T) where {T<:IntensityMap}
-    KullbackLeibler(img, flux(img))
+    KullbackLeibler(img./flux(img))
 end
 
 @inline divergence_point(::KullbackLeibler, p, q) = q*log(q/(p+eps(typeof(p))))
-@inline normalize_div(::KullbackLeibler, div, fm, flux) = div/fm - log(fm/flux)
+# @inline normalize_div(::KullbackLeibler, div, fm) = div/fm - log(fm)
 
 
 struct Renyi{T,S} <: AbstractDivergence
@@ -161,14 +154,14 @@ akin the to sup norm and fails to match the image structure.
 function Renyi(img::T, α) where {T<:IntensityMap}
     @assert !(α-1 ≈ 0) "α=1 is the KL divergence use that instead"
     f = flux(img)
-    Renyi{T,typeof(f)}(img, f, α)
+    Renyi{T,typeof(f)}(img./flux(img), α)
 end
 
 @inline divergence_point(d::Renyi, p, q) = p*(q/p)^d.α, q
-@inline function normalize_div(d::Renyi, div, fm, flux)
-    α = d.α
-    return inv(α-1)*log(div*(flux/fm)^α/flux)
-end
+# @inline function normalize_div(d::Renyi, div, fm)
+#     α = d.α
+#     return inv(α-1)*log(div*(fm)^(-α))
+# end
 
 
 
@@ -190,32 +183,15 @@ ls = LeastSquares(img::EHTImage)
 We have a template internal matrix the prevents internal allocations during computation
 This is a internal feature that the user does not need to worry about.
 """
-struct LeastSquares{T,S,V} <: AbstractDivergence
+struct LeastSquares{T} <: AbstractDivergence
     img::T
-    flux::S
-    template::V
+    mimg::T
 end
 
 function LeastSquares(img::T) where {T<:EHTImage}
     LeastSquares(img, flux(img), zeros(size(img)))
 end
 
-
-function (ls::LeastSquares)(θ::AbstractTemplate)
-    @unpack img, flux, template = ls
-    template_norm = zero(eltype(img.img))
-    xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
-    ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
-
-    @inbounds for i in 1:img.nx
-        @simd for j in 1:img.ny
-            x = xstart + img.psize_x*(i-1)
-            y = ystart + img.psize_y*(j-1)
-            template_value = θ(x,y)+1e-12
-            template[j,i] = template_value
-            template_norm += template_value
-        end
-    end
-    template .= template./template_norm .- img./flux
-    return sum(abs2, template)
+function divergence_point(::LeastSquares, p, q)
+    return abs2(p - q)
 end
