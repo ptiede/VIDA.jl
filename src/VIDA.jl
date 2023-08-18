@@ -10,22 +10,22 @@ module VIDA
 
 
 
-using BlackBoxOptim
 import ComradeBase as CB
-using CMAEvolutionStrategy
-using DataFrames
 using DocStringExtensions
 using FITSIO
 using HDF5
 using ImageFiltering: imfilter, Kernel.gaussian, Fill, Algorithm.FFT
 using Interpolations
 using LaTeXStrings
-using Optim
-using Parameters
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
 using RecipesBase
 using Requires
-using SpecialFunctions:erf
+using SpecialFunctions: erf
+using Reexport
+@reexport using ComradeBase
+@reexport using VLBISkyModels
+
+using ComradeBase: SpatialIntensityMap
 
 import DataFrames: stack  # ensure two exports don't clash; also exported by Base julia 1.9.
 
@@ -34,22 +34,17 @@ export
     Bhattacharyya, KullbackLeibler, LeastSquares,Renyi,
     #Templates
     GaussianRing,SlashedGaussianRing,EllipticalGaussianRing,
-    TIDAGaussianRing,GeneralGaussianRing, Constant, AsymGaussian,
-    SymCosineRing, SymCosineRingwFloor, SymCosineRingwGFloor, CosineRing, Disk,
-    ImageTemplate, LogSpiral,
-    DiffuseBack,
-    stretch, rotate, stretchrotate,
-    #Template helper functions
-    stack,split,unpack,
+    EllipticalSlashedGaussianRing, EllipticalCosineRing, Constant, AsymGaussian,
+    SymCosineRing, SymCosineRingwFloor, SymCosineRingwGFloor, CosineRing,
+    GaussianDisk, LogSpiral,
     #Image functions
-    EHTImage, load_image, load_fits, clipimage, save_fits,
-    flux, centroid, inertia, regrid_image, pixelloc,
-    regrid, blur,
+    EHTImage, load_image, clipimage,
+    inertia, blur,
     #Movie functions
-    EHTMovie, load_hdf5, save_hdf5,
+    VIDAMovie, load_hdf5, save_hdf5,
     get_image, get_frames, get_times, join_frames,
     #Optimizers
-    extractor, threaded_extractor, BBO, CMAES, Opt,
+    # extractor, threaded_extractor, BBO, CMAES, Opt,
     #ExtractionProblem
     ExtractProblem
 
@@ -74,8 +69,8 @@ function __init__()
 end
 #include("visualizations.jl")
 #template extractor
-include("extractor.jl")
-include("utils.jl")
+# include("extractor.jl")
+# include("utils.jl")
 
 
 

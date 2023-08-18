@@ -14,10 +14,10 @@ end
 
 function clipimage!(clip, image::SpatialIntensityMap, mode=:relative)
     if mode == :absolute
-        map!(x->clipvalue(clip,x),image, image)
+        image .= clipvalue.(clip, image)
     elseif mode == :relative
         maxim = maximum(image)
-        map!(x->clipvalue(clip*maxim,x),image, image)
+        image .= clipvalue.(clip*maxim, image)
     else
         @assert false "clipimage: Mode must be one of :absolute or :relative where :absolute cuts on value and :relative on fraction of maximum intensity"
     end
@@ -48,23 +48,7 @@ the NS direction.
 
 Returns the blurred image.
 """
-function blur(img::EHTImage, fwhm)
-    # Using image template function which blurs on the pixel scale.
-    # So first transform from μas to pixel number and standard deviation
-    σ_px = fwhm./(2*sqrt(2*log(2)))./abs(img.psize_x)
-    σ_py = fwhm./(2*sqrt(2*log(2)))./abs(img.psize_y)
-
-    # Now I need to pick my kernel size. I am going out to 5σ for the
-    # gaussian kernel. I have to add one for the convolution to play nice
-    nkern = Int(floor(σ_px)*10 + 1)
-    # Note I tried to use IIRGaussian but it wasn't accurate enough for us.
-    bimg = imfilter(img,
-                    gaussian((σ_py, σ_px),(nkern,nkern)),
-                    Fill(0.0, img),
-                    FFT()
-                )
-
-    #Now return the updated image
-    #TODO can I find a way to do this without having to allocate a new image?
-    return bimg
+function blur(img::SpatialIntensityMap, fwhm)
+    σ = fwhm./(2*sqrt(2*log(2)))
+    return convolve(img, modify(Gaussian(), stretch(σ)))
 end

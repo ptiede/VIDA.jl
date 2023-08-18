@@ -4,62 +4,9 @@ font = Plots.font
 
 
 
-"""
-    plot(image::EHTImage)
-
-where `image` is templated off of EHTImage struct.
-
-# Details
-This was created to be close to the ehtim display object. It takes an
-EHTImage object and plots it according to EHT conventions.
-
-Note that is does not save the figure.
-"""
-@recipe function f(image::EHTImage)
-
-    #Define some constants
-    μas2rad = π/180.0/3600/1e6
-    #Construct the image grid in μas
-    psizeuas_x = -image.psize_x
-    psizeuas_y = image.psize_y
-    fovx = psizeuas_x*image.nx
-    fovy = psizeuas_y*image.ny
-
-    brightness_temp = image.wavelength^2/(2*KB)/1e26/
-                      abs(μas2rad^2*image.psize_x*image.psize_y)
-
-    #brightness_temp = image.wavelength^2/(2*k_B.val)/1e26/
-    #                  abs(μas2rad^2*image.psize_x*image.psize_y)
-
-    tickfontsize --> 11
-    guidefontsize --> 14
-    size --> (500,400)
-    xaxis --> "ΔRA  (μas)"
-    yaxis --> "ΔDEC (μas)"
-    seriescolor --> :afmhot
-    aspect_ratio --> 1
-    bar_width --> 0
-    xlims --> (-fovx/2,fovx/2)
-    ylims --> (-fovy/2,fovy/2)
-    #left_margin --> -2mm
-    right_margin --> 5mm
-    x = collect(range(-fovx/2, fovx/2; length=image.nx))
-    y = collect(range(-fovy/2, fovy/2; length=image.ny))
-    z = image.img[:,end:-1:1]*brightness_temp/1e9
-    seriestype := :heatmap
-    fontfamily --> "sans serif"
-    colorbar_title --> "Brightness Temperature (10⁹ K)"
-    xflip --> true
-    widen := false
-    #framestyle --> :box
-    title --> image.source*" "*string(round(C0/image.wavelength/1e9))*" GHz"
-    linecolor-->:black
-    tick_direction --> :out
-    x,y,z
-end
 
 @doc """
-    triptic(img::EHTImage, template)
+    triptic(img::SpatialIntensityMap, template)
 Plots a triptic where the left panel is the `img` middle
 the `template` and the right a two cross-sections of the image
 and template
@@ -68,14 +15,14 @@ function triptic end
 
 @userplot Triptic
 """
-    triptic(image::EHTImage, θ::T) where {T<:AbstractTemplate}
+    triptic(image::SpatialIntensityMap, θ::T) where {T<:AbstractTemplate}
 A plot recipe for a triptic plot with the `image`, i.e. an EHT image and the template `\theta`
 used for parameter estimate. The first two panels are the image and template and
 the third are RA and DEC cross-sections of both the template and image centered at the
 center of light.
 """
 @recipe function f(h::Triptic)
-    if length(h.args) != 2 || !(typeof(h.args[1]) <: EHTImage) ||
+    if length(h.args) != 2 || !(typeof(h.args[1]) <: SpatialIntensityMap) ||
         !(typeof(h.args[2]) <: AbstractTemplate)
         error("Triptic should be given a image and template.  Got: $(typeof(h.args))")
     end
@@ -329,7 +276,7 @@ The default image will use 128x128 pixels with a 120x120 field of view.
     bar_width --> 0
     xlims --> (-fovx/2,fovx/2)
     ylims --> (-fovy/2,fovy/2)
-    xitr,yitr,img = template_image(θ, npix, [-fovx/2,fovx/2],[-fovy/2,fovy/2])
+    xitr,yitr,img = intensitmap(θ, fovx, fovy, npix, npix)
     #left_margin --> -2mm
     right_margin --> 5mm
     x = collect(reverse(xitr))

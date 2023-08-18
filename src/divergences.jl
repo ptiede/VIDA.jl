@@ -1,3 +1,4 @@
+export divergence
 
 """
     $(TYPEDEF)
@@ -22,7 +23,7 @@ abstract type AbstractDivergence end
 
 
 
-@inline function divergence(d::AbstractDivergence, m::M) where {M<:AbstractModel}
+@inline function divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
     _divergence(d, m)
 end
 
@@ -45,8 +46,8 @@ end
 #     return normalize_div(d, div, fm)
 # end
 
-function _divergence(d::AbstractDivergence, m::AbstractModel)
-    (;img) = d
+function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
+    (;img, mimg) = d
     img_model = CB.intensitymap!(d.mimg, m)
     fm = flux(img_model)
     div  = sum(zip(img, mimg)) do (ii, im)
@@ -78,12 +79,12 @@ struct Bhattacharyya{T<:IntensityMap} <: AbstractDivergence
     mimg::T
 end
 function Bhattacharyya(img::T) where {T<:IntensityMap}
-    Bhattacharyya(img./flux(img), copy(mimg))
+    Bhattacharyya(img./flux(img), zero(img))
 end
 
 
 @inline function divergence_point(::Bhattacharyya, p, q)
-    return sqrt(p*abs(q)), q
+    return sqrt(p*abs(q))
 end
 
 # @inline normalize_div(::Bhattacharyya, div, fm) = -log(div/sqrt(fm))
@@ -112,7 +113,7 @@ struct KullbackLeibler{T<:IntensityMap} <: AbstractDivergence
     mimg::T
 end
 function KullbackLeibler(img::T) where {T<:IntensityMap}
-    KullbackLeibler(img./flux(img))
+    KullbackLeibler(img./flux(img), zero(img))
 end
 
 @inline divergence_point(::KullbackLeibler, p, q) = q*log(q/(p+eps(typeof(p))))
@@ -120,12 +121,9 @@ end
 
 
 struct Renyi{T,S} <: AbstractDivergence
-    """
-    Abstract image class
-    """
     img::T
-    flux::S
-    α::Float64
+    α::S
+    mimg::T
 end
 
 """
@@ -154,7 +152,7 @@ akin the to sup norm and fails to match the image structure.
 function Renyi(img::T, α) where {T<:IntensityMap}
     @assert !(α-1 ≈ 0) "α=1 is the KL divergence use that instead"
     f = flux(img)
-    Renyi{T,typeof(f)}(img./flux(img), α)
+    Renyi{T,typeof(f)}(img./flux(img), α, zero(img))
 end
 
 @inline divergence_point(d::Renyi, p, q) = p*(q/p)^d.α, q
@@ -188,8 +186,8 @@ struct LeastSquares{T} <: AbstractDivergence
     mimg::T
 end
 
-function LeastSquares(img::T) where {T<:EHTImage}
-    LeastSquares(img, flux(img), zeros(size(img)))
+function LeastSquares(img::SpatialIntensityMap)
+    LeastSquares(img./flux(img), zeros(mimg))
 end
 
 function divergence_point(::LeastSquares, p, q)
