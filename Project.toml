@@ -4,6 +4,7 @@ authors = ["Paul Tiede <ptiede91@gmail.com>"]
 version = "0.10.9"
 
 [deps]
+AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
 BlackBoxOptim = "a134a8b2-14d6-55f6-9291-3336d3ab0209"
 CMAEvolutionStrategy = "8d3b24bd-414e-49e0-94fb-163cc3a3e411"
 ComradeBase = "6d8c423b-a35f-4ef1-850c-862fe21f82c4"
@@ -23,12 +24,13 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 Requires = "ae029012-a4dd-5104-9daa-d747884805df"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+VLBISkyModels = "d6343c73-7174-4e0f-bb64-562643efbeca"
 
 [compat]
 BlackBoxOptim = "0.5, 0.6"
 CMAEvolutionStrategy = "0.1,0.2"
 DataFrames = "0.19, 0.20, 0.21, 0.22, 1.0"
-DocStringExtensions = "0.8,0.9"
+DocStringExtensions = "0.8,0.9, 0.9"
 FITSIO = "0.14, 0.15, 0.16, 0.17"
 HDF5 = "0.14, 0.15, 0.16"
 ImageFiltering = "0.6,0.7"

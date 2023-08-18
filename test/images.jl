@@ -18,7 +18,7 @@ end
     img = VIDA.load_fits("../example/data/example_image.fits")
     cimg = clipimage(0.1, img)
     cimg = clipimage(0.0, img, :absolute)
-    rescale(img, npix, xlim, ylim)
+    regrid(img, npix, xlim, ylim)
     ra,dec = pixelloc(img)
 end
 

@@ -31,7 +31,7 @@ include("common.jl")
 
     #Now lets blur the movie
     bmov = blur(mov, 10.0)
-    #Rescale the movie
-    rmov = rescale(mov, 128, [-50.0, 50.0], [-50.0, 50.0])
+    #regrid the movie
+    rmov = regrid(mov, 128, [-50.0, 50.0], [-50.0, 50.0])
 
 end

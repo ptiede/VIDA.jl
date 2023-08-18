@@ -43,8 +43,8 @@ export
     stack,split,unpack,
     #Image functions
     EHTImage, load_image, load_fits, clipimage, save_fits,
-    flux, centroid, inertia, rescale_image, pixelloc,
-    rescale, blur,
+    flux, centroid, inertia, regrid_image, pixelloc,
+    regrid, blur,
     #Movie functions
     EHTMovie, load_hdf5, save_hdf5,
     get_image, get_frames, get_times, join_frames,
