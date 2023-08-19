@@ -26,6 +26,7 @@ using Reexport
 @reexport using VLBISkyModels
 
 using ComradeBase: SpatialIntensityMap
+import ComradeBase: intensity_point
 
 export
     #make the divergences to use for optimization

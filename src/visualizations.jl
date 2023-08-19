@@ -42,7 +42,7 @@ center of light.
 
     #Construct the image grid in μas
     g = axiskeys(image)
-    dataim = ComradeBase.baseimage(image./sum(image))'
+    dataim = ComradeBase.baseimage(image./flux(image))'
 
     #Construct the template image
     template_img = intensitymap(θ, g)
@@ -237,7 +237,7 @@ center of light.
         linestyle := :dash
         seriescolor := :cornflowerblue
         x = collect(Xitr)
-        y = @view fimg[jmin, end:-1:1]
+        y = @view fimg[jmin, :]
         legend := false
         x,y
     end
