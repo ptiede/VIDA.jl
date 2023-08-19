@@ -25,7 +25,7 @@ using InteractiveUtils
 # To read in an image we just use the `load_fits` function
 # which should work with any fits image from ehtim and clean
 
-img = load_fits(joinpath(dirname(pathof(VIDA)),"../example/data/example_image.fits"));
+img = load_image(joinpath(dirname(pathof(VIDA)),"../example/data/example_image.fits"));
 
 # To see what this img is lets print the type
 println(typeof(img))
@@ -54,7 +54,7 @@ plot(img)
 
 
 # To see what functions can act on an EHTImage object just call
-methodswith(EHTImage)
+methodswith(IntensityMap)
 
 
 # From this list we see there are several methods that can act on EHTImage types.
@@ -68,24 +68,24 @@ methodswith(EHTImage)
 # attached to it. That means it is both a type and a function. For instance we create a
 # divergence by
 
- bh = Bhattacharyya(img);
- kl = KullbackLeibler(img);
+bh = Bhattacharyya(img);
+kl = KullbackLeibler(img);
 
 # Now to evaluate the divergence we need to pass it a template.
 # This can be any template your choose. The great thing about julia is that bh will use
 # multiple dispatch to figure out which template is being passed to the divergence.
 
 # For instance lets create a few different templates
-
-gr = GaussianRing(r0=20.0, σ=5.0, x0=0.0, y0=0.0)
-ggr = GeneralGaussianRing(r0=20.0,
-                          σ = 5.0,
-                          τ = 0.2,
-                          ξτ = 0.78,
-                          s = 0.5,
-                          ξs = 0.78,
-                          x0=0.0,
-                          y0=0.0
+gr = GaussianRing(μas2rad(20.0), μas2rad(5.0), 0.0, 0.0)
+ggr = EllipticalSlashedGaussianRing(
+                          μas2rad(20.0), #r0
+                          μas2rad(5.0), #σ
+                          0.2, #τ
+                          0.78, #ξτ
+                          0.5, #s
+                          0.78, #ξs
+                          μas2rad(-10.0), #x0
+                          0.0 #y0
                         )
 # We can also plot both templates
 a = plot(gr, title="GaussianRing")
@@ -95,17 +95,19 @@ plot(a, b, layout=(1,2), size=(600,300))
 
 # VIDA has a number of templates defined. These are all subtypes of the AbstractTemplate type.
 # To see which templates are implemented you can use the subtype method:
-subtypes(VIDA.AbstractTemplate)
+subtypes(VIDA.AbstractImageTemplate)
 
+# Additionally as of VIDA 0.11 we can also use any VLBISkyModels model and
+# any model that satisfies the interface described [here](https://ehtjulia.github.io/VLBISkyModels.jl/dev/interface/#Model-Interface).
 
-# Note that the AddTemplate and MulTemplate are internal templates that allow the user to easily combine two templates, for example:
-add = gr + 1.0*ggr
+# Using VLBISkyModels interface we can also combine templates together
+add = gr + 2.0*shifted(gr, μas2rad(-10.0), μas2rad(10.0))
 
 # To evaluate the divergence between our template and image we then just evaluate the
 # divergence on the template
-@show bh(gr);
-@show bh(ggr);
-@show bh(add);
+@show divergence(kl, add);
+@show divergence(kl, ggr);
+@show divergence(kl, add);
 
 # Now neither template is really a great approximation to the true image. For instance
 # visually they look quite different, which can be checked with the `triptic` function
@@ -118,30 +120,32 @@ plot(a,b,c, layout=(3,1), size=(800,800))
 
 # ## Extracting the Optimal Template
 # To extract the optimal template the first thing you need to do is define your
-# `ExtractProblem`. This requires your divergence, initial template, and bounds.
-lower = GaussianRing(r0=0.1, σ=0.01, x0=-60.0, y0=-60.0);
-upper = GaussianRing(r0=60.0, σ=20.0, x0=60.0, y0=60.0);
-initial = GaussianRing(r0=20.0, σ=5.0, x0=0.0, y0=0.0);
+# a function that construct the template and parameterization you will consider
+function gr_temp(θ)
+    return GaussianRing(θ.r0, θ.σ, θ.x0, θ.y0)
+end
 
-prob = ExtractProblem(bh, initial, lower, upper);
+# We also want to select the domain that we want to search over
+lower = map(μas2rad, (r0 = 5.0,  σ = 0.01, x0 = -60.0, y0 = -60.0))
+upper = map(μas2rad, (r0 = 60.0, σ = 20.0, x0 = 60.0, y0 = 60.0))
+
+prob = VIDAProblem(bh, gr_temp, lower, upper);
 
 
-# Now to run the optimizers you just need to select which optimizer to use. Currently VIDA
-# has three families of optimizers installed. Each one is a subtype of the VIDA.Optimizer
-# abstract type
-subtypes(VIDA.Optimizer)
+# Now we need to optimize. VIDA uses the [Optimization.jl](https://github.com/SciML/Optimization.jl)
+# meta package for optimization. That means that we can use any optimization package that
+# works with optimization. For information about possible optimizers see their [docs](https://docs.sciml.ai/Optimization/stable/).
 
-# Of the three implemented optimizers my suggestion would be to try the BBO one first.
-# This uses the [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl) package.
-# BBO has a number of options that can be changed. To see them please use the julia
-# `?` mode, or see the documentation.
+# For VIDA the classic optimizer is using the [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl).
+# To use BlackBox optim we need to load the required package
+using OptimizationBBO
 
 # However, for this tutorial I am going to use the `CMAES` optimizer since it is faster
 # albeit less robust to local minima
 
 # To optimize all you need to do is run the extractor function.
 
-optfilt, divmin = extractor(prob, CMAES())
+xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=100_000)
 triptic(img, optfilt)
 
 
@@ -150,49 +154,25 @@ triptic(img, optfilt)
 # To account for this the template tends to get very big to absorb some of
 # this flux. To combat this you can add a constant background template to
 # the problem.
+gr_temp_cont(θ) = GaussianRing(θ.r0, θ.σ, θ.x0, θ.y0) + θ.f*Constant((μas2rad(100.0)))
+lower = (r0 = μas2rad(5.0),  σ = μas2rad(0.01), x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
+upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
 
-lower = GaussianRing(r0=0.1, σ=0.01, x0=-60.0, y0=-60.0) + 1e-10*Constant();
-upper = GaussianRing(r0=60.0, σ=20.0, x0=60.0, y0=60.0) + 1.0*Constant();
-initial = GaussianRing(r0=20.0, σ=5.0, x0=0.0, y0=0.0) + 0.1*Constant();
-
-prob = ExtractProblem(bh, initial, lower, upper);
-optfilt, divmin = extractor(prob, CMAES())
+prob = VIDAProblem(bh, gr_temp_cont, lower, upper);
+xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000)
 triptic(img, optfilt)
 
-# We can also run multple instances of the extractor, and use Julia's Threads interface
-optfilt, divmin = threaded_extractor(4, prob, CMAES())
-
-# This will run `4` instances of the extractor function using the available threads in the
-# Julia session.
 
 # That's much better! Now if you wanted to capture the asymmetry in the ring you can use
 # other templates, for example the CosineRing template. Note that this template tends to be
 # a little harder to fit.
+cos_temp(θ) = EllipticalSlashedGaussianRing(θ.r0, θ.σ, θ.τ, θ.ξτ, θ.s, θ.ξs, θ.x0, θ.y0) + θ.f*θ.f*Constant(μas2rad(100.0))
+lower = (r0 = μas2rad(1.0),  σ = μas2rad(0.01), τ=0.0, ξτ=-π/2, s=0.001, ξs=-1π, x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
+upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), τ=0.5, ξτ=π/2, s=0.999, ξs=1π, x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
 
-lower = CosineRing{1,4}(r0=0.1,
-                        σ=[0.1, -1.0], ξσ = [-π],
-                        τ = 0.01, ξτ = -π,
-                        s = [0.01, -1.0, -1.0, -1.0],
-                        ξs = [-π,-π,-π,-π],
-                        x0=-60.0, y0=-60.0
-                       ) + 1e-10*Constant();
-upper = CosineRing{1,4}(r0=40.0,
-                        σ=[20.0, 1.0], ξσ = [π],
-                        τ = 0.999, ξτ = π,
-                        s = [0.999, 1.0, 1.0, 1.0],
-                        ξs = [π,π,π,π],
-                        x0=60.0, y0=60.0
-                       ) + 1.0*Constant();
-initial = CosineRing{1,4}(r0=20.0,
-                        σ=[5.0, 0.1], ξσ = [0.0],
-                        τ = 0.1, ξτ = 0.0,
-                        s = [0.1, 0.0, 0.0, 0.0],
-                        ξs = [0.0,0.0,0.0,0.0],
-                        x0=0.0, y0=0.0
-                       ) + 1e-2*Constant();
 
-prob = ExtractProblem(bh, initial, lower, upper);
-optfilt, divmin = extractor(prob, CMAES(verbosity=0));
+prob = VIDAProblem(bh, cos_temp, lower, upper);
+xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000);
 triptic(img, optfilt)
 
 # Now looks pretty great! To see how to add a custom template see the [Adding a Custom Template](@ref) page.

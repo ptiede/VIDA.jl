@@ -177,9 +177,10 @@ low levels of flux in image reconstructions that can bias the results.
 Since images or normalized to unity, this means the `Constant` template has no
 additional parameters.
 """
-struct Constant{T} <: AbstractImageTemplate end
-Constant() = Constant{Float64}()
-@inline CB.intensity_point(::Constant{T}, p) where {T} = one(T)
+struct Constant{T} <: AbstractImageTemplate
+    scale::T
+end
+@inline CB.intensity_point(c::Constant{T}, p) where {T} = inv(c.scale)^2
 CB.radialextent(::Constant{T}) where {T} = one(T)
 
 """

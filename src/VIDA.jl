@@ -69,7 +69,7 @@ function __init__()
 end
 #include("visualizations.jl")
 #template extractor
-# include("extractor.jl")
+include("extractor.jl")
 # include("utils.jl")
 
 
