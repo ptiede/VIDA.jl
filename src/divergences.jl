@@ -48,12 +48,12 @@ end
 
 function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
     (;img, mimg) = d
-    img_model = CB.intensitymap!(d.mimg, m)
-    fm = flux(img_model)
+    CB.intensitymap!(mimg, m)
+    fm = flux(mimg)
     div  = sum(zip(img, mimg)) do (ii, im)
         return divergence_point(d, ii, im/fm)
     end
-    return div
+    return normalize_div(d, div)
 end
 
 
@@ -84,10 +84,9 @@ end
 
 
 @inline function divergence_point(::Bhattacharyya, p, q)
-    return sqrt(p*abs(q))
+    return sqrt(p*q)
 end
-
-# @inline normalize_div(::Bhattacharyya, div, fm) = -log(div/sqrt(fm))
+@inline normalize_div(::Bhattacharyya, div) = -log(div)
 
 
 """
@@ -117,7 +116,7 @@ function KullbackLeibler(img::T) where {T<:IntensityMap}
 end
 
 @inline divergence_point(::KullbackLeibler, p, q) = q*log(q/(p+eps(typeof(p))))
-# @inline normalize_div(::KullbackLeibler, div, fm) = div/fm - log(fm)
+@inline normalize_div(::KullbackLeibler, div) = div
 
 
 struct Renyi{T,S} <: AbstractDivergence
@@ -155,11 +154,11 @@ function Renyi(img::T, α) where {T<:IntensityMap}
     Renyi{T,typeof(f)}(img./flux(img), α, zero(img))
 end
 
-@inline divergence_point(d::Renyi, p, q) = p*(q/p)^d.α, q
-# @inline function normalize_div(d::Renyi, div, fm)
-#     α = d.α
-#     return inv(α-1)*log(div*(fm)^(-α))
-# end
+@inline divergence_point(d::Renyi, p, q) = p*(q/p)^d.α
+@inline function normalize_div(d::Renyi, div)
+    α = d.α
+    return inv(α-1)*log(div)
+end
 
 
 
@@ -193,3 +192,5 @@ end
 function divergence_point(::LeastSquares, p, q)
     return abs2(p - q)
 end
+
+@inline normalize_div(::LeastSquares, div) = div

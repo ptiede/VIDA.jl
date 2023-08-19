@@ -23,7 +23,7 @@ center of light.
 """
 @recipe function f(h::Triptic)
     if length(h.args) != 2 || !(typeof(h.args[1]) <: SpatialIntensityMap) ||
-        !(typeof(h.args[2]) <: AbstractTemplate)
+        !(typeof(h.args[2]) <: ComradeBase.AbstractModel)
         error("Triptic should be given a image and template.  Got: $(typeof(h.args))")
     end
     image, θ = h.args
@@ -41,18 +41,17 @@ center of light.
 
 
     #Construct the image grid in μas
-    psizeuas_x = -image.psize_x
-    psizeuas_y = image.psize_y
-    fovx = psizeuas_x*image.nx
-    fovy = psizeuas_y*image.ny
-    xitr = range(-fovx/2, fovx/2; length=image.nx)
-    yitr = range(-fovy/2, fovy/2; length=image.ny)
-    dataim = @view(image.img[:,end:-1:1])/sum(image.img)
+    g = axiskeys(image)
+    dataim = ComradeBase.baseimage(image./sum(image))'
 
     #Construct the template image
-    template_img = make_image(θ, image.nx, [-fovx/2,fovx/2], [-fovy/2,fovy/2], image;
-                                    intensity=1)
-    fimg = template_img.img
+    template_img = intensitymap(θ, g)
+    fimg = ComradeBase.baseimage(template_img/flux(template_img))'
+
+    (;X, Y) = g
+    Xitr = map(rad2μas, X)
+    Yitr = map(rad2μas, Y)
+    fovx, fovy = map(rad2μas, values(fieldofview(image)))
 
 
     #Get scale bar and slice data.
@@ -62,8 +61,8 @@ center of light.
     xseg = range(startx, startx-size, length=4)
     yseg = starty*ones(4)
     #Finally the slices
-    xx = collect(xitr)
-    yy = collect(yitr)
+    xx = collect(Xitr)
+    yy = collect(Yitr)
     xcol,ycol = centroid(template_img)
     imin = argmin(abs.(xx .- xcol))
     jmin = argmin(abs.(yy .- ycol))
@@ -82,8 +81,8 @@ center of light.
         #size := (300,300)
         aspect_ratio := 1
         xflip := true
-        x = collect(xitr)
-        y = collect(yitr)
+        x = collect(Xitr)
+        y = collect(Yitr)
         z = dataim
         x,y,z
     end
@@ -150,9 +149,9 @@ center of light.
         colorbar := false
         subplot := 2
         aspect_ratio := 1
-        x = collect(xitr)
-        y = collect(yitr)
-        z = @view(fimg[:,end:-1:1])
+        x = collect(Xitr)
+        y = collect(Yitr)
+        z = fimg
         x,y,z
     end
 
@@ -213,8 +212,8 @@ center of light.
         seriestype := :line
         linestyle := :solid
         seriescolor := :cornflowerblue
-        x = collect(reverse(xitr))
-        y = @view dataim[jmin,image.ny:-1:1]
+        x = collect(reverse(Xitr))
+        y = dataim[jmin,end:-1:1]
         legend := false
         x,y
     end
@@ -224,8 +223,8 @@ center of light.
         seriestype := :line
         linestyle := :solid
         seriescolor := :red
-        x = collect(yitr)
-        y = @view dataim[:, image.nx-imin]
+        x = collect(Yitr)
+        y = @view dataim[:, imin]
         xguide := "RA, DEC chords (μas)"
         yticks := false
         legend := false
@@ -237,8 +236,8 @@ center of light.
         seriestype := :line
         linestyle := :dash
         seriescolor := :cornflowerblue
-        x = collect(xitr)
-        y = @view fimg[jmin,image.ny:-1:1]
+        x = collect(Xitr)
+        y = @view fimg[jmin, end:-1:1]
         legend := false
         x,y
     end
@@ -248,8 +247,8 @@ center of light.
         seriestype := :line
         seriescolor := :red
         linestyle := :dash
-        x = collect(yitr)
-        y = @view fimg[:, image.nx-imin]
+        x = collect(Yitr)
+        y = @view fimg[:, imin]
         xguide := "RA, DEC chords (μas)"
         yticks := false
         legend := false
@@ -276,7 +275,9 @@ The default image will use 128x128 pixels with a 120x120 field of view.
     bar_width --> 0
     xlims --> (-fovx/2,fovx/2)
     ylims --> (-fovy/2,fovy/2)
-    xitr,yitr,img = intensitmap(θ, fovx, fovy, npix, npix)
+    img = intensitmap(θ, fovx, fovy, npix, npix)
+    xitr = img.X
+    yitr = img.Y
     #left_margin --> -2mm
     right_margin --> 5mm
     x = collect(reverse(xitr))
