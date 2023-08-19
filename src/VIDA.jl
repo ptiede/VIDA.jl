@@ -26,6 +26,7 @@ using Reexport
 @reexport using VLBISkyModels
 
 using ComradeBase: SpatialIntensityMap
+import ComradeBase: intensity_point
 
 import DataFrames: stack  # ensure two exports don't clash; also exported by Base julia 1.9.
 

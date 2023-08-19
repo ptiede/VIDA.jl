@@ -2,50 +2,66 @@
 
 # If you want to add your own template you just need to define a new:
 # - template type
-# - size method
-# - imagetemplate method for that type of template.
-#
+# -
 # For example to add a symmetric gaussian template we can use:
 using VIDA
 
-Base.@kwdef struct SymGaussian <: VIDA.AbstractImageTemplate
-   σ::Float64 #standard deviation of the Gaussian
-   x0::Float64 #x location of mean
-   y0::Float64 #y location of mean
+struct SlashedExponentialRing{T} <: VIDA.AbstractImageTemplate
+    αouter::T
+    αinner::T #standard deviation of the Gaussian
+    s::T
 end
 
-SymGaussian(p) = SymGaussian(p[1],p[2],p[3])
+function VIDA.intensity_point(m::SlashedExponentialRing, p)
+    (;X, Y) = p
+    (;αinner, αouter, s) = m
+    r = hypot(X, Y)
+    ϕ = atan(X, -Y)
 
-Base.size(::Type{SymGaussian}) = 3
+    n = (1-s*cos(ϕ))/(s + 1)
 
-function (θ::SymGaussian)(x,y)
-  z2 = ((x-θ.x0)^2 + (y-θ.y0)^2)/(2.0*θ.σ^2)
-  return 1.0/(2.0*π*θ.σ^2)*exp(-z2)
+    return n*r^αinner/(1 + r^(αouter + αinner))
 end
+
+# We can also add a convienence constructor
+function SlashedExponentialRing(r0, αouter, αinner, s, ξs, x0, y0)
+    return modify(SlashedExponentialRing(αouter, αinner, s),
+            Stretch(r0, r0), Rotate(ξs), Shift(x0, y0))
+end
+
 
 # Then you can simply call the same optimizing functions and
 # plotting functions. For example lets create a fake image and fit it
 
-template = SymGaussian(σ=20.0, x0=0.0, y0=0.0)
+template = SlashedExponentialRing(μas2rad(20.0), 3.0, 4.0, 0.5, π/2, 0.0, 0.0)
 
-# Now I will use a utility function to convert a template to an EHTImage
-img = VIDA.make_image(template, 64, (-60.0,60.0), (-60.0,60.0));
+# VIDA uses [`ComradeBase`](https://github.com/ptiede/ComradeBase.jl) and `VLBISkyModels`
+# interface. We can create an image using `intensitymap`
+img = intensitymap(template, μas2rad(128.0), μas2rad(128.0), 64, 64)
 
+# We can also plot the image
+using Plots
+plot(img)
 
 # Now lets see if we can get the correct parameters
 bh = Bhattacharyya(img);
 
-# Define the starting point for the optimization and the bounds
-start = SymGaussian(rand(3))
-upper = SymGaussian(σ=40.0, x0=60.0, y0=60.0)
-lower = SymGaussian(σ=0.001, x0=-60.0, y0=-60.0)
+# To fit we need to define a fitting function. For this our template function
+# needs to accept a named tuple.
+temp(θ) = SlashedExponentialRing(θ.r0, θ.αout, θ.αin, θ.s, θ.ξs, θ.x0, θ.y0)
+# Additionally we need to define the search region for our template extraction
+upper = (r0=μas2rad(40.0), αout=10.0, αin = 10.0, s=0.999, ξs=1π, x0= μas2rad(60.0), y0= μas2rad(60.0))
+lower = (r0=μas2rad(5.0), αout=1.0, αin = 0.0, s=0.001, ξs=-1π, x0= -μas2rad(60.0), y0= -μas2rad(60.0))
 
-prob = ExtractProblem(bh, start, lower, upper)
+# We can now create our problem
+prob = VIDAProblem(bh, temp, lower, upper)
 
-θopt, divmin = extractor(prob, CMAES())
+# The vida method can use any optimizer that works with [`Optimization.jl`](https://docs.sciml.ai/Optimization/stable/)
+# For this work we will use [`CMAEvolutionStrategy`](https://github.com/jbrea/CMAEvolutionStrategy.jl).
+using OptimizationCMAEvolutionStrategy
+xopt, θopt, divmin = vida(prob, CMAEvolutionStrategyOpt(); maxiters=50_000)
 
 @show θopt
 
 # Let's also plot the results
-
 triptic(img, template)
