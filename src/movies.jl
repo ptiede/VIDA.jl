@@ -59,9 +59,12 @@ VIDAMovie(times, images::Vector{<:SpatialIntensityMap}) = VIDAMovie(_join_frames
 
 function _join_frames(times, images)
     g = axiskeys(first(images))
-    mimg = stack(images)
+    arr = zeros(size(g)..., length(times))
+    for i in eachindex(times)
+        arr[:, :, i] .= images[i]
+    end
     gt = GriddedKeys((X=g.X, Y=g.Y, T=times))
-    return IntensityMap(mimg, gt)
+    return IntensityMap(arr, gt)
 end
 
 
