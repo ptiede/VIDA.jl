@@ -51,8 +51,6 @@ Base.size(::Type{Gaussian}) = 3
 ```
 """
 abstract type AbstractImageTemplate <: AbstractTemplate end
-@inline function (θ::AbstractImageTemplate)(x,y)
-    return CB.intensity_point(θ, (X=x, Y=y))
-end
 
 include(joinpath(@__DIR__, "image.jl"))
+include(joinpath(@__DIR__, "rings.jl"))

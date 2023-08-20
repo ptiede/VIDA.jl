@@ -3,8 +3,15 @@ using LinearAlgebra
 using Interpolations: Lanczos
 include(joinpath(@__DIR__, "common.jl"))
 
+function test_template(θ::AbstractTemplate; npix=128, fov=120.0, )
+    @inferred ComradeBase.intensity_point(θ, (X=0.0, Y=0.0))
+    @test ComradeBase.intensity_point(θ, (X=0.0, Y=0.0)) isa AbstractFloat
+    @inferred ComradeBase.radialextent(θ)
+    @test ComradeBase.radialextent(θ) isa AbstractFloat
+end
 
-@testset "TemplateAsymGaussian" begin
+
+@testset "GaussianRing" begin
     θ = AsymGaussian(σ, τ, ξτ, x0,y0)
     θ1 = AsymGaussian(x0=x0,σ=σ,y0=y0, τ=τ, ξ=ξτ)
     θ2 = AsymGaussian([σ,τ,ξτ,x0,y0])
