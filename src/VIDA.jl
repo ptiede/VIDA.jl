@@ -11,6 +11,7 @@ module VIDA
 
 
 import ComradeBase as CB
+import ComradeBase as CB
 using DocStringExtensions
 using FITSIO
 using HDF5
@@ -26,8 +27,6 @@ using Reexport
 
 using ComradeBase: SpatialIntensityMap
 import ComradeBase: intensity_point
-
-import DataFrames: stack  # ensure two exports don't clash; also exported by Base julia 1.9.
 
 export
     #make the divergences to use for optimization
