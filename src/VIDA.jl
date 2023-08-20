@@ -66,7 +66,7 @@ end
 
 @static if !isdefined(Base, :get_extension)
     function __init__()
-        @require Plots="91a5bcdd-55d7-5caf-9e0b-520d859cae80" include(@__DIR__, "../ext/VIDAPlotsExt.jl")
+        @require Plots="91a5bcdd-55d7-5caf-9e0b-520d859cae80" include(joinpath(@__DIR__, "../ext/VIDAPlotsExt.jl"))
 
     end
 end
