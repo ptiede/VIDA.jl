@@ -88,7 +88,7 @@ function main()
     return 0
 end
 
-function make_problem(div, truthimg::EHTImage)
+function make_problem(div, truthimg::IntensityMap)
     lower = ImageTemplate(-80.0, -80.0, truthimg)
     upper = ImageTemplate(80.0, 80.0, truthimg)
     template = ImageTemplate(0.0, 0.0, truthimg)

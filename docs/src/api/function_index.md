@@ -18,37 +18,29 @@ Pages = ["function_index.md"]
 
 ## Templates
 
-These are the various template types and helper functions.
+These are the various template types in VIDA and VLBISkyModels.
 
 ```@docs
-VIDA.AbstractTemplate
-VIDA.AbstractImageTemplate
-VIDA.AbstractModifierTemplate
-VIDA.AbstractCompositeTemplate
-ImageTemplate
 LogSpiral
 Constant
-Disk
-AsymGaussian
+GaussDisk
+RingTemplate
+RadialGaussian
+RadialDblPower
+RadialTruncExp
+AzimuthalUniform
+AzimuthalCosine
 GaussianRing
+CosineRing
+```
+
+In addition in VIDA we define a number of helper functions for commonly used templates
+```@docs
 SlashedGaussianRing
 EllipticalGaussianRing
-TIDAGaussianRing
-GeneralGaussianRing
-SymCosineRing
-CosineRing
-AddTemplate
-MulTemplate
-StretchMod
-stretch
-RotateMod
-rotate
-stretchrotate
-Base.size(f::T) where {T<:AbstractTemplate}
-unpack
-stack
-split
-VIDA.template_image
+CosineRingwFloor
+CosineRingwGFloor
+EllipticalCosineRing
 ```
 
 ## Images
@@ -56,19 +48,9 @@ VIDA.template_image
 VIDA has an image interface that reads in images using the FITS standard.
 
 ```@docs
-AbstractImage
-AbstractFitsImage
-EHTImage
-load_fits
-save_fits
-centroid
-inertia
-pixelloc
-flux(::EHTImage)
-rescale(::EHTImage, ::Any, ::Any, ::Any)
-blur(::EHTImage, ::Any)
+load_image
+VIDA.blur(::ComradeBase.IntensityMap, ::Any)
 clipimage
-field_of_view
 ```
 
 ## Movies
@@ -77,17 +59,16 @@ VIDA also has a movie interface using hdf5. Note that movies are
 more than just a list of images. We also use an interpolation between frames.
 
 ```@docs
-AbstractMovie
-EHTMovie
-load_hdf5
-save_hdf5
-join_frames
-get_times
-get_frames
-get_image
-flux(::EHTMovie, ::Any)
-blur(::EHTMovie, ::Any)
-rescale(::EHTMovie,::Any,::Any,::Any)
+VIDA.VIDAMovie
+VIDA.load_hdf5
+VIDA.save_hdf5
+VIDA.join_frames
+VIDA.get_times
+VIDA.get_frames
+VIDA.get_image
+VIDA.flux(::VIDAMovie, ::Any)
+VIDA.blur(::VIDAMovie, ::Any)
+VLBISkyModels.regrid(::VIDAMovie)
 ```
 
 ## Divergences
@@ -96,6 +77,8 @@ rescale(::EHTMovie,::Any,::Any,::Any)
 AbstractDivergence
 Bhattacharyya
 KullbackLeibler
+Renyi
+LeastSquares
 ```
 
 ## Extractor
@@ -104,20 +87,10 @@ This defines the interface to the optimizers that can find
 the optimal template for a given image.
 
 ```@docs
-Optimizer
-BBO
-CMAES
-Opt
-ExtractProblem
-extractor
-threaded_extractor
+VIDAProblem
+vida
 ```
 
-## Utilities
-
-```@docs
-make_image
-```
 
 ## Visualizations
 

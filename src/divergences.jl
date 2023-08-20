@@ -1,24 +1,82 @@
+export divergence
 
 """
     $(TYPEDEF)
-An abstract class for a divergence of a function. This expects
-that a subtype has a field with an EHTImage object and a flux type.
-The struct is then assumed to be a **functor** and have a function
-that computes the divergence of the image and a template.
 
-For example
+Defines an `AbstractDivergence` type. This is the basic cost function of `VIDA`.
+
+A subtype of `AbstractDivergence` must be a `struct` with at least two fields
+  - `img::IntensityMap` which holds the image you wish to run feature extraction on
+  - `mimg::IntensityMap` which is an internal buffer that stores the model image.
+
+The divergence is evaluated roughly as
+
 ```julia
-    struct MyDiv{T,F,S} <: AbstractDivergence
-        img::EHTImage{T,F}
-        flux::S
-    end
-    function (bh::MyDiv)(θ::AbstractTemplate)
-        ...
-    end
+    normalize_div(div, sum(divergence_point(div, image, model)))
+```
+
+
+Therefore a user must implement the following methods
+
+  - [`divergence_point](@ref)`: Which evaluates the divergence at a single pixel
+  - [`normalize_div`](@ref): Which normalizes and modifies the
 ```
 
 """
 abstract type AbstractDivergence end
+
+"""
+    divergence_point(div::AbstractDivergence, p, q)
+
+Evaluate the divergence `div` at a single pixel with value `p` and `q` for image and
+template. The total divergence
+"""
+function divergence_point end
+
+"""
+    normalize_div(div, val)
+
+Returns the proper divergence whose values have been normalized so that the value is always
+postive semi-definite and is only zero then the template and the image are equal.
+"""
+function normalize_div end
+
+
+
+@inline function divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
+    _divergence(d, m)
+end
+
+# @inline function _divergence(::IsAnalytic, d::AbstractDivergence, m::AbstractModel)
+#     return divergence_analytic(d, m)
+# end
+
+# @inline function _divergence(::NotAnalytic, d::AbstractDivergence, m::AbstractModel)
+#     return divergence_numeric(d, m)
+# end
+
+
+# function _divergence(d::AbstractDivergence, m::AbstractModel)
+#     (;img) = d
+#     g = CB.imagegrid(img)
+#     div, fm = mapreduce(.+, zip(g, img)) do (p, I)
+#         Imod = CB.intensity_point(m, p)
+#         return divergence_point(d, I, Imod), Imod
+#     end
+#     return normalize_div(d, div, fm)
+# end
+
+function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
+    (;img, mimg) = d
+    CB.intensitymap!(mimg, m)
+    fm = flux(mimg)
+    div  = sum(zip(img, mimg)) do (ii, im)
+        return divergence_point(d, ii, im/fm)
+    end
+    return normalize_div(d, div)
+end
+
+
 
 """
     $(TYPEDEF)
@@ -36,37 +94,19 @@ Bh(f_\\theta||\\hat{I}) = -\\log\\int \\sqrt{f_\\theta(x,y)\\hat{I}(x,y)}dxdy,
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 """
-struct Bhattacharyya{T<:EHTImage,S} <: AbstractDivergence
-    """
-    Abstract image class
-    """
+struct Bhattacharyya{T<:IntensityMap} <: AbstractDivergence
     img::T
-    flux::S
+    mimg::T
 end
-function Bhattacharyya(img::T) where {T<:EHTImage}
-    Bhattacharyya(img, flux(img))
-end
-function (bh::Bhattacharyya)(θ::T) where {T<:AbstractTemplate}
-    @unpack img, flux = bh
-    bsum = zero(eltype(img.img))
-    template_norm = zero(eltype(img.img))
-    xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
-    ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
-    for i in 1:img.nx
-        @simd for j in 1:img.ny
-            x = xstart + img.psize_x*(i-1)
-            y = ystart + img.psize_y*(j-1)
-            template_value = abs(θ(x,y))
-            @inbounds bsum += sqrt(template_value*img.img[j,i])
-            template_norm += template_value
-        end
-    end
-    return -log(bsum/sqrt(template_norm*flux))
+function Bhattacharyya(img::T) where {T<:IntensityMap}
+    Bhattacharyya(img./flux(img), zero(img))
 end
 
 
-
-
+@inline function divergence_point(::Bhattacharyya, p, q)
+    return sqrt(p*q)
+end
+@inline normalize_div(::Bhattacharyya, div) = -log(div)
 
 
 """
@@ -87,44 +127,22 @@ where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 This struct is also a functor.
 """
-struct KullbackLeibler{T,S} <: AbstractDivergence
-    """
-    Abstract image class
-    """
+struct KullbackLeibler{T<:IntensityMap} <: AbstractDivergence
     img::T
-    flux::S
+    mimg::T
 end
-function KullbackLeibler(img::T) where {T<:EHTImage}
-    KullbackLeibler(img, flux(img))
+function KullbackLeibler(img::T) where {T<:IntensityMap}
+    KullbackLeibler(img./flux(img), zero(img))
 end
 
+@inline divergence_point(::KullbackLeibler, p, q) = q*log(q/(p+eps(typeof(p))))
+@inline normalize_div(::KullbackLeibler, div) = div
 
-function (kl::KullbackLeibler)(θ::T) where {T<:AbstractTemplate}
-    @unpack img, flux = kl
-    klsum = zero(eltype(img.img))
-    template_norm = zero(eltype(img.img))
-    xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
-    ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
-
-    @inbounds for i in 1:img.nx
-        @simd for j in 1:img.ny
-            x = xstart + img.psize_x*(i-1)
-            y = ystart + img.psize_y*(j-1)
-            template_value = θ(x,y)+1e-12
-            klsum += template_value*log(template_value/(img.img[j,i]+1e-12))
-            template_norm += template_value
-        end
-    end
-    return (klsum/template_norm - log(template_norm/flux))
-end
 
 struct Renyi{T,S} <: AbstractDivergence
-    """
-    Abstract image class
-    """
     img::T
-    flux::S
-    α::Float64
+    α::S
+    mimg::T
 end
 
 """
@@ -150,34 +168,17 @@ Typically we find that `α=1.5` works well, as it focusses on the bright regions
 moreso than the Bh and KL divergence. For `α>2` the measure tends to devolve in something
 akin the to sup norm and fails to match the image structure.
 """
-function Renyi(img::T, α) where {T<:EHTImage}
+function Renyi(img::T, α) where {T<:IntensityMap}
     @assert !(α-1 ≈ 0) "α=1 is the KL divergence use that instead"
     f = flux(img)
-    Renyi{T,typeof(f)}(img, f, α)
+    Renyi{T,typeof(f)}(img./flux(img), α, zero(img))
 end
 
-function (div::Renyi)(θ::AbstractTemplate)
-    @unpack img, flux, α = div
-    dsum = zero(eltype(img.img))
-    template_norm = zero(eltype(img.img))
-    xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
-    ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
-
-    @inbounds for i in 1:img.nx
-        @simd for j in 1:img.ny
-            x = xstart + img.psize_x*(i-1)
-            y = ystart + img.psize_y*(j-1)
-            template_value = θ(x,y)+1e-12
-            imI = img.img[j,i] + eps(eltype(img.img))
-            dsum += imI*(template_value/imI)^α
-            template_norm += template_value
-        end
-    end
-    return inv(α-1)*log(dsum*(flux/template_norm)^α/flux)
-
-
+@inline divergence_point(d::Renyi, p, q) = p*(q/p)^d.α
+@inline function normalize_div(d::Renyi, div)
+    α = d.α
+    return inv(α-1)*log(div)
 end
-
 
 
 
@@ -199,32 +200,17 @@ ls = LeastSquares(img::EHTImage)
 We have a template internal matrix the prevents internal allocations during computation
 This is a internal feature that the user does not need to worry about.
 """
-struct LeastSquares{T,S,V} <: AbstractDivergence
+struct LeastSquares{T} <: AbstractDivergence
     img::T
-    flux::S
-    template::V
+    mimg::T
 end
 
-function LeastSquares(img::T) where {T<:EHTImage}
-    LeastSquares(img, flux(img), zeros(size(img)))
+function LeastSquares(img::SpatialIntensityMap)
+    LeastSquares(img./flux(img), zero(img))
 end
 
-
-function (ls::LeastSquares)(θ::AbstractTemplate)
-    @unpack img, flux, template = ls
-    template_norm = zero(eltype(img.img))
-    xstart = (-img.nx*img.psize_x + img.psize_x)/2.0
-    ystart = (-img.ny*img.psize_y + img.psize_y)/2.0
-
-    @inbounds for i in 1:img.nx
-        @simd for j in 1:img.ny
-            x = xstart + img.psize_x*(i-1)
-            y = ystart + img.psize_y*(j-1)
-            template_value = θ(x,y)+1e-12
-            template[j,i] = template_value
-            template_norm += template_value
-        end
-    end
-    template .= template./template_norm .- img./flux
-    return sum(abs2, template)
+function divergence_point(::LeastSquares, p, q)
+    return abs2(p - q)
 end
+
+@inline normalize_div(::LeastSquares, div) = div

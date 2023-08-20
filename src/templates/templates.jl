@@ -5,22 +5,18 @@
     $(TYPEDEF)
 An abstract type that defines super template type.
 """
-abstract type AbstractTemplate end
+abstract type AbstractTemplate <: CB.AbstractModel end
 
-"""
-    size(f::AbstractTemplate)
-Get the number of parameters for the template f
-"""
-Base.size(f::T) where {T<:AbstractTemplate} = Base.size(T)
+# Hook into ComradeBase interface
+CB.visanalytic(::Type{<:AbstractTemplate}) = CB.NotAnalytic()
+CB.imanalytic(::Type{<:AbstractTemplate}) = CB.IsAnalytic()
+CB.isprimitive(::Type{<:AbstractTemplate}) = CB.IsPrimitive()
 
+CB.flux(::AbstractTemplate) = 1.0
 
-# Updates the paramters for a given template even though they are immutable
-function _update(θ::AbstractTemplate, p)
-    return typeof(θ)(p)
-end
 
 #Load the variety of utils needed
-include(joinpath(@__DIR__, "utils.jl"))
+# include(joinpath(@__DIR__, "utils.jl"))
 
 
 """
@@ -55,20 +51,7 @@ Base.size(::Type{Gaussian}) = 3
 ```
 """
 abstract type AbstractImageTemplate <: AbstractTemplate end
+
 include(joinpath(@__DIR__, "image.jl"))
-
-"""
-    $(TYPEDEF)
-Meta-template that accepts a abstract template and modifies it through
-some analytic transformation. This is useful for model composability.
-"""
-abstract type AbstractModifierTemplate <: AbstractTemplate end
-include(joinpath(@__DIR__, "modifiers.jl"))
-
-"""
-    $(TYPEDEF)
-Abstract type for taking two templates composing them in some manner
-and returning a new template.
-"""
-abstract type AbstractCompositeTemplate <: AbstractTemplate end
-include(joinpath(@__DIR__,"composite.jl"))
+include(joinpath(@__DIR__, "rings.jl"))
+include(joinpath(@__DIR__, "cosinering.jl"))
