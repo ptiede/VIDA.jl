@@ -1,4 +1,5 @@
-using HypercubeTransform, Random, Distributions
+using HypercubeTransform, Random
+using Distributions: Uniform, product_distribution
 using Optimization
 
 export VIDAProblem, vida, threaded_vida
@@ -15,21 +16,33 @@ function VIDAProblem(div, f, lb, ub)
     return VIDAProblem(div, f, SciMLBase.NoAD(), lb, ub)
 end
 
+_distize(x::Real, y::Real) = Uniform(x, y)
+_distize(x::NTuple{N}, y::NTuple{N}) where {N} = ntuple(i->Uniform(x[i], y[i]), N)
+function _distize(x::AbstractArray, y::AbstractArray)
+    dists = map((x,y)->Uniform(x, y), x, y)
+    return product_distribution(dists)
+end
+
 
 function build_opt(prob, unit_cube)
-    dist = map((x,y)->Uniform(x, y), prob.lb, prob.ub)
+    dist = map((x,y)->_distize(x, y), prob.lb, prob.ub)
     if unit_cube
         t = ascube(dist)
         bounds_lower = fill(1e-3, dimension(t))
         bounds_upper = fill(0.999, dimension(t))
     else
         t = asflat(dist)
-        bounds_lower = nothing
-        bounds_upper = nothing
+        bounds_lower = fill(-20.0, dimension(t))
+        bounds_upper = fill(20.0, dimension(t))
 
     end
-    f = let t=t, div = prob.div, mod = prob.f
-        x->divergence(div, mod(transform(t, x)))
+    f = let t=t, div = prob.div, mod = prob.f, lb=bounds_lower, ub=bounds_upper
+        x->begin
+            for i in eachindex(x)
+                (lb[i] > x[i] || ub[i] < x[i]) && return Inf
+            end
+            return divergence(div, mod(transform(t, x)))
+        end
     end
     return f, t, (bounds_lower, bounds_upper)
 end
@@ -49,7 +62,7 @@ function vida(prob::VIDAProblem, optimizer; rng=Random.default_rng(), init_param
     f, t, (lb, ub) = build_opt(prob, unit_cube)
     x0 = initial_point(rng, t, init_params)
     fopt = OptimizationFunction((x,p)->f(x), prob.autodiff)
-    optprob = OptimizationProblem(fopt, x0; lb, ub)
+    optprob = OptimizationProblem(fopt, x0, nothing; lb=lb, ub=ub)
     xopt, min =  _vida(fopt, t, optprob, optimizer; kwargs...)
     return xopt, prob.f(xopt), min
 end
@@ -59,23 +72,4 @@ function _vida(fopt, t, optprob, optimizer; kwargs...)
     sol = solve(optprob, optimizer; kwargs...)
     xopt = transform(t, sol.u)
     return xopt, sol.minimum
-end
-
-function threaded_vida(nstart::Int, prob::VIDAProblem, optimizer; rng=Random.default_rng(), init_params=nothing, unit_cube=true, kwargs...)
-    f, t, (lb, ub) = build_opt(prob, unit_cube)
-    x0 = initial_point(rng, t, init_params)
-    fopt = OptimizationFunction((x,p)->f(x), autodiff)
-
-    tasks = map(1:nstart) do i
-        x0 = init_params(rng, t, init_params[i])
-        prob = OptimizationProblem(fopt, x0, lb, ub)
-        xopt, lp = _vida(fopt, prob, optimizer; kwargs...)
-        return xopt, lp
-    end
-
-    sols = fetch.(tasks)
-    xopts = first.(sols)
-    lopts = last.(sols)
-    inds = sortperm(lopts)
-    return xopts[inds], lops[inds]
 end

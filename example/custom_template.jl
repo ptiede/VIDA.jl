@@ -18,9 +18,9 @@ function VIDA.intensity_point(m::SlashedExponentialRing, p)
     r = hypot(X, Y)
     ϕ = atan(X, -Y)
 
-    n = (1-s*cos(ϕ))/(s + 1)
+    n = (1-s*cos(ϕ))
 
-    return n*r^αinner/(1 + r^(αouter + αinner))
+    return n*r^αinner/(1 + r^(αouter + αinner+1))
 end
 
 # We can also add a convienence constructor
@@ -58,10 +58,19 @@ prob = VIDAProblem(bh, temp, lower, upper)
 
 # The vida method can use any optimizer that works with [`Optimization.jl`](https://docs.sciml.ai/Optimization/stable/)
 # For this work we will use [`CMAEvolutionStrategy`](https://github.com/jbrea/CMAEvolutionStrategy.jl).
-using OptimizationCMAEvolutionStrategy
-xopt, θopt, divmin = vida(prob, CMAEvolutionStrategyOpt(); maxiters=50_000)
+using OptimizationBBO
+xopt, θopt, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 
 @show θopt
 
 # Let's also plot the results
 triptic(img, template)
+
+
+# Now with all of this said this template actually already exists in VIDA using
+# the flexible [`RingTemplate`](@ref).
+rad = RadialDblPower(xopt.αin, xopt.αout)
+azi = AzimuthalCosine(xopt.s, xopt.ξs)
+t   = modify(RingTemplate(rad, azi), Stretch(xopt.r0), Shift(xopt.x0, xopt.y0))
+
+triptic(img, t)

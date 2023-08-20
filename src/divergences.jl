@@ -186,7 +186,7 @@ struct LeastSquares{T} <: AbstractDivergence
 end
 
 function LeastSquares(img::SpatialIntensityMap)
-    LeastSquares(img./flux(img), zeros(mimg))
+    LeastSquares(img./flux(img), zero(img))
 end
 
 function divergence_point(::LeastSquares, p, q)

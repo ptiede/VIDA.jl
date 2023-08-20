@@ -49,6 +49,7 @@ function load_im_h5(fname::String)
         time = read(header["t"])*tunit/3600
         image = fid["pol"][1,:,:]
 
+
         # Now convert everything to EHTImage
         image = image.*jyscale
         src = "SgrA"
@@ -56,19 +57,13 @@ function load_im_h5(fname::String)
         dec = -28.992
 
         # convert to μas
-        fovμas = dx/dsource*lunit*2.06265e11
-        psize_x = fovμas/nx
-        psize_y = fovμas/nx
+        fov = μas2rad(dx/dsource*lunit*2.06265e11)
 
-        mjd = 53005.0
-        return EHTImage(nx, nx,
-                        -psize_x, psize_y,
-                        src,
-                        ra, dec,
-                        C0/rf,
-                        mjd,
-                        image
-                    )
+        mjd = 53005
+        ComradeBase.MinimalHeader(src, ra, dec, mjd, frequency)
+        g = imagepixels(fov, fov, nx, nx; header)
+
+        return IntensityMap(image, g)
     end
     return img
 end
@@ -101,11 +96,16 @@ that only work with ehtim.
 """
 function save_hdf5(filename, mov; style=:ehtim)
     # Copy this so I don't manipulate the movie itself
-    I = deepcopy(reshape(mov.frames.itp.coefs, mov.nx, mov.ny, length(mov.frames.itp.knots[2])))
+    I = copy(mov.frames)
     # Now because HDF5 uses row major I need to permute the dims around
     # so that ehtim reads this in correctly.
-    I = permutedims(I, [2,1,3])[:,end:-1:1,:]
-    times = mov.frames.itp.knots[2]
+    I = ComradeBase.baseimage(I)[end:-1:1,end:-1:1,:]
+    times = mov.frames.T
+    head = header(mov.frames)
+
+    if head isa ComradeBase.NoHeader
+        head = (ra = 180.0, dec = 0.0, mjd = 5000, frequency = 230e9, source="M87")
+    end
 
     #Open and output in a safe manner
     h5open(filename, "w") do file
@@ -115,14 +115,14 @@ function save_hdf5(filename, mov; style=:ehtim)
         file["header"] = ""
         header = file["header"]
         #Now I write the header as attributes since this is what ehtim does
-        attributes(header)["dec"] = string(mov.dec)
-        attributes(header)["mjd"] = string(Int(mov.mjd))
+        attributes(header)["dec"] = string(head.dec)
+        attributes(header)["mjd"] = string(Int(head.mjd))
         attributes(header)["pol_prim"] = "I"
         attributes(header)["polrep"] = "stokes"
-        attributes(header)["psize"] = string(mov.psize_y/(3600.0*1e6*180.0/π))
-        attributes(header)["ra"] = string(mov.ra)
-        attributes(header)["rf"] = string(C0/mov.wavelength)
-        attributes(header)["source"] = string(mov.source)
+        attributes(header)["psize"] = string(step(mov.frames.X))
+        attributes(header)["ra"] = string(head.ra)
+        attributes(header)["rf"] = string(head.frequency)
+        attributes(header)["source"] = string(head.source)
         #Now write the times
         @write file times
     end
@@ -131,32 +131,25 @@ end
 
 function _load_ehtimhdf5(filename)
     #Open the hdf5 file
-    fid = h5open(filename, "r")
-    try
+    img = h5open(filename, "r") do fid
         header = fid["header"]
         # Read the images TODO: Make this lazy to not nuke my memory
         images = read(fid["I"])
-        images = permutedims(images, [2,1,3])[end:-1:1,:,:]
-        npix = Base.size(images)[1]
+        images = images[end:-1:1,end:-1:1,:]
+        psize = parse(Float64, read(header["psize"]))
+        fov = psize*size(images,1)
         times = read(fid["times"])
         source = String(read(header["source"]))
         ra = parse(Float64, read(header["ra"]))
         dec = parse(Float64, read(header["dec"]))
-        mjd = parse(Float64, read(header["mjd"]))
+        mjd = parse(Int, read(header["mjd"]))
         rf = parse(Float64, read(header["rf"]))
         psize = parse(Float64, read(header["psize"]))*3600*1e6*180.0/π
-        close(fid)
-        return EHTMovie(npix, npix,
-                        -psize, psize,
-                        source,
-                        ra, dec,
-                        C0/rf,
-                        mjd,
-                        times, images
-                    )
-    catch
-        close(fid)
-        println("Unable to open $filename")
-        return nothing
+        header = ComradeBase.MinimalHeader(source, ra, dec, mjd, rf)
+        g = imagepixels(fov, fov, size(images, 1), size(images, 2); header)
+        gt = GriddedKeys((X=g.X, Y=g.Y, T = times))
+        img = IntensityMap(images, gt)
+        return img
     end
+    return VIDAMovie(img)
 end

@@ -50,5 +50,5 @@ Returns the blurred image.
 """
 function blur(img::SpatialIntensityMap, fwhm)
     σ = fwhm./(2*sqrt(2*log(2)))
-    return convolve(img, modify(Gaussian(), stretch(σ)))
+    return VLBISkyModels.convolve(img, modify(Gaussian(), Stretch(σ)))
 end

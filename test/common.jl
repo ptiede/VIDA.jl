@@ -19,8 +19,8 @@ const δϕ = 0.1π
 
 
 const npix = 512
-const xlim = [-60.0,60.0]
-const ylim = [-60.0,60.0]
+const fovx = 120.0
+const fovy = 120.0
 
 const ϵ = 1e-4
 

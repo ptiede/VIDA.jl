@@ -11,9 +11,16 @@ $(TYPEDEF)
 The type is to hold a EHT movie. The dimension of the movie array
 is assumed to be in the form DEC,RA,Time.
 """
-struct VIDAMovie{F<:AbstractVector{<:IntensityMap}, I<:Interpolations.AbstractExtrapolation} <: AbstractMovie
+struct VIDAMovie{T, F<:IntensityMap{T, 3}, I<:Interpolations.AbstractExtrapolation} <: AbstractMovie
     frames::F
     itp::I
+end
+
+function Base.show(io::IO, mov::VIDAMovie{T, F}) where {T, F}
+    println(io, "VIDAMovie{$T}:")
+    println(io, "\tFrame dimension : $(size(mov.frames)[1:2])")
+    println(io, "\tNumber of frames: $(size(mov.frames, 3))")
+    println(io, "\tTime range      : $((first(mov.frames.T), last(mov.frames.T)))")
 end
 
 
@@ -37,12 +44,12 @@ function VIDAMovie(
     #Create the interpolation object for the movie
     #This does not need equal times
     @assert propertynames(mov) == (:X, :Y, :T) "Array must have dimension X, Y, T"
-    nx = size(img, :X)
-    ny = size(img, :Y)
-    nt = size(img, :T)
+    nx = size(mov, :X)
+    ny = size(mov, :Y)
+    nt = size(mov, :T)
     fimages = reshape(mov, nx*ny, nt)
     sitp = extrapolate(interpolate((collect(1.0:(nx*ny)), mov.T),
-                        ComradeBase.baseimage(fimages),
+                        fimages,
                         (NoInterp(), Gridded(Linear()))),
                         (Interpolations.Flat(), Interpolations.Flat()))
     return VIDAMovie(mov, sitp)
@@ -88,9 +95,11 @@ end
 Gets the frame of the movie object `mov` at the time t. This returns an `EHTImage`
 object at the requested time. The returned object is found by linear interpolation.
 """
-function get_image(mov::VIDAMovie, t)
-    img = reshape(mov.frames.(1:(mov.nx*mov.ny), Ref(t)), mov.ny, mov.nx)
-    return IntensityMap(img, GriddedKeys((X=mov.frames.X, Y=mov.frame.Y, T=t:t)))
+function get_image(mov::VIDAMovie, t; keeptime=false)
+    img = mov.itp.(1:prod(size(mov.frames)[1:2]), Ref(t))
+    (;X, Y) = mov.frames
+    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), GriddedKeys((;X, Y, T=t:t)))
+    return IntensityMap(reshape(img, size(mov.frames)[1:2]), GriddedKeys((X=mov.frames.X, Y=mov.frames.Y)))
 end
 
 @doc """
@@ -123,7 +132,7 @@ Returns the blurred movie.
 """
 function blur(mov::VIDAMovie, fwhm)
     frames = get_frames(mov)
-    bframes = map(x->convolve(x, modify(Gaussian(), Stretch(fwhm))), eachslice(frames, dims=:T))
+    bframes = map(x->blur(x, fwhm), eachslice(frames, dims=(:X,:Y)))
     return bframes
 end
 
