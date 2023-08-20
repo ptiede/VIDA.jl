@@ -8,8 +8,7 @@ abstract type AbstractMovie end
 $(TYPEDEF)
 
 # Details
-The type is to hold a EHT movie. The dimension of the movie array
-is assumed to be in the form DEC,RA,Time.
+Holds a X,Y,T `IntensityMap` plus an interpolator that lets you make a continuous movie
 """
 struct VIDAMovie{T, F<:IntensityMap{T, 3}, I<:Interpolations.AbstractExtrapolation} <: AbstractMovie
     frames::F
@@ -70,7 +69,7 @@ end
 
 @doc """
     $(SIGNATURES)
-Joins an array of EHTImages at specified times to form an VIDAMovie object.
+Joins an array of `IntensityMap` at specified times to form an VIDAMovie object.
 
 ## Inputs
  - times: An array of times that the image was created at

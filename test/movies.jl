@@ -9,6 +9,10 @@ include("common.jl")
         return intensitymap(f, 120.0, 120.0, 64, 64)
     end
     mov = join_frames(times, frames)
+    VIDAMovie(times, frames)
+    @test times == get_times(mov)
+    show(mov)
+    println(mov)
     #Test the save and read hdf5
     save_hdf5("test.hdf5", mov)
     mov_read = load_hdf5("test.hdf5")
@@ -29,5 +33,7 @@ include("common.jl")
 
     #Now lets blur the movie
     bmov = VIDA.blur(mov, 10.0)
+
+    regrid(mov, imagepixels(100.0, 100.0, 32, 32))
 
 end
