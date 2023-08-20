@@ -20,7 +20,7 @@ end
 end
 
 @testset "ImageModifiers Asymmetric" begin
-    img = VIDA.load_fits("../example/data/asymetric_image.fits")
+    img = VIDA.load_image("../example/data/asymetric_image.fits")
     cimg = clipimage(0.1, img)
     cimg = clipimage(0.0, img, :absolute)
 end
@@ -28,6 +28,6 @@ end
 @testset "BlurImages" begin
     filt = GaussianRing(1.0)
     img = intensitymap(filt, 10.0, 10.0, 128, 128)
-    bimg = blur(img, σ*2*sqrt(2*log(2)))
+    bimg = VIDA.blur(img, σ*2*sqrt(2*log(2)))
     @test size(img) == (128,128)
 end

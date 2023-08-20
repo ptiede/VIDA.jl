@@ -54,3 +54,4 @@ abstract type AbstractImageTemplate <: AbstractTemplate end
 
 include(joinpath(@__DIR__, "image.jl"))
 include(joinpath(@__DIR__, "rings.jl"))
+include(joinpath(@__DIR__, "cosinering.jl"))

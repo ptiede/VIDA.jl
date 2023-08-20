@@ -132,8 +132,8 @@ Returns the blurred movie.
 """
 function blur(mov::VIDAMovie, fwhm)
     frames = get_frames(mov)
-    bframes = map(x->blur(x, fwhm), eachslice(frames, dims=(:X,:Y)))
-    return bframes
+    bframes = map(x->blur(x, fwhm), eachslice(frames, dims=(:T)))
+    return join_frames(mov.frames.T, bframes |> parent |> parent)
 end
 
 @doc """
@@ -144,11 +144,11 @@ end
  - xlim : Tuple with the limits of the image in the RA
  - ylim : Tuple with the limits of the image in DEC
 """
-function regrid(mov::VIDAMovie, g::GriddedKeys{(:X, :Y)})
+function VLBISkyModels.regrid(mov::VIDAMovie, g::GriddedKeys{(:X, :Y)})
     # Get the times and frames and apply the image method to each
     frames = get_frames(mov)
     # Isn't broadcasting the best?
-    rframes = map(eachslice(frames; dims=(:X, :Y))) do I
+    rframes = map(eachslice(frames; dims=(:T))) do I
         fimg = VLBISkyModels.InterpolatedImage(I)
         img = intensitymap(fimg, g)
         return img

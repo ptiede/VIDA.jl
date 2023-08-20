@@ -5,7 +5,7 @@ Template type for a logarithmic spiral segment
 ## Fields
 $(FIELDS)
 """
-Base.@kwdef struct LogSpiral{T<:Real} <: AbstractImageTemplate
+struct LogSpiral{T<:Real} <: AbstractImageTemplate
     """ Unit curvature of the logarithmic spiral """
     κ::T
     """ thickness of the Gaussian spiral arm """
@@ -13,7 +13,7 @@ Base.@kwdef struct LogSpiral{T<:Real} <: AbstractImageTemplate
     """ Azimuthal extent of the spiral arm """
     δϕ::T
 end
-CB.radialextent(d::LogSpiral{T}) where {T} = d.r0*exp(d.κ*d.δϕ)
+CB.radialextent(d::LogSpiral{T}) where {T} = exp(d.κ*d.δϕ)
 
 function LogSpiral(r0, κ, σ, δϕ, ξ, x0, y0)
     return modify(LogSpiral(κ, σ/r0, δϕ), Stretch(r0), Rotate(ξ), Shift(x0, y0))
@@ -77,7 +77,7 @@ Defines a template for an image that has a smoothed disk model.
 
 
 """
-Base.@kwdef struct GaussDisk{T} <: AbstractImageTemplate
+struct GaussDisk{T} <: AbstractImageTemplate
     """
     Disk edge standard deviation
     """

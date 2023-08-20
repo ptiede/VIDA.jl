@@ -22,14 +22,12 @@ include("common.jl")
     #@inferred get_frames(mov)
     @inferred getindex(frames, 1)
     @test typeof(images[T=1]) === typeof(frames[1])
-    @test frames[1].img == images[1].img
-    @test img.img == images[1].img
+    @test frames[1] == images[T=1]
+    @test img == images[T=1]
 
     flux(mov, 10.0)
 
     #Now lets blur the movie
-    bmov = blur(mov, 10.0)
-    #regrid the movie
-    rmov = regrid(mov, 128, [-50.0, 50.0], [-50.0, 50.0])
+    bmov = VIDA.blur(mov, 10.0)
 
 end

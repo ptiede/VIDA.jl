@@ -2,24 +2,44 @@ export divergence
 
 """
     $(TYPEDEF)
-An abstract class for a divergence of a function. This expects
-that a subtype has a field with an EHTImage object and a flux type.
-The struct is then assumed to be a **functor** and have a function
-that computes the divergence of the image and a template.
 
-For example
+Defines an `AbstractDivergence` type. This is the basic cost function of `VIDA`.
+
+A subtype of `AbstractDivergence` must be a `struct` with at least two fields
+  - `img::IntensityMap` which holds the image you wish to run feature extraction on
+  - `mimg::IntensityMap` which is an internal buffer that stores the model image.
+
+The divergence is evaluated roughly as
+
 ```julia
-    struct MyDiv{T,F,S} <: AbstractDivergence
-        img::EHTImage{T,F}
-        flux::S
-    end
-    function (bh::MyDiv)(θ::AbstractTemplate)
-        ...
-    end
+    normalize_div(div, sum(divergence_point(div, image, model)))
+```
+
+
+Therefore a user must implement the following methods
+
+  - [`divergence_point](@ref)`: Which evaluates the divergence at a single pixel
+  - [`normalize_div`](@ref): Which normalizes and modifies the
 ```
 
 """
 abstract type AbstractDivergence end
+
+"""
+    divergence_point(div::AbstractDivergence, p, q)
+
+Evaluate the divergence `div` at a single pixel with value `p` and `q` for image and
+template. The total divergence
+"""
+function divergence_point end
+
+"""
+    normalize_div(div, val)
+
+Returns the proper divergence whose values have been normalized so that the value is always
+postive semi-definite and is only zero then the template and the image are equal.
+"""
+function normalize_div end
 
 
 

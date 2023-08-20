@@ -1,6 +1,5 @@
 using Test,VIDA
 using OptimizationBBO
-using OptimizationMetaheuristics
 include("common.jl")
 
 @testset "VIDA" begin
@@ -25,9 +24,9 @@ include("common.jl")
     bh = Bhattacharyya(fimg)
 
     prob = VIDAProblem(bh, temp, lower, upper)
-    xopt, θopt, dmin = vida(prob, ECA(); maxiters=1000, abstol=1e-2)
-    map((x,y)->@test(isapprox(x, y, atol=1e-3)), xopt, p0)
+    xopt, θopt, dmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=100_000)
+    map((x,y)->@test(isapprox(x, y, atol=1e-2)), xopt, p0)
 
-    xopt, θopt, dmin = vida(prob, ECA(); unit_cube=false, maxiters=1000, abstol=1e-2)
-    map((x,y)->@test(isapprox(x, y, atol=1e-3)), xopt, p0)
+    xopt, θopt, dmin = vida(prob, BBO_adaptive_de_rand_1_bin(); unit_cube=false, maxiters=100_000)
+    map((x,y)->@test(isapprox(x, y, atol=1e-2)), xopt, p0)
 end

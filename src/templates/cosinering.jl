@@ -1,3 +1,5 @@
+export CosineRing, CosineRingwFloor, CosineRingwGFloor, GaussDisk
+
 """
     $(TYPEDEF)
 Extrememly flexible symmetric ring model. The thickness is modeled as a cosine
@@ -14,7 +16,7 @@ Here the zero order term is forced to be unity, so `M` defines the `M`
 additional terms.
 
 """
-Base.@kwdef struct CosineRing{N,M,T} <: AbstractImageTemplate
+struct CosineRing{N,M,T} <: AbstractImageTemplate
     """
     0th order ring thickness of the Gaussian ring
     """
@@ -28,14 +30,15 @@ Base.@kwdef struct CosineRing{N,M,T} <: AbstractImageTemplate
     """Slash orientations (length M) in radians measured north of east"""
     ξs::NTuple{M, T}
 end
-CB.radialextent(d::CosineRing{N,M,T}) where {N,M,T} = one(T) + 3*d.σ[1]
+CB.radialextent(d::CosineRing{N,M,T}) where {N,M,T} = one(T) + 3*(d.σ0 + maximum(d.σ))
+CB.radialextent(d::CosineRing{0,M,T}) where {M,T} = one(T) + 3*(d.σ0)
 
 function CosineRing(
     r0,
     σ0,
     σ::NTuple{N}, ξσ::NTuple{N},
     s::NTuple{M}, ξs::NTuple{M}, x0, y0) where {N, M}
-    return modify(CosineRing(σ0/r0, σ/r0, ξσ, s, ξs), Stretch(r0), Shift(x0, y0))
+    return modify(CosineRing(σ0/r0, σ./r0, ξσ, s, ξs), Stretch(r0), Shift(x0, y0))
 end
 
 
@@ -52,9 +55,9 @@ function CB.intensity_point(θ::CosineRing{N,M,T}, p) where {N,M,T}
         n -= θ.s[i]*cos(i*(ϕ - θ.ξs[i]))
     end
 
-    σ = θ.σ[1]
+    σ = θ.σ0
     @inbounds for i in 1:N
-        σ += θ.σ[i+1]*cos(i*(ϕ - θ.ξσ[i]))
+        σ += θ.σ[i]*cos(i*(ϕ - θ.ξσ[i]))
     end
 
     return abs(n)*exp(-dr2/(2*σ^2))
@@ -65,17 +68,37 @@ end
 
 """
     $(SIGNATURES)
-Symmetric ring model of radius `r0`  whose azimuthal brightness and thickness is described using a
-`M` and `N` order cosine expansion. In addition a disk with radius matching the diameter
-of the ring with flux `floor` is added to the center of the ring.
 
-# Details
-The thickness of the ring is modeled by a cosine expansion in azimuthal
-angle. `N` specifies the number of cosine modes to fit, where the first
-mode is the constant thickness portion and so has no corresponding angle.
-The slash is modeled as a separate cosine expansion, with `M` terms.
-Here the zero order term is forced to be unity, so `M` defines the `M`
-additional terms.
+A Cosine ring with a [`GaussDisk`](@ref) at the center of the ring that matches the
+`r0` and `σ0` of the CosineRing.
+
+
+This is a convienence constructor of the more basic VLBISkyModel image constructors.
+It is equivalent to
+
+```julia
+CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) + floor*modify(GaussDisk(σ0/r0), Stretch(r0), Shift(x0, y0))
+```
+
+### Details
+Adds ellipticity to the ring. The radius `r0` of the ring is now defined as the
+geometric mean of the semi-major (a) and semi-minor (b) axis lengths i.e.
+
+r0 = √(a*b).
+
+The ellipticity `τ` is given by τ = 1-b/a.
+
+## Arguments
+ - `r0`: geometric mean radius (√ab) of the ring
+ - `σ0`: standard deviation of the Gaussian ring
+ - `σ` : amplitudes of the `N` order cosine expansion of the ring thickness
+ - `ξσ`: phase of the `N` order cosine expansion of the ring thickness
+ - `s` : amplitudes of the `M` order cosine expansion of the azimuthal brightness
+ - `ξs`: phase of the `N` order cosine expansion of the azimuthal brightness
+ - `floor`: The flux of the center Gaussian. This is relative to the CosineRing.
+ - `x0`: location of the ring center horizontally
+ - `y0`: location of the ring center vertically
+
 
 """
 function CosineRingwFloor(
@@ -84,23 +107,39 @@ function CosineRingwFloor(
     σ::NTuple{N}, ξσ::NTuple{N},
     s::NTuple{M}, ξs::NTuple{M},
     floor, x0, y0) where {N, M}
-    return modify(CosineRing(σ0/r0, σ/r0, ξσ, s, ξs), Stretch(r0), Shift(x0, y0)) +
-           floor*modify(GaussDisk(), Stretch(r0), Shift(x0, y0))
+    return CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) + floor*modify(GaussDisk(σ0/r0), Stretch(r0), Shift(x0, y0))
 end
 
 """
     $(SIGNATURES)
-Symmetric ring model of radius `r0` whose azimuthal brightness and thickness is described using a
-`M` and `N` order cosine expansion. In addition a Gaussian component with thickness
-`σG` and flux fraction `floor` is added to the center of the ring.
 
-# Details
-The thickness of the ring is modeled by a cosine expansion in azimuthal
-angle. `N` specifies the number of cosine modes to fit, where the first
-mode is the constant thickness portion and so has no corresponding angle.
-The slash is modeled as a separate cosine expansion, with `M` terms.
-Here the zero order term is forced to be unity, so `M` defines the `M`
-additional terms.
+A Cosine ring with a Gaussian blob at the center of the ring.
+This is a convienence constructor of the more basic VLBISkyModel image constructors.
+It is equivalent to
+
+```julia
+CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) + floor*modify(Gaussian(), Stretch(σG), Shift(x0, y0))
+```
+
+### Details
+Adds ellipticity to the ring. The radius `r0` of the ring is now defined as the
+geometric mean of the semi-major (a) and semi-minor (b) axis lengths i.e.
+
+r0 = √(a*b).
+
+The ellipticity `τ` is given by τ = 1-b/a.
+
+## Arguments
+ - `r0`: geometric mean radius (√ab) of the ring
+ - `σ0`: standard deviation of the Gaussian ring
+ - `σ` : amplitudes of the `N` order cosine expansion of the ring thickness
+ - `ξσ`: phase of the `N` order cosine expansion of the ring thickness
+ - `s` : amplitudes of the `M` order cosine expansion of the azimuthal brightness
+ - `ξs`: phase of the `N` order cosine expansion of the azimuthal brightness
+ - `floor`: The flux of the center Gaussian. This is relative to the CosineRing.
+ - `σG`: The size of the central Gaussian.
+ - `x0`: location of the ring center horizontally
+ - `y0`: location of the ring center vertically
 
 """
 function CosineRingwGFloor(
@@ -108,8 +147,8 @@ function CosineRingwGFloor(
         σ0,
         σ::NTuple{N}, ξσ::NTuple{N},
         s::NTuple{M}, ξs::NTuple{M}, floor, σG, x0, y0) where {N, M}
-    return modify(CosineRing(σ0/r0, σ/r0, ξσ, s, ξs), Stretch(r0), Shift(x0, y0)) +
-           floor*modify(Gaussian(), Stretch(σG/r0), Shift(x0, y0))
+    return CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) +
+           floor*modify(Gaussian(), Stretch(σG), Shift(x0, y0))
 end
 
 
@@ -138,11 +177,11 @@ The ellipticity `τ` is given by τ = 1-b/a.
 ## Arguments
  - `r0`: geometric mean radius (√ab) of the ring
  - `σ0`: standard deviation of the Gaussian ring
- - `σ` : coefficients of the `N` order cosine expansion of the ring thickness
+ - `σ` : amplitudes of the `N` order cosine expansion of the ring thickness
  - `ξσ`: phase of the `N` order cosine expansion of the ring thickness
  - `τ` : asymmetry of the ring τ = 1-b/a
  - `ξτ`: semi-major axis measured east of north
- - `s` : coefficients of the `M` order cosine expansion of the azimuthal brightness
+ - `s` : amplitudes of the `M` order cosine expansion of the azimuthal brightness
  - `ξs`: phase of the `N` order cosine expansion of the azimuthal brightness
  - `x0`: location of the ring center horizontally
  - `y0`: location of the ring center vertically
@@ -155,7 +194,7 @@ function EllipticalCosineRing(
     τ, ξτ,
     s::NTuple{M}, ξs::NTuple{M}, x0, y0) where {N, M}
     return modify(
-            CosineRing(σ0/r0, σ/r0, ξσ, s, ξs .- ξτ),
+            CosineRing(σ0/r0, σ./r0, ξσ, s, ξs .- ξτ),
             Stretch(r0*sqrt(1-τ), r0/sqrt(1-τ)),
             Rotate(ξτ),
             Shift(x0, y0))

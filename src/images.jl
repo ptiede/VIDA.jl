@@ -27,19 +27,6 @@ end
 
 
 @doc """
-    regrid(img::EHTImage, nx, ny, xlim, ylim)
-# Inputs
- - img::EHTImage : Image you want to regrid
- - npix : Number of pixels in x and y direction
- - xlim : Tuple with the limits of the image in the RA in μas
- - ylim : Tuple with the limits of the image in DEC in μas
-"""
-function regrid(img::SpatialIntensityMap, g::GriddedKeys)
-    fimg = VLBISkyModels.InterpolatedImage(img)
-    return intensitymap(fimg, g)
-end
-
-@doc """
     $(SIGNATURES)
 Blurs the `img` with a gaussian kernel with fwhm in μas. If `fwhm` is a scalar
 then the kernel is assumed to be symmetric, otherwise you

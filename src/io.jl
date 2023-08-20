@@ -142,7 +142,7 @@ function _load_ehtimhdf5(filename)
         source = String(read(header["source"]))
         ra = parse(Float64, read(header["ra"]))
         dec = parse(Float64, read(header["dec"]))
-        mjd = parse(Int, read(header["mjd"]))
+        mjd = parse(Float64, read(header["mjd"]))
         rf = parse(Float64, read(header["rf"]))
         psize = parse(Float64, read(header["psize"]))*3600*1e6*180.0/π
         header = ComradeBase.MinimalHeader(source, ra, dec, mjd, rf)
