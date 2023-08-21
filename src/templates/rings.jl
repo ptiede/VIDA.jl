@@ -82,9 +82,10 @@ CB.radialextent(d::RadialGaussian) = 1 + 3*d.σ
     RadialDblPower(αinner, αouter)
 
 Radial profile that given by a double power-law with the function form
-    ```
-    r^αinner*inv(1+ r^(αinner + αouter + 1))
-    ```
+
+```julia
+r^αinner*inv(1+ r^(αinner + αouter + 1))
+```
 
 ## Notes
 This is usually couple with a azimuthal profile to create a general ring template

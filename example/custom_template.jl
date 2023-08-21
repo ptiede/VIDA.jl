@@ -1,8 +1,8 @@
 # # Adding a Custom Template
 
 # If you want to add your own template you just need to define a new:
-# - template type
-# -
+# - subtype of `AbstractImageTemplate`
+# - implement the interface desribed in [`AbstractImageTemplate`](@ref)
 # For example to add a symmetric gaussian template we can use:
 using VIDA
 
@@ -35,8 +35,8 @@ end
 
 template = SlashedExponentialRing(μas2rad(20.0), 3.0, 4.0, 0.5, π/2, 0.0, 0.0)
 
-# VIDA uses [`ComradeBase`](https://github.com/ptiede/ComradeBase.jl) and `VLBISkyModels`
-# interface. We can create an image using `intensitymap`
+# VIDA uses [`ComradeBase`](https://github.com/ptiede/ComradeBase.jl) and [`VLBISkyModels`](https://ehtjulia.github.io/VLBISkyModels.jl/dev/interface/)
+# interface. Therefore, we can create an image using `intensitymap`
 img = intensitymap(template, μas2rad(128.0), μas2rad(128.0), 64, 64)
 
 # We can also plot the image
@@ -57,7 +57,7 @@ lower = (r0=μas2rad(5.0), αout=1.0, αin = 0.0, s=0.001, ξs=-1π, x0= -μas2r
 prob = VIDAProblem(bh, temp, lower, upper)
 
 # The vida method can use any optimizer that works with [`Optimization.jl`](https://docs.sciml.ai/Optimization/stable/)
-# For this work we will use [`CMAEvolutionStrategy`](https://github.com/jbrea/CMAEvolutionStrategy.jl).
+# For this work we will use [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl).
 using OptimizationBBO
 xopt, θopt, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 
