@@ -17,5 +17,5 @@ Pages = ["function_index.md"]
 ```
 
 ```@autodocs
-Modules = [HypercubeTransform]
+Modules = [VIDA]
 ```
