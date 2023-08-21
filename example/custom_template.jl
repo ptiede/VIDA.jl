@@ -9,7 +9,7 @@
 using VIDA
 
 using Pkg #hide
-Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "examples")) #hide
+Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "example")) #hide
 
 
 struct SlashedExponentialRing{T} <: VIDA.AbstractImageTemplate
@@ -70,7 +70,7 @@ xopt, θopt, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 @show θopt
 
 # Let's also plot the results
-triptic(img, template)
+triptic(img, θopt)
 
 
 # Now with all of this said this template actually already exists in VIDA using

@@ -14,7 +14,7 @@
 using VIDA
 
 using Pkg #hide
-Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "examples")) #hide
+Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "example")) #hide
 
 
 using Plots
