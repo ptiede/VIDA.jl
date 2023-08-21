@@ -71,7 +71,7 @@ function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
     CB.intensitymap!(mimg, m)
     fm = flux(mimg)
     div  = sum(zip(img, mimg)) do (ii, im)
-        return divergence_point(d, ii, im/fm)
+        return divergence_point(d, ii, max(im/fm, 0))
     end
     return normalize_div(d, div)
 end
