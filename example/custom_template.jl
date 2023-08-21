@@ -1,10 +1,10 @@
 # # Adding a Custom Template
 
 # If you want to add your own template you just need to define a new:
-# - subtype of `AbstractImageTemplate`
-# - implement the interface desribed in [`AbstractImageTemplate`](@ref)
-# For example to add a symmetric gaussian template we can use:
+# - subtype of [`VIDA.AbstractImageTemplate`](@ref)
+# - implement the interface desribed in [`VIDA.AbstractImageTemplate`](@ref)
 
+# In this tutorial we will implement a custom template from scratch.
 
 using VIDA
 
@@ -74,7 +74,7 @@ triptic(img, θopt)
 
 
 # Now with all of this said this template actually already exists in VIDA using
-# the flexible [`RingTemplate`](@ref).
+# the flexible [`VIDA.RingTemplate`](@ref).
 rad = RadialDblPower(xopt.αin, xopt.αout)
 azi = AzimuthalCosine(xopt.s, xopt.ξs)
 t   = modify(RingTemplate(rad, azi), Stretch(xopt.r0), Shift(xopt.x0, xopt.y0))

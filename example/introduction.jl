@@ -26,7 +26,7 @@ using InteractiveUtils
 # [eht-imaging](https://github.com/achael/eht-imaging) outputs. So as long as you stick
 # to that standard you should be fine.
 
-# To read in an image we just use the `load_fits` function
+# To read in an image we just use the [`VIDA.load_image`](@ref) function
 # which should work with any fits image from ehtim and clean
 
 img = load_image(joinpath(dirname(pathof(VIDA)),"../example/data/example_image.fits"));
@@ -57,28 +57,16 @@ plot(img)
 # type
 
 
-# To see what functions can act on an EHTImage object just call
-methodswith(IntensityMap)
-
-
-# From this list we see there are several methods that can act on EHTImage types.
-# To see what a certain function does you can type `?inertia` in the terminal to see the help for the inertia method.
 
 ## Creating a divergence
 # In order to find the optimal template you need to first decide on your objective or
 # cost function. In VIDA we use probaility divergences to measure differences between the
-# template and image. A divergence is defined as an abstract type `AbstractDivergence`.
-# In VIDA a divergence is a `functor`. A functor is a type that has an anonymous function
-# attached to it. That means it is both a type and a function. For instance we create a
-# divergence by
+# template and image. A divergence is defined as an abstract type [`VIDA.AbstractDivergence`](@ref).
 
 bh = Bhattacharyya(img);
 kl = KullbackLeibler(img);
 
-# Now to evaluate the divergence we need to pass it a template.
-# This can be any template your choose. The great thing about julia is that bh will use
-# multiple dispatch to figure out which template is being passed to the divergence.
-
+# Now to evaluate the divergence we need a template to compare the image to.
 # For instance lets create a few different templates
 gr = GaussianRing(μas2rad(20.0), μas2rad(5.0), 0.0, 0.0)
 ggr = EllipticalSlashedGaussianRing(
@@ -97,7 +85,7 @@ b = plot(ggr, title="GeneralGaussianRing")
 plot(a, b, layout=(1,2), size=(600,300))
 
 
-# VIDA has a number of templates defined. These are all subtypes of the AbstractTemplate type.
+# VIDA has a number of templates defined. These are all subtypes of the [`AbstractTemplate`](@ref) type.
 # To see which templates are implemented you can use the subtype method:
 subtypes(VIDA.AbstractImageTemplate)
 
@@ -108,13 +96,13 @@ subtypes(VIDA.AbstractImageTemplate)
 add = gr + 2.0*shifted(gr, μas2rad(-10.0), μas2rad(10.0))
 
 # To evaluate the divergence between our template and image we then just evaluate the
-# divergence on the template
+# [`VIDA.divergence`](@ref) on the template
 @show divergence(kl, add);
 @show divergence(kl, ggr);
 @show divergence(kl, add);
 
 # Now neither template is really a great approximation to the true image. For instance
-# visually they look quite different, which can be checked with the `triptic` function
+# visually they look quite different, which can be checked with the [`VIDA.triptic`](@ref) function
 
 a = triptic(img, gr)
 b = triptic(img, ggr)
@@ -133,6 +121,7 @@ end
 lower = map(μas2rad, (r0 = 5.0,  σ = 0.01, x0 = -60.0, y0 = -60.0))
 upper = map(μas2rad, (r0 = 60.0, σ = 20.0, x0 = 60.0, y0 = 60.0))
 
+# Given that we can form the [`VIDA.VIDAProblem`](@ref) type.
 prob = VIDAProblem(bh, gr_temp, lower, upper);
 
 
@@ -146,7 +135,7 @@ using OptimizationBBO
 
 # However, for this tutorial we will use the `BlackBoxOptim` optimizer.
 
-# To optimize all you need to do is run the extractor function.
+# To optimize all you need to do is run the [`VIDA.vida`](@ref) function.
 
 xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=100_000)
 triptic(img, optfilt)

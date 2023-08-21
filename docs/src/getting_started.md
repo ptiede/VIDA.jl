@@ -57,7 +57,7 @@ Currently we have 6 templates defined, although they all belong to the same fami
 
 In order to extract features we first need a cost function that penalized our parameterized distributions ``f_\theta(x,y)``. Since we are considering the image as a probability distribution, one cost function would be the distance or **divergence** between two distributions. A probability divergence is just a functional that takes in two probability distributions p,q and is minimized iff ``p\equiv q``.
 
-Divergences are defined by the abstract type [`AbstractDivergence`](@ref). Implementations of the this type are also expected to implement a functor that evaluates the divergence on some template.
+Divergences are defined by the abstract type [`VIDA.AbstractDivergence`](@ref). Implementations of the this type are also expected to implement a functor that evaluates the divergence on some template.
 
-The current recommended default template is the [`Bhattacharyya`](@ref) divergence although all the 
+The current recommended default template is the [`VIDA.Bhattacharyya`](@ref) divergence although all the 
 template give similar answers. 
