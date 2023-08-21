@@ -21,18 +21,19 @@ Note we do not implement the flux of the templates since they are often difficul
 
 ## Ring Templates
 
-As of VIDA 0.11 we also include a composite image template class called [`RingTemplate`](@ref).
+As of VIDA 0.11 we also include a composite image template class called [`VIDA.RingTemplate`](@ref).
 
 ## Divergence `AbstractDivergence`
 
-In order to extract a feature you need to create a probability divergence function. Currently the divergences are defined using a [`AbstractDivergence`](@ref) type. The general user-facing interface is
+In order to extract a feature you need to create a probability divergence function. Currently the divergences are defined using 
+a [`VIDA.AbstractDivergence`](@ref) type. The general user-facing interface is
 
 ```julia
 bh = Bhattacharyya(image) #make the Bh divergence
 kl = KullbackLeibler(image) #makes the KL divergence
 ```
 
-to initialize the divergence. To evaluate the divergence on a template you use the [`divergence`](@ref) function
+to initialize the divergence. To evaluate the divergence on a template you use the [`VIDA.divergence`](@ref) function
 
 ```julia
 divergence(bh, θ::AbstractTemplate)
@@ -55,12 +56,12 @@ lower = (r0 = 5.0, σ = 0.1, x0 = -60.0, y0 = 60.0)
 upper = (r0 = 30.0, σ = 5.0, x0 = -60.0, y0 = 60.0)
 ```
 
-We can then form our [`VIDAProblem`](@ref) using the divergence defined above
+We can then form our [`VIDA.VIDAProblem`](@ref) using the divergence defined above
 ```julia
 prob = VIDAProblem(bh, temp, lower, upper)
 ```
 
-Finally, to get the optimal parameters and template we can call the [`vida`](@ref) function
+Finally, to get the optimal parameters and template we can call the [`VIDA.vida`](@ref) function
 
 ```julia
 using OptimizationMetaheuristics
