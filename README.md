@@ -21,7 +21,7 @@ For more information on how to use VIDA please refer to the [documentation](http
 
 ## Distributed scripts
 
-In the examples folder we have a complete script that shows how to use VIDA on a cluster to extract image features from multiple images at the same time. Please see the [README](https://github.com/ptiede/VIDA.jl/tree/master/scripts) in the scripts folder for more information.
+In the `example` folder we have a complete script that shows how to use VIDA on a cluster to extract image features from multiple images at the same time. Please see the [README](https://github.com/ptiede/VIDA.jl/tree/master/scripts) in the scripts folder for more information.
 
 # Citation
 

@@ -7,7 +7,7 @@ The basic VIDA program mirrors the following structure
 ```julia
 using VIDA
 # load the image and plot it
-image = load_fits("examples/data/elliptical_gaussian_rot-0.00.fits")
+image = load_fits("example/data/elliptical_gaussian_rot-0.00.fits")
 plot(image)
 # Build the divergence we want to fit
 bh = Bhattacharyya(image)
