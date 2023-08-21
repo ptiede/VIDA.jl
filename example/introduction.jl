@@ -156,9 +156,9 @@ triptic(img, optfilt)
 gr_temp_cont(θ) = GaussianRing(θ.r0, θ.σ, θ.x0, θ.y0) + θ.f*Constant((μas2rad(100.0)))
 lower = (r0 = μas2rad(5.0),  σ = μas2rad(0.01), x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
 upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
-
 prob = VIDAProblem(bh, gr_temp_cont, lower, upper);
 xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000)
+#-
 triptic(img, optfilt)
 
 
@@ -168,10 +168,9 @@ triptic(img, optfilt)
 cos_temp(θ) = EllipticalSlashedGaussianRing(θ.r0, θ.σ, θ.τ, θ.ξτ, θ.s, θ.ξs, θ.x0, θ.y0) + θ.f*θ.f*Constant(μas2rad(100.0))
 lower = (r0 = μas2rad(1.0),  σ = μas2rad(0.01), τ=0.0, ξτ=-π/2, s=0.001, ξs=-1π, x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
 upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), τ=0.5, ξτ=π/2, s=0.999, ξs=1π, x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
-
-
 prob = VIDAProblem(bh, cos_temp, lower, upper);
 xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000);
+#-
 triptic(img, optfilt)
 
 # Now looks pretty great! To see how to add a custom template see the [Adding a Custom Template](@ref) page.

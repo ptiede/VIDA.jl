@@ -72,5 +72,6 @@ triptic(img, template)
 rad = RadialDblPower(xopt.αin, xopt.αout)
 azi = AzimuthalCosine(xopt.s, xopt.ξs)
 t   = modify(RingTemplate(rad, azi), Stretch(xopt.r0), Shift(xopt.x0, xopt.y0))
+#-
 
 triptic(img, t)
