@@ -4,7 +4,13 @@
 # - subtype of `AbstractImageTemplate`
 # - implement the interface desribed in [`AbstractImageTemplate`](@ref)
 # For example to add a symmetric gaussian template we can use:
+
+
 using VIDA
+
+using Pkg #hide
+Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "examples")) #hide
+
 
 struct SlashedExponentialRing{T} <: VIDA.AbstractImageTemplate
     αouter::T

@@ -1,8 +1,8 @@
 using Documenter
 
-if haskey(ENV, "GITHUB_ACTIONS")
-    ENV["JULIA_DEBUG"] = "Documenter"
-end
+# if haskey(ENV, "GITHUB_ACTIONS")
+#     ENV["JULIA_DEBUG"] = "Documenter"
+# end
 
 
 using VIDA

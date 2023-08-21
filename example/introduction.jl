@@ -11,9 +11,13 @@
 # ## Getting started
 # To load VIDA we follow the typical Julia flow. Note that to include plotting functionality
 # you need to include Plots as well
+using VIDA
+
+using Pkg #hide
+Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "examples")) #hide
+
 
 using Plots
-using VIDA
 using InteractiveUtils
 
 
