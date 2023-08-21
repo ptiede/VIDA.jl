@@ -19,6 +19,7 @@ using ImageFiltering: imfilter, Kernel.gaussian, Fill, Algorithm.FFT
 using Interpolations
 using LaTeXStrings
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
+using Measures
 using RecipesBase
 using SpecialFunctions: erf
 using Reexport

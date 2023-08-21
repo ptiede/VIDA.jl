@@ -1,6 +1,6 @@
+using Plots
 using VIDA
 using Test
-using Plots
 
 @testset "VIDA.jl" begin
     # Write your own tests here.
