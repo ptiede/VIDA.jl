@@ -140,8 +140,7 @@ prob = VIDAProblem(bh, gr_temp, lower, upper);
 # To use BlackBox optim we need to load the required package
 using OptimizationBBO
 
-# However, for this tutorial I am going to use the `CMAES` optimizer since it is faster
-# albeit less robust to local minima
+# However, for this tutorial we will use the `BlackBoxOptim` optimizer.
 
 # To optimize all you need to do is run the extractor function.
 

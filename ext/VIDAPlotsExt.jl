@@ -2,13 +2,13 @@ module VIDAPlotsExt
 
 using VIDA
 if isdefined(Base, :get_extension)
+    using Plots
     using RecipesBase
     using Measures
-    using Plots
 else
+    using ..Plots
     using ..RecipesBase
     using ..Measures
-    using ..Plots
 end
 
 font = Plots.font

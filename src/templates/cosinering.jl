@@ -194,7 +194,7 @@ function EllipticalCosineRing(
     τ, ξτ,
     s::NTuple{M}, ξs::NTuple{M}, x0, y0) where {N, M}
     return modify(
-            CosineRing(σ0/r0, σ./r0, ξσ, s, ξs .- ξτ),
+            CosineRing(σ0/r0, σ./r0, ξσ .- ξτ, s, ξs .- ξτ),
             Stretch(r0*sqrt(1-τ), r0/sqrt(1-τ)),
             Rotate(ξτ),
             Shift(x0, y0))

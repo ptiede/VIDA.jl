@@ -12,8 +12,6 @@ CB.visanalytic(::Type{<:AbstractTemplate}) = CB.NotAnalytic()
 CB.imanalytic(::Type{<:AbstractTemplate}) = CB.IsAnalytic()
 CB.isprimitive(::Type{<:AbstractTemplate}) = CB.IsPrimitive()
 
-CB.flux(::AbstractTemplate) = 1.0
-
 
 #Load the variety of utils needed
 # include(joinpath(@__DIR__, "utils.jl"))

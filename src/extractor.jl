@@ -17,7 +17,9 @@ function VIDAProblem(div, f, lb, ub)
 end
 
 _distize(x::Real, y::Real) = Uniform(x, y)
-_distize(x::NTuple{N}, y::NTuple{N}) where {N} = ntuple(i->Uniform(x[i], y[i]), N)
+_distize(x::Tuple, y::Tuple) = ntuple(i->_distize(x[i], y[i]), length(x))
+_distize(x::NamedTuple{N}, y::NamedTuple{N}) where {N} = NamedTuple{N}(_distize(values(x), values(y)))
+
 function _distize(x::AbstractArray, y::AbstractArray)
     dists = map((x,y)->Uniform(x, y), x, y)
     return product_distribution(dists)
