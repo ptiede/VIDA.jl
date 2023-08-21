@@ -7,7 +7,10 @@
 [![DOI](https://zenodo.org/badge/271097921.svg)](https://zenodo.org/badge/latestdoi/271097921)
 
 
-`VIDA.jl` or the *Variational Image Domain Analysis* provides a interface to extracting features from fits images created for the EHT, using the notion of probability divergences similar to variational inference, hence the name. The currently implemented divergences are the Bhattacharyya distance/divergence as well as the Kullback-Leibler divergence. These are used to extract ring-like features from image reconstructions of black holes such as from M87. 
+`VIDA.jl` or the *Variational Image Domain Analysis* provides a interface to extracting features from fits images created for the EHT, using the notion of probability divergences similar to variational inference. This package has been used extensively in the most recent EHT publications of [Sgr A*](https://iopscience.iop.org/journal/2041-8205/page/Focus_on_First_Sgr_A_Results).
+
+As of **version 0.11** VIDA now uses the [`ComradeBase`](https://ptiede.github.io/Comrade.jl/dev/base_api/) and [`VLBISkyModels`](https://ehtjulia.github.io/VLBISkyModels.jl/dev/interface/) interface. This implies that any model that satisifies this interface can 
+now be used as a VIDA template.
 
 For more information on how to use VIDA please refer to the [documentation](https://ptiede.github.io/VIDA.jl/stable)
 

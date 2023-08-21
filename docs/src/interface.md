@@ -67,8 +67,5 @@ using OptimizationMetaheuristics
 xopt, opt_template, divmin = vida(prob, ECA())
 ```
 
-!!! warn
-   Older versions of `VIDA` also included a threaded version of `vida`. This no longer exists
-   and would give a race condition if someone tried to use it at this point due to a difference
-   in how `divergence` is calculated. If you want to run multiple copies of VIDA at once please
-   use Julia's `Distributed` functionality.
+!!! warning
+    Older versions of `VIDA` also included a threaded version of `vida`. This no longer exists and would give a race condition if someone tried to use it at this point due to a difference in how `divergence` is calculated. If you want to run multiple copies of VIDA at once please use Julia's `Distributed` functionality.

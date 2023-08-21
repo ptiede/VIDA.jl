@@ -22,9 +22,6 @@ makedocs(;
     repo="https://github.com/ptiede/VIDA.jl/blob/{commit}{path}#L{line}",
     sitename="VIDA.jl",
     format=Documenter.HTML(;
-        prettyurls=get(ENV, "CI", "false") == "true",
-        canonical="https://ptiede.github.io/VIDA.jl",
-        assets=String[],
     ),
     pages=[
         "Home" => "index.md",
@@ -38,5 +35,6 @@ makedocs(;
 
 deploydocs(;
     repo="github.com/ptiede/VIDA.jl",
-    push_preview=true
+    push_preview=true,
+    devbranch = "master"
 )

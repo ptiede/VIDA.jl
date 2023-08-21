@@ -1,54 +1,30 @@
-
-#Template information and documentation
-
 """
     $(TYPEDEF)
-An abstract type that defines super template type.
+
+An abstract `ComradeBase.AbstractModel` that serves as the parent type of all
+the `VIDA` templates implemented in this repo.
+
+By default this model assumes the following `ComradeBase` traits
+```julia
+ComradeBase.visanalytic(::Type{<:AbstractImageTemplate}) = NoAnalytic()
+ComradeBase.imanalytic(::Type{<:AbstractImageTemplate})  = IsAnalytic()
+ComradeBase.ispolarized(::Type{<:AbstractImageTemplate}) = NotPolarized()
+```
+
+As a result if a user wishes the implement their own subtype (e.g., `MyTemplate`) of `AbstratImageTemplate`
+they will need to implement the following methods
+  - `ComradeBase.intensity_point(m::MyTemplate, p)`: which computes the potentially unormalized brightness of the template at the point `p`.
+  - `ComradeBase.radialextent(m::MyTemplate)`: which computes the rough radial extent of the model `m`.
+
+For more information about the total interface see [VLBISkyModels.jl](https://ehtjulia.github.io/VLBISkyModels.jl/stable/interface/)
 """
-abstract type AbstractTemplate <: CB.AbstractModel end
+abstract type AbstractImageTemplate <: ComradeBase.AbstractModel end
 
 # Hook into ComradeBase interface
-CB.visanalytic(::Type{<:AbstractTemplate}) = CB.NotAnalytic()
-CB.imanalytic(::Type{<:AbstractTemplate}) = CB.IsAnalytic()
-CB.isprimitive(::Type{<:AbstractTemplate}) = CB.IsPrimitive()
+CB.visanalytic(::Type{<:AbstractImageTemplate}) = CB.NotAnalytic()
+CB.imanalytic(::Type{<:AbstractImageTemplate})  = CB.IsAnalytic()
+CB.isprimitive(::Type{<:AbstractImageTemplate}) = CB.IsPrimitive()
 
-
-#Load the variety of utils needed
-# include(joinpath(@__DIR__, "utils.jl"))
-
-
-"""
-    $(TYPEDEF)
-
-An abstract type that will contain the template information, such as the parameters.
-Specific instanstantiations will need to be defined for you to use this.
-
-### Details
-    This defined the highest function type. If you wish to implement your own template you
-    need to define a a couple of things
-    1. The template type <: AbstractTemplate
-    2. an functor of the type that computes the template function
-    3. an `Base.size` function that defines the number of parameters of the template.
-
-An example is given by:
-```julia
-#All of our composite type are defined using the Paramters.jl package to you
-can directly refer to the struct parameters when creating it, although this isn't
-actually used anywhere in the code.
-@with_kw struct Gaussian <: AbstractImageTemplate
-    σ::Float64
-    x0::Float64
-    y0::Float64
-end
-
-#Typically we inline and force the function to use fastmath
- @inline function (θ::Gaussian)(x,y)
-    return 1.0/(2π*σ^2)*exp(-0.5*( (x-x0)^2+(y-y0)^2 ) )
-end
-Base.size(::Type{Gaussian}) = 3
-```
-"""
-abstract type AbstractImageTemplate <: AbstractTemplate end
 
 include(joinpath(@__DIR__, "image.jl"))
 include(joinpath(@__DIR__, "rings.jl"))
