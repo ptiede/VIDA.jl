@@ -66,6 +66,10 @@ julia> rad = RadialGaussian(0.1)
 julia> azi = AzimuthalUniform()
 julia> t = RingTemplate(rad, azi)
 ```
+
+## Arguments
+  - `σ`: The standard deviation for the Gaussian ring.
+
 """
 struct RadialGaussian{T} <: AbstractRadial
     σ::T
@@ -95,6 +99,11 @@ julia> rad = RadialDblPower(3.0, 3.0)
 julia> azi = AzimuthalUniform()
 julia> t = RingTemplate(rad, azi)
 ```
+
+## Arguments
+  - `αinner` the power law index for `r<1`.
+  - `αouter` the power law index for `r≥1`.
+
 """
 struct RadialDblPower{T} <: AbstractRadial
     αinner::T
@@ -116,6 +125,10 @@ end
 Radial profile that has a exponential profile up to a cutoff radius of 1 where for `r<1`
 the profile is identically zero.
 
+This evalutes to
+```julia
+    exp(-(r-1)/σ)
+```
 ## Notes
 This is usually couple with a azimuthal profile to create a general ring template
 
@@ -124,6 +137,10 @@ julia> rad = RadialTruncExp(2.0)
 julia> azi = AzimuthalUniform()
 julia> t = RingTemplate(rad, azi)
 ```
+
+## Arguments
+  - `σ`: Exponential inverse fall off parameter.
+
 """
 struct RadialTruncExp{T} <: AbstractRadial
     σ::T
@@ -140,6 +157,7 @@ struct AzimuthalUniform{T} <: AbstractAzimuthal end
 
 """
     AzimuthalUniform()
+    AzimuthalUniform{T}()
 
 A azimuthal profile that is uniform for all angles.
 
@@ -158,7 +176,7 @@ AzimuthalUniform() = AzimuthalUniform{Float64}()
 
 
 """
-    AzimuthalCosine(s::NTuple{N}, ξ::NTuple{N, T})
+    AzimuthalCosine(s::NTuple{N,T}, ξ::NTuple{N, T}) where {N, T}
 
 A azimuthal profile that is  given by a cosine expansion of order `N`.
 The expansion is given by
@@ -175,6 +193,12 @@ julia> rad = RadialDblPower(3.0, 3.0)
 julia> azi = AzimuthalCosine((0.5, 0.2), (0.0, π/4)) # Defaults to Float64
 julia> t = RingTemplate(rad, azi)
 ```
+
+## Arguments
+  - `s` : amplitudes of the `N` order cosine expansion of the azimuthal brightness
+  - `ξs`: phase of the `N` order cosine expansion of the azimuthal brightness
+
+
 """
 struct AzimuthalCosine{T, N} <: AbstractAzimuthal
     s::NTuple{N,T}
@@ -203,6 +227,9 @@ the hood. To create this function your self do
 RingTemplate(RadialGaussian(σ), AzimuthalUniform())
 ```
 
+## Arguments
+- `σ` : standard deviation of the Gaussian ring
+
 """
 @inline GaussianRing(σ) = RingTemplate(RadialGaussian(σ), AzimuthalUniform())
 
@@ -218,6 +245,13 @@ the hood. To create this function your self do
 ```julia
 modify(GaussianRing(σ/r0), Stretch(r0), Shift(x0, y0))
 ```
+
+## Arguments
+- `r0`: radius of the ring
+- `σ` : standard deviation of the Gaussian ring
+- `x0`: location of the ring center horizontally
+- `y0`: location of the ring center vertically
+
 
 """
 @inline GaussianRing(r0, σ, x0, y0) = modify(GaussianRing(σ/r0), Stretch(r0), Shift(x0, y0))

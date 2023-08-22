@@ -94,7 +94,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
  - `σ` : amplitudes of the `N` order cosine expansion of the ring thickness
  - `ξσ`: phase of the `N` order cosine expansion of the ring thickness
  - `s` : amplitudes of the `M` order cosine expansion of the azimuthal brightness
- - `ξs`: phase of the `N` order cosine expansion of the azimuthal brightness
+ - `ξs`: phase of the `M` order cosine expansion of the azimuthal brightness
  - `floor`: The flux of the center Gaussian. This is relative to the CosineRing.
  - `x0`: location of the ring center horizontally
  - `y0`: location of the ring center vertically
@@ -135,7 +135,7 @@ The ellipticity `τ` is given by τ = 1-b/a.
  - `σ` : amplitudes of the `N` order cosine expansion of the ring thickness
  - `ξσ`: phase of the `N` order cosine expansion of the ring thickness
  - `s` : amplitudes of the `M` order cosine expansion of the azimuthal brightness
- - `ξs`: phase of the `N` order cosine expansion of the azimuthal brightness
+ - `ξs`: phase of the `M` order cosine expansion of the azimuthal brightness
  - `floor`: The flux of the center Gaussian. This is relative to the CosineRing.
  - `σG`: The size of the central Gaussian.
  - `x0`: location of the ring center horizontally
@@ -182,9 +182,9 @@ The ellipticity `τ` is given by τ = 1-b/a.
  - `τ` : asymmetry of the ring τ = 1-b/a
  - `ξτ`: semi-major axis measured east of north
  - `s` : amplitudes of the `M` order cosine expansion of the azimuthal brightness
- - `ξs`: phase of the `N` order cosine expansion of the azimuthal brightness
- - `x0`: location of the ring center horizontally
- - `y0`: location of the ring center vertically
+ - `ξs`: phase of the `M` order cosine expansion of the azimuthal brightness
+ - `x0`: horizontal location of the ring center
+ - `y0`: vertical location of the ring center vertically
 
 """
 function EllipticalCosineRing(

@@ -10,14 +10,10 @@ module VIDA
 
 
 
-import ComradeBase as CB
-import ComradeBase as CB
 using DocStringExtensions
 using FITSIO
 using HDF5
-using ImageFiltering: imfilter, Kernel.gaussian, Fill, Algorithm.FFT
 using Interpolations
-using LaTeXStrings
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
 using Measures
 using RecipesBase
@@ -26,6 +22,7 @@ using Reexport
 @reexport using ComradeBase
 @reexport using VLBISkyModels
 
+import ComradeBase as CB
 using ComradeBase: SpatialIntensityMap
 import ComradeBase: intensity_point
 

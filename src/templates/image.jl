@@ -15,6 +15,30 @@ struct LogSpiral{T<:Real} <: AbstractImageTemplate
 end
 CB.radialextent(d::LogSpiral{T}) where {T} = exp(d.κ*d.δϕ)
 
+"""
+    $(SIGNATURES)
+
+Constructs a `LogSpiral` template.
+
+## Notes
+This is a convienence constructor that uses `VLBISkyModels` `modify`
+under the hood. To create this function yourself do
+
+```julia
+modify(LogSpiral(κ, σ/r0, δϕ),
+       Stretch(r0), Rotate(ξ), Shift(x0, y0))
+```
+
+## Arguments
+  - `r0`: Radius of the start of the logarithmic spiral
+  - `κ`:  Unit curvature of the spiral
+  - `σ`:  Thickness of the logarithmic spiral
+  - `δϕ`: The angular extent of the spiral
+  - `ξ`:  The position angle of the start of the spiral
+  - `x0`: The horizontal location of the start of the spiral
+  - `y0`: The vertical location of the start of the spiral
+
+"""
 function LogSpiral(r0, κ, σ, δϕ, ξ, x0, y0)
     return modify(LogSpiral(κ, σ/r0, δϕ), Stretch(r0), Rotate(ξ), Shift(x0, y0))
 end
@@ -61,8 +85,15 @@ low levels of flux in image reconstructions that can bias the results.
 
 Since images or normalized to unity, this means the `Constant` template has no
 additional parameters.
+
+## Fields
+$(FIELDS)
+
 """
 struct Constant{T} <: AbstractImageTemplate
+    """
+    Sets the angular scale of the image. This is usually equal to the image FOV
+    """
     scale::T
 end
 @inline CB.intensity_point(c::Constant{T}, p) where {T} = inv(c.scale)^2
@@ -72,9 +103,11 @@ CB.radialextent(::Constant{T}) where {T} = one(T)
     $(TYPEDEF)
 A smoothed disk model
 
-### Details
+## Details
 Defines a template for an image that has a smoothed disk model.
 
+## Fields
+$(FIELDS)
 
 """
 struct GaussDisk{T} <: AbstractImageTemplate
@@ -95,4 +128,24 @@ end
 end
 CB.radialextent(d::GaussDisk{T}) where {T} = one(T) + 3*d.α
 
+"""
+    $(SIGNATURES)
+
+Constructs a disk template with a Gaussian fall off.
+
+## Notes
+This is a convienence constructor that uses `VLBISkyModels` `modify`
+under the hood. To create this function yourself do
+
+```julia
+modify(GaussDisk(σ/r0), Stretch(r0), Shift(x0, y0))
+```
+
+## Arguments
+  - `r0`: Radius of flat top of the disk.
+  - `σ`:  Standard deviation of the Gaussian of the disk edge.
+  - `x0`: The horizontal location of the disk center
+  - `y0`: The vertical location of the disk center
+
+"""
 GaussDisk(r0, σ, x0, y0) = modify(GaussDisk(σ/r0), Stretch(r0), Shift(x0, y0))

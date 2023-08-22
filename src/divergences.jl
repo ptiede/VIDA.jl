@@ -202,8 +202,8 @@ This computes the squared 2 norm between your image and template, both of which
 are normalized to unit flux.
 
 To construct this just pass it an image object
-```julia
-ls = LeastSquares(img::EHTImage)
+```julia-repl
+julia> ls = LeastSquares(img::EHTImage)
 ```
 
 # Notes
