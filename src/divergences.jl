@@ -18,7 +18,7 @@ The divergence is evaluated roughly as
 
 Therefore a user must implement the following methods
 
-  - [`divergence_point](@ref)`: Which evaluates the divergence at a single pixel
+  - [`divergence_point`](@ref): Which evaluates the divergence at a single pixel
   - [`normalize_div`](@ref): Which normalizes and modifies the
 ```
 
