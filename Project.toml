@@ -34,6 +34,7 @@ VIDAPlotsExt = "Plots"
 [compat]
 AxisKeys = "0.2"
 ComradeBase = "0.5"
+Distributions = "0.24, 0.25"
 DocStringExtensions = "0.8, 0.9"
 FITSIO = "0.14, 0.15, 0.16, 0.17"
 HDF5 = "0.14, 0.15, 0.16"
