@@ -61,7 +61,7 @@ and standard deviation `σ`.
 ## Notes
 This is usually couple with a azimuthal profile to create a general ring template
 
-```julia
+```julia-repl
 julia> rad = RadialGaussian(0.1)
 julia> azi = AzimuthalUniform()
 julia> t = RingTemplate(rad, azi)
@@ -84,13 +84,13 @@ CB.radialextent(d::RadialGaussian) = 1 + 3*d.σ
 Radial profile that given by a double power-law with the function form
 
 ```julia
-r^αinner*inv(1+ r^(αinner + αouter + 1))
+    r^αinner*inv(1+ r^(αinner + αouter + 1))
 ```
 
 ## Notes
 This is usually couple with a azimuthal profile to create a general ring template
 
-```julia
+```julia-repl
 julia> rad = RadialDblPower(3.0, 3.0)
 julia> azi = AzimuthalUniform()
 julia> t = RingTemplate(rad, azi)
@@ -119,7 +119,7 @@ the profile is identically zero.
 ## Notes
 This is usually couple with a azimuthal profile to create a general ring template
 
-```julia
+```julia-repl
 julia> rad = RadialTruncExp(2.0)
 julia> azi = AzimuthalUniform()
 julia> t = RingTemplate(rad, azi)
@@ -146,7 +146,7 @@ A azimuthal profile that is uniform for all angles.
 ## Notes
 This is usually couple with a radial profile to create a general ring template
 
-```julia
+```julia-repl
 julia> rad = RadialDblPower(3.0, 3.0)
 julia> azi = AzimuthalUniform() # Defaults to Float64
 julia> t = RingTemplate(rad, azi)
@@ -170,7 +170,7 @@ The expansion is given by
 ## Notes
 This is usually couple with a radial profile to create a general ring template
 
-```julia
+```julia-repl
 julia> rad = RadialDblPower(3.0, 3.0)
 julia> azi = AzimuthalCosine((0.5, 0.2), (0.0, π/4)) # Defaults to Float64
 julia> t = RingTemplate(rad, azi)

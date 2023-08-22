@@ -76,8 +76,8 @@ A Cosine ring with a [`GaussDisk`](@ref) at the center of the ring that matches 
 This is a convienence constructor of the more basic VLBISkyModel image constructors.
 It is equivalent to
 
-```julia
-CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) + floor*modify(GaussDisk(σ0/r0), Stretch(r0), Shift(x0, y0))
+```julia-repl
+julia> CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) + floor*modify(GaussDisk(σ0/r0), Stretch(r0), Shift(x0, y0))
 ```
 
 ### Details
@@ -117,8 +117,8 @@ A Cosine ring with a Gaussian blob at the center of the ring.
 This is a convienence constructor of the more basic VLBISkyModel image constructors.
 It is equivalent to
 
-```julia
-CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) + floor*modify(Gaussian(), Stretch(σG), Shift(x0, y0))
+```julia-repl
+julia> CosineRing(r0, σ0, σ, ξσ, s, ξs, x0, y0) + floor*modify(Gaussian(), Stretch(σG), Shift(x0, y0))
 ```
 
 ### Details
@@ -158,8 +158,8 @@ end
 An Elliptical Cosine ring. This is a convienence constructor of the more basic
 VLBISkyModel image constructors. It is equivalent to
 
-```julia
-modify(CosineRing(σ0/r0, σ/r0, ξσ, s, ξs .- ξτ),
+```julia-repl
+julia> modify(CosineRing(σ0/r0, σ/r0, ξσ, s, ξs .- ξτ),
             Stretch(r0*sqrt(1-τ), r0/sqrt(1-τ)),
             Rotate(ξτ),
             Shift(x0, y0)
