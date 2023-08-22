@@ -5,7 +5,7 @@ using Optimization
 export VIDAProblem, vida, threaded_vida
 
 """
-    $(TYPDEF)
+    $(TYPEDEF)
 
 A composite type that holds various properties that define the optimization process
 to extract the optimal filter.
