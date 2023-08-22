@@ -77,8 +77,8 @@ function build_opt(prob, unit_cube)
     dist = map((x,y)->_distize(x, y), prob.lb, prob.ub)
     if unit_cube
         t = ascube(dist)
-        bounds_lower = fill(1e-3, dimension(t))
-        bounds_upper = fill(0.999, dimension(t))
+        bounds_lower = fill(0.0, dimension(t))
+        bounds_upper = fill(1.0, dimension(t))
     else
         t = asflat(dist)
         bounds_lower = fill(-20.0, dimension(t))
