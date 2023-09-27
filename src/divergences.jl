@@ -57,6 +57,10 @@ the divergence with respect to the image stored in `d` is compared to the templa
     _divergence(d, m)
 end
 
+function divergence(d::AbstractDivergence, m::IntensityMap{<:Real})
+    _divergence(d, m)
+end
+
 # @inline function _divergence(::IsAnalytic, d::AbstractDivergence, m::AbstractModel)
 #     return divergence_analytic(d, m)
 # end
@@ -80,11 +84,23 @@ function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
     (;img, mimg) = d
     CB.intensitymap!(mimg, m)
     fm = flux(mimg)
+    return __divergence(d, img, mimg, fm)
+end
+
+function _divergence(d::AbstractDivergece, mimg::IntensityMap{<:Real})
+    (;img) = d
+    fm = flux(mimg)
+    return __divergence(d, img, mimg, fm)
+end
+
+
+function __divergence(d, img, mimg, fm)
     div  = sum(zip(img, mimg)) do (ii, im)
         return divergence_point(d, ii, max(im/fm, 0))
     end
     return normalize_div(d, div)
 end
+
 
 
 
