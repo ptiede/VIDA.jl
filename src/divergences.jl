@@ -1,4 +1,4 @@
-export divergence
+export divergence, nxcorr
 
 """
     $(TYPEDEF)
@@ -240,3 +240,23 @@ function divergence_point(::LeastSquares, p, q)
 end
 
 @inline normalize_div(::LeastSquares, div) = div
+
+
+"""
+    $(SIGNATURES)
+
+Returns the normalized cross correlation (NXCORR) between `img1` and `img2`.
+NXCORR is defined as
+
+    NXCORR(n, m) = (Nσₙσₘ) Σᵢ (nᵢ - μₙ)(mᵢ - μₘ)
+
+where `n` and `m` are the two images `μ` is the mean and `σ` is the pixelwise standard deviation
+"""
+function nxcorr(img1::IntensityMap{T}, img2::IntensityMap{T}) where {T<:Real}
+    m1, s1 = mean_and_std(img1)
+    m2, s2 = mean_and_std(img2)
+    xcorr =  sum(zip(img1, img2)) do (I, J)
+        (I - m1)*(J - m2)
+    end
+    return xcorr/(length(img1)*s1*s2)
+end
