@@ -87,7 +87,7 @@ function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
     return __divergence(d, img, mimg, fm)
 end
 
-function _divergence(d::AbstractDivergece, mimg::IntensityMap{<:Real})
+function _divergence(d::AbstractDivergence, mimg::IntensityMap{<:Real})
     (;img) = d
     fm = flux(mimg)
     return __divergence(d, img, mimg, fm)
