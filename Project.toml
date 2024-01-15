@@ -1,7 +1,7 @@
 name = "VIDA"
 uuid = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
 authors = ["Paul Tiede <ptiede91@gmail.com>"]
-version = "0.11.0"
+version = "0.11.1"
 
 [deps]
 ComradeBase = "6d8c423b-a35f-4ef1-850c-862fe21f82c4"
@@ -30,7 +30,7 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 VIDAPlotsExt = "Plots"
 
 [compat]
-ComradeBase = "0.5"
+ComradeBase = "0.6"
 Distributions = "0.24, 0.25"
 DocStringExtensions = "0.8, 0.9"
 FITSIO = "0.14, 0.15, 0.16, 0.17"
@@ -44,7 +44,7 @@ RecipesBase = "1.0"
 Reexport = "1"
 Requires = "1.1"
 SpecialFunctions = "0.10, 1.0, 2"
-VLBISkyModels = "0.3"
+VLBISkyModels = "0.4"
 julia = "1.6"
 
 [extras]
