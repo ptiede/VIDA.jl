@@ -6,16 +6,21 @@ CurrentModule = VIDA
 
 ## Contents
 
-```@contents
+<!-- ```@contents
 Pages = ["function_index.md"]
-```
+``` -->
 
 ## Index
 
-```@index
+<!-- ```@index
 Pages = ["function_index.md"]
+``` -->
+
+```@docs
+VIDA.VIDA
+VIDA.AbstractDivergence
 ```
 
-```@autodocs
+<!-- ```@autodocs
 Modules = [VIDA]
-```
+``` -->

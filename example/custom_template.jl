@@ -49,7 +49,8 @@ img = intensitymap(template, μas2rad(128.0), μas2rad(128.0), 64, 64)
 using Plots
 plot(img)
 
-# Now lets see if we can get the correct parameters
+# Now lets see if we can get the correct parameters. First we construct our optimization
+# divergence the Bhattacharyya divergence.
 bh = Bhattacharyya(img);
 
 # To fit we need to define a fitting function. For this our template function
@@ -62,8 +63,8 @@ lower = (r0=μas2rad(5.0), αout=1.0, αin = 0.0, s=0.001, ξs=-1π, x0= -μas2r
 # We can now create our problem
 prob = VIDAProblem(bh, temp, lower, upper)
 
-# The vida method can use any optimizer that works with [`Optimization.jl`](https://docs.sciml.ai/Optimization/stable/)
-# For this work we will use [`BlackBoxOptim`](https://github.com/robertfeldt/BlackBoxOptim.jl).
+# The `vida` method can use any optimizer that works with [Optimization.jl](https://docs.sciml.ai/Optimization/stable/)
+# For this work we will use [BlackBoxOptim.jl](https://github.com/robertfeldt/BlackBoxOptim.jl).
 using OptimizationBBO
 xopt, θopt, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 

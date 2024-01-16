@@ -20,7 +20,6 @@ Therefore a user must implement the following methods
 
   - [`divergence_point`](@ref): Which evaluates the divergence at a single pixel
   - [`normalize_div`](@ref): Which normalizes and modifies the
-```
 
 """
 abstract type AbstractDivergence end

@@ -326,8 +326,8 @@ semi-minor axis `a` and semi-major axis `b`.
  This is a convienence constructor that uses [`RingTemplate`](@ref) under
  the hood. To create this function your self do
 
- ```julia
- modify(GaussianRing(σ/r0), Stretch(r0*sqrt(1-τ), r0/sqrt(1-τ)), Rotate(ξτ), Shift(x0, y0))
+ ```julia-repl
+ julia> modify(GaussianRing(σ/r0), Stretch(r0*sqrt(1-τ), r0/sqrt(1-τ)), Rotate(ξτ), Shift(x0, y0))
  ```
 
 """
