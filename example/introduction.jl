@@ -22,7 +22,7 @@ using InteractiveUtils
 
 
 # ### Step 1 Read in Data
-# `VIDA` currently only works with fits images. THe fits header is based off of what
+# `VIDA` currently only works with fits images. The fits header is based off of what
 # [eht-imaging](https://github.com/achael/eht-imaging) outputs. So as long as you stick
 # to that standard you should be fine.
 
@@ -37,9 +37,9 @@ println(typeof(img))
 # To plot the image we can just call plot. This uses recipes and the Plots.jl framework
 plot(img)
 
-# So from the output we see that img is a EHTImage type. The information in the curly
-# brackets defines the parametric type information. What this means is that the image
-# that is constrained in the EHTImage type is a Matrix whose elements are Float64's.
+# So from the output we see that img is a `IntensityMap` type. This follows ComradeBase and
+# VLBISkyModels, see their [docs](https://ehtjulia.github.io/VLBISkyModels.jl/stable/) for
+# more information.
 
 
 # Julia isn't a traditional class OOP language. Namely, methods/functions are first class
@@ -52,9 +52,10 @@ plot(img)
 
 
 # Now because of the lack of classes sometimes it can be difficult to figure out which
-# functions will act of our datatypes, e.g. the EHTImage type. Fortunately, Julia has some
-# convenience functions that let you see which functions/methods can act of the EHTImage
+# functions will act of our datatypes, e.g. the `IntensityMap` type. Fortunately, Julia has some
+# convenience functions that let you see which functions/methods can act of the `IntensityMap`
 # type
+methodswith(IntensityMap)
 
 
 
@@ -70,23 +71,25 @@ kl = KullbackLeibler(img);
 # For instance lets create a few different templates
 gr = GaussianRing(μas2rad(20.0), μas2rad(5.0), 0.0, 0.0)
 ggr = EllipticalSlashedGaussianRing(
-                          μas2rad(20.0), #r0
-                          μas2rad(5.0), #σ
-                          0.2, #τ
-                          0.78, #ξτ
-                          0.5, #s
-                          0.78, #ξs
-                          μas2rad(-10.0), #x0
-                          0.0 #y0
+                          μas2rad(20.0), # r0
+                          μas2rad(5.0), # σ
+                          0.2, # τ
+                          0.78, # ξτ
+                          0.5, # s
+                          0.78, # ξs
+                          μas2rad(-10.0), # x0
+                          0.0 # y0
                         )
+
+
 # We can also plot both templates
 a = plot(gr, title="GaussianRing")
 b = plot(ggr, title="GeneralGaussianRing")
 plot(a, b, layout=(1,2), size=(600,300))
 
 
-# VIDA has a number of templates defined. These are all subtypes of the [`AbstractTemplate`](@ref) type.
-# To see which templates are implemented you can use the subtype method:
+# VIDA has a number of templates defined. These are all subtypes of the [`AbstractTemplate`](@ref)
+# type. To see which templates are implemented you can use the subtype method:
 subtypes(VIDA.AbstractImageTemplate)
 
 # Additionally as of VIDA 0.11 we can also use any VLBISkyModels model and

@@ -73,7 +73,7 @@ Joins an array of `IntensityMap` at specified times to form an VIDAMovie object.
 
 ## Inputs
  - times: An array of times that the image was created at
- - images: An array of EHTImage objects
+ - images: An array of IntensityMap objects
 
 ## Outputs
 VIDAMovie object
@@ -94,7 +94,7 @@ end
 
 @doc """
     $(SIGNATURES)
-Gets the frame of the movie object `mov` at the time t. This returns an `EHTImage`
+Gets the frame of the movie object `mov` at the time t. This returns an `IntensityMap`
 object at the requested time. The returned object is found by linear interpolation.
 """
 function get_image(mov::VIDAMovie, t; keeptime=false)
@@ -106,7 +106,7 @@ end
 
 @doc """
     $(SIGNATURES)
-Gets all the frames of the movie object `mov`. This returns a array of `EHTImage`
+Gets all the frames of the movie object `mov`. This returns a array of `IntensityMap`
 objects.
 """
 function get_frames(mov::VIDAMovie)

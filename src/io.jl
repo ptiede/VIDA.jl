@@ -8,11 +8,10 @@ Curerntly we have .fits, and .h5 implemented.
 This reads in a fits file that is more robust to the various imaging algorithms
 in the EHT, i.e. is works with clean, smili, eht-imaging.
 
-The function returns an EHTImage object that contains the relevant image and parameters
+The function returns an `IntensityMap` object that contains the relevant image and parameters
 extracted from the fits file. It also ensures that we are astronomers and that the image
 using sky-left coordinates.
 """
-
 function load_image(fname)
     _, ext = splitext(fname)
 
@@ -32,7 +31,7 @@ $(SIGNATURES)
 where `fname` should be a hdf5 image file generated using illinois hdf5 process
 # Details
 
-The function returns an EHTImage object that contains the relevant image and parameters
+The function returns an IntensityMap object that contains the relevant image and parameters
 extracted from the fits file. It also ensures that we are astronomers and that the image
 using sky-left coordinates.
 """
@@ -50,7 +49,7 @@ function load_im_h5(fname::String)
         image = fid["pol"][1,:,:]
 
 
-        # Now convert everything to EHTImage
+        # Now convert everything to IntensityMap
         image = image.*jyscale
         src = "SgrA"
         ra = 17.7611
