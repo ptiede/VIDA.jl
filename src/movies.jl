@@ -57,12 +57,12 @@ end
 VIDAMovie(times, images::Vector{<:SpatialIntensityMap}) = VIDAMovie(_join_frames(times, images))
 
 function _join_frames(times, images)
-    g = axiskeys(first(images))
+    g = axisdims(first(images))
     arr = zeros(size(g)..., length(times))
     for i in eachindex(times)
         arr[:, :, i] .= images[i]
     end
-    gt = GriddedKeys((X=g.X, Y=g.Y, T=times))
+    gt = RectiGrid((X=g.X, Y=g.Y, T=times))
     return IntensityMap(arr, gt)
 end
 
@@ -73,7 +73,7 @@ Joins an array of `IntensityMap` at specified times to form an VIDAMovie object.
 
 ## Inputs
  - times: An array of times that the image was created at
- - images: An array of EHTImage objects
+ - images: An array of IntensityMap objects
 
 ## Outputs
 VIDAMovie object
@@ -94,19 +94,19 @@ end
 
 @doc """
     $(SIGNATURES)
-Gets the frame of the movie object `mov` at the time t. This returns an `EHTImage`
+Gets the frame of the movie object `mov` at the time t. This returns an `IntensityMap`
 object at the requested time. The returned object is found by linear interpolation.
 """
 function get_image(mov::VIDAMovie, t; keeptime=false)
     img = mov.itp.(1:prod(size(mov.frames)[1:2]), Ref(t))
     (;X, Y) = mov.frames
-    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), GriddedKeys((;X, Y, T=t:t)))
-    return IntensityMap(reshape(img, size(mov.frames)[1:2]), GriddedKeys((X=mov.frames.X, Y=mov.frames.Y)))
+    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((;X, Y, T=t:t)))
+    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X=mov.frames.X, Y=mov.frames.Y)))
 end
 
 @doc """
     $(SIGNATURES)
-Gets all the frames of the movie object `mov`. This returns a array of `EHTImage`
+Gets all the frames of the movie object `mov`. This returns a array of `IntensityMap`
 objects.
 """
 function get_frames(mov::VIDAMovie)
@@ -146,7 +146,7 @@ end
  - xlim : Tuple with the limits of the image in the RA
  - ylim : Tuple with the limits of the image in DEC
 """
-function VLBISkyModels.regrid(mov::VIDAMovie, g::GriddedKeys{(:X, :Y)})
+function VLBISkyModels.regrid(mov::VIDAMovie, g::RectiGrid{<:ComradeBase.SpatialDims})
     # Get the times and frames and apply the image method to each
     frames = get_frames(mov)
     # Isn't broadcasting the best?

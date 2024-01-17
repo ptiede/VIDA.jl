@@ -264,14 +264,13 @@ Implements the slashed gaussian ring template, that uses a cosine
 to implement the slash and has a brightness position angle of 0 degrees
 east of north.
 
-## Notes
-This is a convienence constructor that uses [`RingTemplate`](@ref) under
-the hood. To create this function your self do
-
 ## Arguments
 - `σ` : standard deviation of the Gaussian ring
 - `s` : Slash amplitude. 0 means no slash, and 1 is maximal.
 
+## Notes
+This is a convienence constructor that uses [`RingTemplate`](@ref) under
+the hood. To create this function your self do
 
 ```julia
 RingTemplate(RadialGaussian(σ), AzimuthalCosine((s,), (zero(s),)))
@@ -365,7 +364,7 @@ The brightness asymmetry uses a cosine to implement the slash.
 
  ## Notes
  This is a convienence constructor that uses [`RingTemplate`](@ref) under
- the hood. To create this function your self do
+ the hood. To create this function your self we define
 
  ```julia
  modify(SlashedGaussianRing(σ/r0, s),

@@ -20,7 +20,6 @@ Therefore a user must implement the following methods
 
   - [`divergence_point`](@ref): Which evaluates the divergence at a single pixel
   - [`normalize_div`](@ref): Which normalizes and modifies the
-```
 
 """
 abstract type AbstractDivergence end
@@ -106,7 +105,7 @@ end
 
 """
     $(TYPEDEF)
-Type for the Bhattacharyya divergence. It constructed from an `EHTImage` i.e. data.
+Type for the Bhattacharyya divergence. It constructed from an `IntensityMap` i.e. data.
 Additionally to evaluate the divergence we use a functor approach where if θ
 is your
 ### Details
@@ -137,7 +136,7 @@ end
 
 """
     $(TYPEDEF)
-Type for the KL divergence. It constructed from an `EHTImage` i.e. data.
+Type for the KL divergence. It constructed from an `IntensityMap` i.e. data.
 Additionally to evaluate the divergence we use a functor approach where if θ
 is your
 ### Details
@@ -172,8 +171,8 @@ struct Renyi{T,S} <: AbstractDivergence
 end
 
 """
-    Renyi(img::EHTImage, α)
-Construct the Renyi divergence with parameter α. It constructed from an `EHTImage` i.e. data.
+    Renyi(img::IntensityMap, α)
+Construct the Renyi divergence with parameter α. It constructed from an `IntensityMap` i.e. data.
 
 ### Details
 This computes the KL divergence which is related to Hellinger distance between
@@ -181,7 +180,7 @@ two distributions. In fact, they are both minimized at the same point. The Bhatt
 divergence is defined as
 
 ```math
-Ry(f_\\theta||\\hat{I}) = \\frac{1}{α-1}\\log\\int log
+Ry(f_\\theta||\\hat{I}) = \\frac{1}{α-1}\\log\\int
         \\left(\\frac{f_{\\theta}(x,y)^\\alpha}{\\hat{I}(x,y)^{\\alpha-1}}\\right)dxdy,
 ```
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
@@ -210,7 +209,7 @@ end
 
 """
     $(TYPEDEF)
-Type for the least squares divergence. It constructed from an `EHTImage` i.e. data.
+Type for the least squares divergence. It constructed from an `IntensityMap` i.e. data.
 Additionally to evaluate the divergence we use a functor approach where if θ
 is your
 ### Details
@@ -219,7 +218,7 @@ are normalized to unit flux.
 
 To construct this just pass it an image object
 ```julia-repl
-julia> ls = LeastSquares(img::EHTImage)
+julia> ls = LeastSquares(img::IntensityMap)
 ```
 
 # Notes

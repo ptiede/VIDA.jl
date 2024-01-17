@@ -31,6 +31,7 @@ makedocs(;
         "generated/custom_template.md",
         "api/function_index.md",
     ],
+    warnonly=true
 )
 
 deploydocs(;

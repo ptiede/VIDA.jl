@@ -2,7 +2,7 @@ export CosineRing, CosineRingwFloor, CosineRingwGFloor, GaussDisk
 
 """
     $(TYPEDEF)
-Extrememly flexible symmetric ring model. The thickness is modeled as a cosine
+A flexible symmetric ring model. The thickness is modeled as a cosine
 expansion with `N` terms and the slash by a expansion with `M` terms.
 
 
@@ -89,6 +89,7 @@ r0 = √(a*b).
 The ellipticity `τ` is given by τ = 1-b/a.
 
 ## Arguments
+
  - `r0`: geometric mean radius (√ab) of the ring
  - `σ0`: standard deviation of the Gaussian ring
  - `σ` : amplitudes of the `N` order cosine expansion of the ring thickness
