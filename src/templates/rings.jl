@@ -40,6 +40,12 @@ struct RingTemplate{R<:AbstractRadial, A<:AbstractAzimuthal} <: AbstractImageTem
     azimuthal::A
 end
 
+function VLBISkyModels.__extract_template(m::RingTemplate)
+    trad = VLBISkyModels.__extract_template(m.radial)
+    tazi = VLBISkyModels.__extract_template(m.azimuthal)
+    return Tangent{typeof(m)}(;radial=trad, azimuthal=tazi)
+end
+
 @inline function CB.intensity_point(d::RingTemplate, p)
     (;X, Y) = p
     r = hypot(X, Y)
