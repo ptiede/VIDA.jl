@@ -14,6 +14,7 @@ using DocStringExtensions
 using FITSIO
 using HDF5
 using Interpolations
+using NamedTupleTools
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
 using Measures
 using RecipesBase
