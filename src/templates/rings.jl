@@ -40,9 +40,9 @@ struct RingTemplate{R<:AbstractRadial, A<:AbstractAzimuthal} <: AbstractImageTem
     azimuthal::A
 end
 
-function VLBISkyModels.__extract_template(m::RingTemplate)
-    trad = VLBISkyModels.__extract_template(m.radial)
-    tazi = VLBISkyModels.__extract_template(m.azimuthal)
+function VLBISkyModels.__extract_tangent(m::RingTemplate)
+    trad = VLBISkyModels.__extract_tangent(m.radial)
+    tazi = VLBISkyModels.__extract_tangent(m.azimuthal)
     return Tangent{typeof(m)}(;radial=trad, azimuthal=tazi)
 end
 

@@ -4,6 +4,7 @@ authors = ["Paul Tiede <ptiede91@gmail.com>"]
 version = "0.11.1"
 
 [deps]
+ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
 ComradeBase = "6d8c423b-a35f-4ef1-850c-862fe21f82c4"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 Distributed = "8ba89e20-285c-5b6f-9357-94700520ee1b"

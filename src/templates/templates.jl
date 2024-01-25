@@ -25,16 +25,17 @@ CB.visanalytic(::Type{<:AbstractImageTemplate}) = CB.NotAnalytic()
 CB.imanalytic(::Type{<:AbstractImageTemplate})  = CB.IsAnalytic()
 CB.isprimitive(::Type{<:AbstractImageTemplate}) = CB.IsPrimitive()
 
-function VLBISkyModels.__extract_tangent(m::AbstractImageTemplate)
-    nt = ntfromstruct(m)
-    if ntm isa NamedTuple{(), Tuple{}}
-        return ZeroTangent()
-    else
-        return Tangent{typeof(dm)}(;nt...)
-    end
-end
 
 
 include(joinpath(@__DIR__, "image.jl"))
 include(joinpath(@__DIR__, "rings.jl"))
 include(joinpath(@__DIR__, "cosinering.jl"))
+
+function VLBISkyModels.__extract_tangent(m::Union{AbstractImageTemplate, AbstractRadial, AbstractAzimuthal})
+    nt = ntfromstruct(m)
+    if nt isa NamedTuple{(), Tuple{}}
+        return ZeroTangent()
+    else
+        return Tangent{typeof(m)}(;nt...)
+    end
+end

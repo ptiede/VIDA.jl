@@ -9,7 +9,7 @@ divergences implemented.
 module VIDA
 
 
-
+using ChainRulesCore
 using DocStringExtensions
 using FITSIO
 using HDF5
