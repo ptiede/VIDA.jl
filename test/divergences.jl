@@ -36,3 +36,12 @@ end
     @test isapprox(divergence(bh, θa)*2, divergence(ry,θa), rtol=1e-6)
     @inferred divergence(ry, θ)
 end
+
+
+@testset "DivergenceNxCorr" begin
+    θ = GaussianRing(r0,σ,x0,y0)
+    img = intensitymap(θ, fovx, fovy, npix, npix)
+    div = NxCorr(img)
+    @test divergence(div, θ) < 1e-5
+    @inferred divergence(div, θ)
+end

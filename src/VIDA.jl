@@ -19,6 +19,7 @@ using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
 using Measures
 using RecipesBase
 using SpecialFunctions: erf
+using StatsBase
 using Reexport
 @reexport using ComradeBase
 @reexport using VLBISkyModels
@@ -29,7 +30,7 @@ import ComradeBase: intensity_point
 
 export
     #make the divergences to use for optimization
-    Bhattacharyya, KullbackLeibler, LeastSquares, Renyi,
+    Bhattacharyya, KullbackLeibler, LeastSquares, Renyi, NxCorr,
     #Templates
     GaussianRing, SlashedGaussianRing,EllipticalGaussianRing,
     EllipticalSlashedGaussianRing, EllipticalCosineRing, Constant,
