@@ -10,7 +10,7 @@ $(TYPEDEF)
 # Details
 Holds a X,Y,T `IntensityMap` plus an interpolator that lets you make a continuous movie
 """
-struct VIDAMovie{T, F<:IntensityMap{T, 3}, I<:Interpolations.AbstractExtrapolation} <: AbstractMovie
+struct VIDAMovie{T, F<:IntensityMap{T, 3}, I<:AbstractExtrapolation} <: AbstractMovie
     frames::F
     itp::I
 end
@@ -50,7 +50,7 @@ function VIDAMovie(
     sitp = extrapolate(interpolate((collect(1.0:(nx*ny)), mov.T),
                         fimages,
                         (NoInterp(), Gridded(Linear()))),
-                        (Interpolations.Flat(), Interpolations.Flat()))
+                        (Flat(), Flat()))
     return VIDAMovie(mov, sitp)
 end
 
