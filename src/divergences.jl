@@ -249,7 +249,7 @@ end
     NxCorr(img::IntensityMap)
 
 Construct the normalized cross correlation (NXCORR) divergence with respect to the image `img`.
-To maximize the NXCorr we instead compute the -log(NxCorr) as the divergence
+To maximize the NXCorr we instead compute the -log(|NxCorr|) as the divergence
 
 NxCorr is defined as:
     NXCORR(n, m) = (Nσₙσₘ) Σᵢ (nᵢ - μₙ)(mᵢ - μₘ)
@@ -260,7 +260,7 @@ function NxCorr(img::T) where {T<:IntensityMap}
 end
 
 function __divergence(d::NxCorr, img, mimg, fm)
-    return -log(nxcorr(img, mimg))
+    return -log(abs(nxcorr(img, mimg)))
 end
 
 """
