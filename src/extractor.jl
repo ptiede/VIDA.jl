@@ -74,21 +74,22 @@ end
 
 
 function build_opt(prob, unit_cube)
+    T = eltype(prob.div.img)
     dist = map((x,y)->_distize(x, y), prob.lb, prob.ub)
     if unit_cube
         t = ascube(dist)
-        bounds_lower = fill(0.0, dimension(t))
-        bounds_upper = fill(1.0, dimension(t))
+        bounds_lower = fill(zero(T), dimension(t))
+        bounds_upper = fill(one(T), dimension(t))
     else
         t = asflat(dist)
-        bounds_lower = fill(-20.0, dimension(t))
-        bounds_upper = fill(20.0, dimension(t))
+        bounds_lower = fill(-convert(T, 20), dimension(t))
+        bounds_upper = fill(convert(T, 20), dimension(t))
 
     end
     f = let t=t, div = prob.div, mod = prob.f, lb=bounds_lower, ub=bounds_upper
         x->begin
             for i in eachindex(x)
-                (lb[i] > x[i] || ub[i] < x[i]) && return Inf
+                (lb[i] > x[i] || ub[i] < x[i]) && return convert(T, Inf)
             end
             return divergence(div, mod(transform(t, x)))
         end
