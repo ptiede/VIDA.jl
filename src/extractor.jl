@@ -97,14 +97,14 @@ function build_opt(prob, unit_cube)
     return f, t, (bounds_lower, bounds_upper)
 end
 
-function initial_point(rng, t::HypercubeTransform.AbstractHypercubeTransform, init_params)
+function initial_point(rng, T::Type, t::HypercubeTransform.AbstractHypercubeTransform, init_params)
     !isnothing(init_params) && return inverse(t, init_params)
-    return rand(rng, dimension(t))
+    return rand(rng, T, dimension(t))
 end
 
-function initial_point(rng, t::HypercubeTransform.TransformVariables.AbstractTransform, init_params)
+function initial_point(rng, T::Type, t::HypercubeTransform.TransformVariables.AbstractTransform, init_params)
     !isnothing(init_params) && return inverse(t, init_params)
-    return randn(rng, dimension(t))
+    return randn(rng, T,  dimension(t))
 end
 
 """
@@ -133,8 +133,9 @@ The remaining `kwargs...` are forwarded to the `Optimization.solve` function.
    - `kwargs...`: Additional options to be passed to the `solve` function from `Optimization.jl`
 """
 function vida(prob::VIDAProblem, optimizer; rng=Random.default_rng(), init_params=nothing, unit_cube=true, kwargs...)
+    T = eltype(prob.div.img)
     f, t, (lb, ub) = build_opt(prob, unit_cube)
-    x0 = initial_point(rng, t, init_params)
+    x0 = initial_point(rng, T, t, init_params)
     fopt = OptimizationFunction((x,p)->f(x), prob.autodiff)
     optprob = OptimizationProblem(fopt, x0, nothing; lb=lb, ub=ub)
     xopt, min =  _vida(fopt, t, optprob, optimizer; kwargs...)
