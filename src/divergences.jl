@@ -274,10 +274,19 @@ NXCORR is defined as
 where `n` and `m` are the two images `μ` is the mean and `σ` is the pixelwise standard deviation
 """
 function nxcorr(img1::IntensityMap{T}, img2::IntensityMap{T}) where {T<:Real}
-    m1, s1 = mean_and_std(img1)
-    m2, s2 = mean_and_std(img2)
-    xcorr =  sum(zip(img1, img2)) do (I, J)
-        (I - m1)*(J - m2)
+    m1 = mean(img1)
+    m2 = mean(img2)
+
+    im1_var = zero(T)
+    im2_var = zero(T)
+    xcorr = zero(T)
+    for I in CartesianIndices(img1)
+        im1_val = (img1[I]-m1)
+        im2_val = (img2[I]-m2)
+        xcorr += im1_val*im2_val
+        im1_var += im1_val^2
+        im2_var += im2_val^2
     end
-    return xcorr/(length(img1)*s1*s2)
+
+    return xcorr/sqrt(im1_var*im2_var)
 end
