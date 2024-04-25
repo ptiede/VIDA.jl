@@ -59,7 +59,7 @@ function load_im_h5(fname::String)
         fov = μas2rad(dx/dsource*lunit*2.06265e11)
 
         mjd = 53005
-        ComradeBase.MinimalHeader(src, ra, dec, mjd, frequency)
+        ComradeBase.MinimalHeader(src, ra, dec, mjd, rf)
         g = imagepixels(fov, fov, nx, nx; header)
 
         return IntensityMap(image, g)
