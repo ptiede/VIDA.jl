@@ -70,7 +70,7 @@ function main()
     out_name = parsed_args["out"]
     seed = parsed_args["seed"]
     stride = parsed_args["stride"]
-    blur = parsed_args["blur"]
+    blur = μas2rad(parsed_args["blur"])
     templates = parsed_args["template"]
     @info "Template types $templates"
     restart = parsed_args["restart"]
