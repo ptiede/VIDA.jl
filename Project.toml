@@ -26,18 +26,17 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 VLBISkyModels = "d6343c73-7174-4e0f-bb64-562643efbeca"
 
-
 [weakdeps]
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [extensions]
-VIDAPlotsExt = "Plots"
 VIDAMakieExt = "Makie"
+VIDAPlotsExt = "Plots"
 
 [compat]
 ChainRulesCore = "1"
-ComradeBase = "0.6"
+ComradeBase = "0.6, 0.7"
 DimensionalData = "0.25"
 Distributions = "0.24, 0.25"
 DocStringExtensions = "0.8, 0.9"
