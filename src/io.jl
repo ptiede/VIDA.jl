@@ -46,7 +46,7 @@ function load_im_h5(fname::String)
         dx = read(header["camera"]["dx"])
         nx = Int(read(header["camera"]["nx"]))
         time = read(header["t"])*tunit/3600
-        image = fid["pol"][1,:,:]
+        image = collect(fid["pol"][1,:,:]')[end:-1:1,:]
 
 
         # Now convert everything to IntensityMap
@@ -60,7 +60,7 @@ function load_im_h5(fname::String)
 
         mjd = 53005
         ComradeBase.MinimalHeader(src, ra, dec, mjd, rf)
-        g = imagepixels(fov, fov, nx, nx; header)
+        g = imagepixels(fov, fov, nx, nx)
 
         return IntensityMap(image, g)
     end
