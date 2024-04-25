@@ -79,7 +79,7 @@ function main()
     println("output name: $out_name, ")
     println("random seed $seed")
     println("Checkpoint stride $stride")
-    println("Blurring Gaussian kernel width in µas: $blur")
+    println("Blurring Gaussian kernel width in µas: $(rad2μas(blur))")
 
     #Read in a file and create list of images to template
     #the last line is the termination of the file
