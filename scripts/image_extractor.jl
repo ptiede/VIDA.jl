@@ -15,7 +15,6 @@ using Random
 @everywhere begin
     using OptimizationBBO
     using OptimizationMetaheuristics
-    using OptimizationCMAEvolutionStrategy
 end
 
 
@@ -336,9 +335,9 @@ end
     div = VIDA.LeastSquares(cimage)
     t = @elapsed begin
         prob = VIDAProblem(div, template, lower, upper)
-        xopt,  θ, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
-        xopt2, θ, divmin = vida(prob, CMAEvolutionStrategyOpt(); init_params=xopt, maxiters=1_000)
-        # xopt2, θ, divmin = vida(prob, ECA(); init_params=xopt, use_initial=true, maxiters=1_000)
+        xopt,  _, _ = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=20_000)
+        # xopt2, θ, divmin = vida(prob, CMAEvolutionStrategyOpt(); init_params=xopt, maxiters=1_000)
+        xopt2, θ, divmin = vida(prob, ECA(;options=Options(f_calls_limit = 1000, f_tol = 1e-5)); init_params=xopt, use_initial=true)
     end
     println("This took $t seconds")
     println("The minimum divergence is $divmin")

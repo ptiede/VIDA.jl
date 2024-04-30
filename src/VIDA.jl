@@ -21,6 +21,7 @@ using Measures
 using RecipesBase
 using SpecialFunctions: erf
 using StatsBase
+using StructArrays: StructArray
 using Reexport
 @reexport using ComradeBase
 @reexport using VLBISkyModels

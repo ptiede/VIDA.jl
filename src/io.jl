@@ -12,13 +12,17 @@ The function returns an `IntensityMap` object that contains the relevant image a
 extracted from the fits file. It also ensures that we are astronomers and that the image
 using sky-left coordinates.
 """
-function load_image(fname)
+function load_image(fname; polarization=false)
     _, ext = splitext(fname)
 
     if ext == ".fits"
-        return ComradeBase.load(fname, IntensityMap)
+        if polarization
+            return ComradeBase.load(fname, StokesIntensityMap)
+        else
+            return ComradeBase.load(fname, IntensityMap)
+        end
     elseif ext == ".h5" || ext == ".hdf5"
-        return load_im_h5(fname)
+        return load_im_h5(fname; polarization)
     else
         throw("$(ext) is not a valid file extension.")
     end
@@ -35,7 +39,7 @@ The function returns an IntensityMap object that contains the relevant image and
 extracted from the fits file. It also ensures that we are astronomers and that the image
 using sky-left coordinates.
 """
-function load_im_h5(fname::String)
+function load_im_h5(fname::String; polarization=false)
     img = h5open(fname, "r") do fid
         header = fid["header"]
         dsource = read(header["dsource"])
@@ -46,14 +50,22 @@ function load_im_h5(fname::String)
         dx = read(header["camera"]["dx"])
         nx = Int(read(header["camera"]["nx"]))
         time = read(header["t"])*tunit/3600
-        image = collect(fid["pol"][1,:,:]')[end:-1:1,:]
+        if polarization
+            stokesI = collect(fid["pol"][1,:,:]')[end:-1:1,:]
+            stokesQ = collect(fid["pol"][2,:,:]')[end:-1:1,:]
+            stokesU = collect(fid["pol"][3,:,:]')[end:-1:1,:]
+            stokesV = collect(fid["pol"][4,:,:]')[end:-1:1,:]
+            image = StructArray{StokesParams{eltype(stokesI)}}((I=stokesI, Q=stokesQ, U=stokesU, V=stokesV))
+        else
+            image = collect(fid["pol"][1,:,:]')[end:-1:1,:]
+        end
 
 
         # Now convert everything to IntensityMap
         image = image.*jyscale
-        src = "SgrA"
-        ra = 17.7611
-        dec = -28.992
+        src = "Unknown"
+        ra = 0.0
+        dec = 0.0
 
         # convert to μas
         fov = μas2rad(dx/dsource*lunit*2.06265e11)
