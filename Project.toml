@@ -56,7 +56,7 @@ Requires = "1.1"
 StructArrays = "0.6"
 SpecialFunctions = "0.10, 1.0, 2"
 StatsBase = "0.33, 0.34"
-VLBISkyModels = "0.4"
+VLBISkyModels = "0.4,0.5"
 julia = "1.6"
 
 [extras]
