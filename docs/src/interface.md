@@ -19,10 +19,6 @@ ComradeBase.radialextent(m::MyNewTemplate)
 
 Note we do not implement the flux of the templates since they are often difficult to calculate.
 
-## Ring Templates
-
-As of VIDA 0.11 we also include a composite image template class called [`VIDA.RingTemplate`](@ref).
-
 ## Divergence `AbstractDivergence`
 
 In order to extract a feature you need to create a probability divergence function. Currently the divergences are defined using 
