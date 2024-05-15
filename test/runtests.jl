@@ -1,4 +1,5 @@
 using Plots
+using CairoMakie
 using VIDA
 using Test
 

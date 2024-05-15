@@ -17,7 +17,7 @@ using Pkg #hide
 Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "example")) #hide
 
 
-using Plots
+using CairoMakie
 using InteractiveUtils
 
 
@@ -34,8 +34,8 @@ img = load_image(joinpath(dirname(pathof(VIDA)),"../example/data/example_image.f
 # To see what this img is lets print the type
 println(typeof(img))
 
-# To plot the image we can just call plot. This uses recipes and the Plots.jl framework
-plot(img)
+# To plot the image we use the `VLBISkyModels.imageviz` function.
+imageviz(img)
 
 # So from the output we see that img is a `IntensityMap` type. This follows ComradeBase and
 # VLBISkyModels, see their [docs](https://ehtjulia.github.io/VLBISkyModels.jl/stable/) for
@@ -83,14 +83,17 @@ ggr = EllipticalSlashedGaussianRing(
 
 
 # We can also plot both templates
-a = plot(gr, title="GaussianRing")
-b = plot(ggr, title="GeneralGaussianRing")
-plot(a, b, layout=(1,2), size=(600,300))
+g = imagepixels(μas2rad(128.0), μas2rad(128.0), 128, 128)
+fig = Figure(;size=(600, 300))
+axis = axis=(aspect=1, xticklabelsvisible=false, yticklabelsvisible=false)
+image(fig[1, 1], intensitymap(gr, g), colormap=:afmhot,  axis=merge(axis, (title="GaussianRing",)))
+image(fig[1, 2], intensitymap(ggr,g), colormap=:afmhot,  axis=merge(axis, (title="GeneralGaussianRing",)))
+fig
 
 
 # VIDA has a number of templates defined. These are all subtypes of the [`AbstractTemplate`](@ref)
 # type. To see which templates are implemented you can use the subtype method:
-subtypes(VIDA.AbstractImageTemplate)
+subtypes(VLBISkyModels.AbstractImageTemplate)
 
 # Additionally as of VIDA 0.11 we can also use any VLBISkyModels model and
 # any model that satisfies the interface described [here](https://ehtjulia.github.io/VLBISkyModels.jl/dev/interface/#Model-Interface).
@@ -107,11 +110,14 @@ add = gr + 2.0*shifted(gr, μas2rad(-10.0), μas2rad(10.0))
 # Now neither template is really a great approximation to the true image. For instance
 # visually they look quite different, which can be checked with the [`VIDA.triptic`](@ref) function
 
-a = triptic(img, gr)
-b = triptic(img, ggr)
-c = triptic(img, add)
-plot(a,b,c, layout=(3,1), size=(800,800))
-
+figa,ax = triptic(img, gr)
+figa
+#-
+figb,ax = triptic(img, ggr)
+figb
+#-
+figc,ax = triptic(img, add)
+figc
 
 # ## Extracting the Optimal Template
 # To extract the optimal template the first thing you need to do is define your
@@ -141,32 +147,33 @@ using OptimizationBBO
 # To optimize all you need to do is run the [`VIDA.vida`](@ref) function.
 
 xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=100_000)
-triptic(img, optfilt)
-
+fig, ax = triptic(img, optfilt)
+fig
 
 # Well that seemed to do a terrible job. The reason is that a lot of these
 # images tend to have some low level flux throughout the image.
 # To account for this the template tends to get very big to absorb some of
 # this flux. To combat this you can add a constant background template to
 # the problem.
-gr_temp_cont(θ) = GaussianRing(θ.r0, θ.σ, θ.x0, θ.y0) + θ.f*Constant((μas2rad(100.0)))
+gr_temp_cont(θ) = GaussianRing(θ.r0, θ.σ, θ.x0, θ.y0) + θ.f*VLBISkyModels.Constant((μas2rad(100.0)))
 lower = (r0 = μas2rad(5.0),  σ = μas2rad(0.01), x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
 upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
 prob = VIDAProblem(bh, gr_temp_cont, lower, upper);
 xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000)
 #-
-triptic(img, optfilt)
-
+fig, ax = triptic(img, optfilt)
+fig
 
 # That's much better! Now if you wanted to capture the asymmetry in the ring you can use
 # other templates, for example the CosineRing template. Note that this template tends to be
 # a little harder to fit.
-cos_temp(θ) = EllipticalSlashedGaussianRing(θ.r0, θ.σ, θ.τ, θ.ξτ, θ.s, θ.ξs, θ.x0, θ.y0) + θ.f*θ.f*Constant(μas2rad(100.0))
+cos_temp(θ) = EllipticalSlashedGaussianRing(θ.r0, θ.σ, θ.τ, θ.ξτ, θ.s, θ.ξs, θ.x0, θ.y0) + θ.f*θ.f*VLBISkyModels.Constant(μas2rad(100.0))
 lower = (r0 = μas2rad(1.0),  σ = μas2rad(0.01), τ=0.0, ξτ=-π/2, s=0.001, ξs=-1π, x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
 upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), τ=0.5, ξτ=π/2, s=0.999, ξs=1π, x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
 prob = VIDAProblem(bh, cos_temp, lower, upper);
 xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000);
 #-
-triptic(img, optfilt)
+fig, ax = triptic(img, optfilt)
+fig
 
 # Now looks pretty great! To see how to add a custom template see the [Adding a Custom Template](@ref) page.

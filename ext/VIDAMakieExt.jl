@@ -64,12 +64,12 @@ function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
 
     color = Makie.to_colormap(colormap)[end]
 
-    image!(ax1, Xitr, Yitr, dataim, colormap=colormap)
+    heatmap!(ax1, Xitr, Yitr, dataim, colormap=colormap)
     hlines!(ax1, [ycol], color=:cornflowerblue, linewidth=2, linestyle=:solid)
     vlines!(ax1, [xcol], color=:red, linewidth=2, linestyle=:solid)
-    add_scalebar!(ax1, IntensityMap(parent(image), (X=rad2μas(image.X), Y=rad2μas(image.Y))), rad2μas(scale_length), color)
+    add_scalebar!(ax1, IntensityMap(parent(image), RectiGrid((X=rad2μas(image.X), Y=rad2μas(image.Y)))), rad2μas(scale_length), color)
 
-    image!(ax2, Xitr, Yitr, fimg, colormap=colormap)
+    heatmap!(ax2, Xitr, Yitr, fimg, colormap=colormap)
     hlines!(ax2, [ycol], color=:cornflowerblue, linewidth=2, linestyle=:dash)
     vlines!(ax2, [xcol], color=:red, linewidth=2, linestyle=:dash)
 
