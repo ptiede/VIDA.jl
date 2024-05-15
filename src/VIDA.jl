@@ -53,8 +53,6 @@ include("images.jl")
 include("movies.jl")
 #io stuff
 include("io.jl")
-#Load the visualization stuff
-include("templates/templates.jl")
 #Load the divergence functions
 include("divergences.jl")
 #Visualization tools

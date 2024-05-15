@@ -5,7 +5,6 @@ using Test
 @testset "VIDA.jl" begin
     # Write your own tests here.
     tests = [
-        "templates",
         "images",
         "movies",
         "divergences",

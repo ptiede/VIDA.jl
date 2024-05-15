@@ -20,7 +20,8 @@ include("common.jl")
     p0 = (;r0, σ, s, ξs, x0, y0,
          σG=σ*2, τG=τ, ξG=π/4, xG = 10.0, yG = 10.0, fG=2.0)
     θ = temp(p0)
-    fimg = intensitymap(θ, fovx, fovy, 64, 64)
+    g = imagepixels(fovx, fovy, 64, 64)
+    fimg = intensitymap(θ, g)
 
     bh = Bhattacharyya(fimg)
 

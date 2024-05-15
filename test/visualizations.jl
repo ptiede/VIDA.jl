@@ -3,7 +3,8 @@ include("common.jl")
 
 @testset "VisualizationsTest" begin
     θ = GaussianRing(r0, σ, x0, y0)
-    img = intensitymap(θ, fovx, fovy, npix, npix)
+    g = imagepixels(fovx, fovy, npix, npix)
+    img = intensitymap(θ, g)
     plot(θ)
     plot(img)
     triptic(img, θ)
