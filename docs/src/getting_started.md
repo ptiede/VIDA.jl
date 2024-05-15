@@ -5,10 +5,10 @@
 The basic VIDA program mirrors the following structure
 
 ```julia
-using VIDA
+using VIDA, CairoMakie
 # load the image and plot it
 image = load_fits("example/data/elliptical_gaussian_rot-0.00.fits")
-plot(image)
+imageviz(image)
 # Build the divergence we want to fit
 bh = Bhattacharyya(image)
 # Create the template to use
@@ -30,7 +30,8 @@ using OptimizationBBO
 xopt, opt_temp, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 
 #plot the results
-triptic(image, opt_temp)
+fig, ax = triptic(image, opt_temp)
+fig
 ```
 
 ## Idea behind VIDA
@@ -59,5 +60,4 @@ In order to extract features we first need a cost function that penalized our pa
 
 Divergences are defined by the abstract type [`VIDA.AbstractDivergence`](@ref). Implementations of the this type are also expected to implement a functor that evaluates the divergence on some template.
 
-The current recommended default template is the [`VIDA.Bhattacharyya`](@ref) divergence although all the 
-template give similar answers. 
+The current recommended default template is the [`VIDA.Bhattacharyya`](@ref) divergence although all the template give similar answers.
