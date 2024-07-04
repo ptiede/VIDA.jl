@@ -6,7 +6,7 @@ include("common.jl")
     phi = times*π
     frames = map(phi) do p
         f = SlashedGaussianRing(r0, σ, s, p, 0.0, 0.0)
-        return intensitymap(f, 120.0, 120.0, 64, 64)
+        return intensitymap(f, imagepixels(120.0, 120.0, 64, 64))
     end
     mov = join_frames(times, frames)
     VIDAMovie(times, frames)

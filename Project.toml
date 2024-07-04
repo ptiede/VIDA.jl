@@ -1,7 +1,7 @@
 name = "VIDA"
 uuid = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
 authors = ["Paul Tiede <ptiede91@gmail.com>"]
-version = "0.11.7"
+version = "0.12.0"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -29,15 +29,13 @@ VLBISkyModels = "d6343c73-7174-4e0f-bb64-562643efbeca"
 
 [weakdeps]
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [extensions]
 VIDAMakieExt = "Makie"
-VIDAPlotsExt = "Plots"
 
 [compat]
 ChainRulesCore = "1"
-ComradeBase = "0.6,0.7"
+ComradeBase = "0.7"
 DimensionalData = "0.25,0.26,0.27"
 Distributions = "0.24, 0.25"
 DocStringExtensions = "0.8, 0.9"
@@ -45,18 +43,17 @@ FITSIO = "0.14, 0.15, 0.16, 0.17"
 HDF5 = "0.14, 0.15, 0.16, 0.17"
 HypercubeTransform = "0.4"
 Interpolations = "0.12, 0.13, 0.14, 0.15"
-Makie = "0.20"
+Makie = "0.20, 0.21"
 Measures = "0.3"
 NamedTupleTools = "0.14"
 Optimization = "3"
-Plots = "1"
 RecipesBase = "1.0"
 Reexport = "1"
 Requires = "1.1"
 StructArrays = "0.6"
 SpecialFunctions = "0.10, 1.0, 2"
 StatsBase = "0.33, 0.34"
-VLBISkyModels = "0.4"
+VLBISkyModels = "0.5"
 julia = "1.6"
 
 [extras]

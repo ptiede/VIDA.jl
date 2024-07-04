@@ -8,7 +8,7 @@ As of 0.11 VIDA uses the [ComradeBase.jl](https://ptiede.github.io/Comrade.jl/st
 and [VLBISkyModels.jl](https://ehtjulia.github.io/VLBISkyModels.jl/stable/) interface. This means that any model that obeys that interface can be used within VIDA.
 Additionally VIDA defines a number of additional templates that are useful. For a complete list see the [API](@ref) page.
 
-For specifically `VIDA` we have created a `AbstractImageTemplate` subtype of the `ComradeBase.AbstractModel` type and partially implemented some functions. 
+For specifically `VIDA` you should subtype `VLBISkyModels.AbstractImageTemplate` subtype of the `ComradeBase.AbstractModel` type and partially implemented some functions.
 For instance, we assume that `ComradeBase.imanalytic(::Type{<:AbstractImageTemplate}) = IsAnalytic()`. As such if an end user wants to implement a new
 feature they just need to implement
 
@@ -18,10 +18,6 @@ ComradeBase.radialextent(m::MyNewTemplate)
 ```
 
 Note we do not implement the flux of the templates since they are often difficult to calculate.
-
-## Ring Templates
-
-As of VIDA 0.11 we also include a composite image template class called [`VIDA.RingTemplate`](@ref).
 
 ## Divergence `AbstractDivergence`
 

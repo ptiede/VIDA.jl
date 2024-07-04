@@ -12,7 +12,7 @@ using Pkg #hide
 Pkg.activate(joinpath(dirname(pathof(VIDA)), "..", "example")) #hide
 
 
-struct SlashedExponentialRing{T} <: VIDA.AbstractImageTemplate
+struct SlashedExponentialRing{T} <: VLBISkyModels.AbstractImageTemplate
     αouter::T
     αinner::T #standard deviation of the Gaussian
     s::T
@@ -43,11 +43,12 @@ template = SlashedExponentialRing(μas2rad(20.0), 3.0, 4.0, 0.5, π/2, 0.0, 0.0)
 
 # VIDA uses [`ComradeBase`](https://github.com/ptiede/ComradeBase.jl) and [`VLBISkyModels`](https://ehtjulia.github.io/VLBISkyModels.jl/dev/interface/)
 # interface. Therefore, we can create an image using `intensitymap`
-img = intensitymap(template, μas2rad(128.0), μas2rad(128.0), 64, 64)
+g = imagepixels(μas2rad(128.0), μas2rad(128.0), 64, 64)
+img = intensitymap(template, g)
 
 # We can also plot the image
-using Plots
-plot(img)
+using CairoMakie
+imageviz(img)
 
 # Now lets see if we can get the correct parameters. First we construct our optimization
 # divergence the Bhattacharyya divergence.
@@ -71,8 +72,8 @@ xopt, θopt, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 @show θopt
 
 # Let's also plot the results
-triptic(img, θopt)
-
+fig, ax = triptic(img, θopt)
+fig
 
 # Now with all of this said this template actually already exists in VIDA using
 # the flexible [`VIDA.RingTemplate`](@ref).
@@ -81,4 +82,5 @@ azi = AzimuthalCosine(xopt.s, xopt.ξs)
 t   = modify(RingTemplate(rad, azi), Stretch(xopt.r0), Shift(xopt.x0, xopt.y0))
 #-
 
-triptic(img, t)
+fig, ax = triptic(img, t)
+fig

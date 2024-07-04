@@ -27,7 +27,7 @@ end
 
 @testset "BlurImages" begin
     filt = GaussianRing(1.0)
-    img = intensitymap(filt, 10.0, 10.0, 128, 128)
+    img = intensitymap(filt, imagepixels(10.0, 10.0, 128, 128))
     bimg = VIDA.blur(img, σ*2*sqrt(2*log(2)))
     @test size(img) == (128,128)
 end
