@@ -81,7 +81,7 @@ function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
     lines!(ax3, Yitr, fimg[:, imin], color=:red, linestyle=:dash)
     ax3.xlabel = "RA, DEC chords (μas)"
 
-    return fig, (ax1, ax2, ax3)
+    return FigureAxis(fig, (ax1, ax2, ax3))
 end
 
 VIDA.triptic(img, template; kwargs...) = _triptic(img, template; kwargs...)
