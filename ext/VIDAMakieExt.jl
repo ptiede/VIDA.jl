@@ -37,16 +37,17 @@ function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
 
     #Construct the image grid in μas
     g = axisdims(image)
-    dataim = ComradeBase.baseimage(image./flux(image))'
-
-    #Construct the template image
-    template_img = intensitymap(θ, g)
-    fimg = ComradeBase.baseimage(template_img/flux(template_img))'
 
     (;X, Y) = g
     Xitr = map(rad2μas, X)
     Yitr = map(rad2μas, Y)
     fovx, fovy = map(rad2μas, values(fieldofview(image)))
+
+    dataim = IntensityMap(baseimage(image./flux(image)), (;X=Xitr, Y=Yitr))
+
+    #Construct the template image
+    template_img = intensitymap(θ, g)
+    fimg = IntensityMap(baseimage(template_img/flux(template_img)), (;X=Xitr, Y=Yitr))
 
 
     #Get scale bar and slice data.
@@ -64,12 +65,12 @@ function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
 
     color = Makie.to_colormap(colormap)[end]
 
-    image!(ax1, Xitr, Yitr, dataim, colormap=colormap)
+    image!(ax1, dataim, colormap=colormap)
     hlines!(ax1, [ycol], color=:cornflowerblue, linewidth=2, linestyle=:solid)
     vlines!(ax1, [xcol], color=:red, linewidth=2, linestyle=:solid)
     add_scalebar!(ax1, IntensityMap(parent(image), (X=rad2μas(image.X), Y=rad2μas(image.Y))), rad2μas(scale_length), color)
 
-    image!(ax2, Xitr, Yitr, fimg, colormap=colormap)
+    image!(ax2, fimg, colormap=colormap)
     hlines!(ax2, [ycol], color=:cornflowerblue, linewidth=2, linestyle=:dash)
     vlines!(ax2, [xcol], color=:red, linewidth=2, linestyle=:dash)
 

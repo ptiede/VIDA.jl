@@ -199,7 +199,7 @@ function Renyi(img::T, α) where {T<:IntensityMap}
     Renyi{T,typeof(f)}(img./flux(img), α, zero(img))
 end
 
-@inline divergence_point(d::Renyi, p, q) = p*(q/p)^d.α
+@inline divergence_point(d::Renyi, p, q) = p*(p/q)^(d.α-1)
 @inline function normalize_div(d::Renyi, div)
     α = d.α
     return inv(α-1)*log(div)
