@@ -28,12 +28,13 @@ end
 
 
 function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
-                 figure=(size=(825, 300),), axis=(xreversed=true, aspect=DataAspect()),
+                 figure=(size=(750, 300),), axis=(xreversed=true, aspect=DataAspect()),
                  colormap=:afmhot, scale_length=fieldofview(image).X/4)
     fig = Figure(;figure...)
     ax1 = Axis(fig[1,1]; axis...)
     ax2 = Axis(fig[1,2]; axis...)
     ax3 = Axis(fig[1,3], aspect=1, yticklabelsvisible=false)
+    hidedecorations!.((ax1, ax2))
 
     #Construct the image grid in μas
     g = axisdims(image)
@@ -43,11 +44,12 @@ function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
     Yitr = map(rad2μas, Y)
     fovx, fovy = map(rad2μas, values(fieldofview(image)))
 
-    dataim = IntensityMap(baseimage(image./flux(image)), (;X=Xitr, Y=Yitr))
+    gμas = RectiGrid((;X=Xitr, Y=Yitr); header=header(image))
+    dataim = IntensityMap(baseimage(image./flux(image)), gμas)
 
     #Construct the template image
     template_img = intensitymap(θ, g)
-    fimg = IntensityMap(baseimage(template_img/flux(template_img)), (;X=Xitr, Y=Yitr))
+    fimg = IntensityMap(baseimage(template_img/flux(template_img)), gμas)
 
 
     #Get scale bar and slice data.
@@ -73,15 +75,18 @@ function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
     heatmap!(ax2, fimg, colormap=colormap)
     hlines!(ax2, [ycol], color=:cornflowerblue, linewidth=2, linestyle=:dash)
     vlines!(ax2, [xcol], color=:red, linewidth=2, linestyle=:dash)
-
+    ax2.yticklabelsvisible = false
     lines!(ax3, reverse(Xitr), dataim[jmin, :], color=:cornflowerblue)
     lines!(ax3, Yitr, dataim[:, imin], color=:red)
-
+    ax3.yaxisposition = :right
+    ax3.ylabel = "Profile"
     lines!(ax3, reverse(Xitr), fimg[jmin, :], color=:cornflowerblue, linestyle=:dash)
     lines!(ax3, Yitr, fimg[:, imin], color=:red, linestyle=:dash)
     ax3.xlabel = "RA, DEC chords (μas)"
+    colgap!(fig.layout, 5.0)
+    colgap!(fig.layout, 2, 20.0)
 
-    return FigureAxis(fig, (ax1, ax2, ax3))
+    return fig
 end
 
 VIDA.triptic(img, template; kwargs...) = _triptic(img, template; kwargs...)
