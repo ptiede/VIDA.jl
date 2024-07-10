@@ -72,7 +72,7 @@ xopt, θopt, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 @show θopt
 
 # Let's also plot the results
-fig, ax = triptic(img, θopt)
+fig = triptic(img, θopt)
 fig
 
 # Now with all of this said this template actually already exists in VIDA using
