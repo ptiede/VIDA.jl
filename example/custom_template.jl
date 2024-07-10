@@ -82,5 +82,5 @@ azi = AzimuthalCosine(xopt.s, xopt.ξs)
 t   = modify(RingTemplate(rad, azi), Stretch(xopt.r0), Shift(xopt.x0, xopt.y0))
 #-
 
-fig, ax = triptic(img, t)
+fig = triptic(img, t);
 fig
