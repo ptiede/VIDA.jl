@@ -37,7 +37,7 @@ end
     ry = Renyi(img, 0.5)
     bh = Bhattacharyya(img)
     @test divergence(ry, θ) < 1e-10
-    @test isapprox(divergence(bh, θa)*2, divergence(ry,θa), rtol=1e-6)
+    @test isapprox(divergence(bh, θa), divergence(ry,θa), rtol=1e-6)
     @inferred divergence(ry, θ)
 end
 
