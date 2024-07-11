@@ -82,7 +82,7 @@ end
 function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
     (;img, mimg) = d
     CB.intensitymap!(mimg, m)
-    fm = flux(mimg)
+    fm = sum(x->max(x, 0), mimg)
     return __divergence(d, img, mimg, fm)
 end
 
