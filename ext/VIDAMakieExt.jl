@@ -76,12 +76,12 @@ function _triptic(image::SpatialIntensityMap, θ::ComradeBase.AbstractModel;
     hlines!(ax2, [ycol], color=:cornflowerblue, linewidth=2, linestyle=:dash)
     vlines!(ax2, [xcol], color=:red, linewidth=2, linestyle=:dash)
     ax2.yticklabelsvisible = false
-    lines!(ax3, reverse(Xitr), dataim[jmin, :], color=:cornflowerblue)
-    lines!(ax3, Yitr, dataim[:, imin], color=:red)
+    lines!(ax3, reverse(Xitr), parent(dataim)[jmin, :], color=:cornflowerblue)
+    lines!(ax3, Yitr, parent(dataim)[:, imin], color=:red)
     ax3.yaxisposition = :right
     ax3.ylabel = "Profile"
-    lines!(ax3, reverse(Xitr), fimg[jmin, :], color=:cornflowerblue, linestyle=:dash)
-    lines!(ax3, Yitr, fimg[:, imin], color=:red, linestyle=:dash)
+    lines!(ax3, reverse(Xitr), parent(fimg)[jmin, :], color=:cornflowerblue, linestyle=:dash)
+    lines!(ax3, Yitr, parent(fimg)[:, imin], color=:red, linestyle=:dash)
     ax3.xlabel = "RA, DEC chords (μas)"
     colgap!(fig.layout, 5.0)
     colgap!(fig.layout, 2, 20.0)
