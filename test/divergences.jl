@@ -11,6 +11,16 @@ include("common.jl")
     @inferred divergence(div, θ)
 end
 
+@testset "DivergenceJS" begin
+    θ = GaussianRing(r0,σ,x0,y0)
+    g = imagepixels(fovx, fovy, npix, npix)
+    img = intensitymap(θ, g)
+    div = JensenShannon(img)
+    @test divergence(div, θ) < 1e-8
+    @inferred divergence(div, θ)
+end
+
+
 @testset "DivergenceBh" begin
     θ = GaussianRing(r0,σ,x0,y0)
     g = imagepixels(fovx, fovy, npix, npix)

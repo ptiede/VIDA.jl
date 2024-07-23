@@ -1,4 +1,4 @@
-export divergence, nxcorr
+export divergence, nxcorr, JensenShannon
 
 """
     $(TYPEDEF)
@@ -149,8 +149,6 @@ KL(f_\\theta||\\hat{I}) = -\\log\\int f_{\\theta}(x,y)\\log
         \\left(\\frac{f_{\\theta}(x,y)}{\\hat{I}(x,y)}\\right)dxdy,
 ```
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
-
-This struct is also a functor.
 """
 struct KullbackLeibler{T<:IntensityMap} <: AbstractDivergence
     img::T
@@ -162,6 +160,29 @@ end
 
 @inline divergence_point(::KullbackLeibler, p, q) = q*log(q/(p+eps(typeof(p))))
 @inline normalize_div(::KullbackLeibler, div) = div
+
+"""
+    JensenShannon(img::IntensityMap)
+
+Computes the Jensen-Shannon divergence (symmetrized KL divergence). This is defined as
+
+JS(P || Q) = 1/2 KL(P || M) + 1/2 KL(Q || M)
+
+where M = 1/2(P + Q)
+"""
+struct JensenShannon{T<:IntensityMap} <: AbstractDivergence
+    img::T
+    mimg::T
+end
+function JensenShannon(img::T) where {T<:IntensityMap}
+    JensenShannon(img./flux(img), zero(img))
+end
+
+@inline function divergence_point(::JensenShannon, p, q)
+    (p ≈ 0 && q ≈ 0) && return zero(p)
+    return (q*log(2*q/((p+q)))) + p*log(2*p/(p+q))
+end
+@inline normalize_div(::JensenShannon, div) = div/2
 
 
 struct Renyi{T,S} <: AbstractDivergence
