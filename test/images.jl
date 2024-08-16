@@ -9,7 +9,7 @@ include("common.jl")
     @test ycent ≈ μas2rad(0.5182951434801205)
     θ = GaussianRing(r0,σ,x0,y0)
     img_fake = intensitymap(θ, axisdims(img))
-    ComradeBase.save("tmp", img)
+    save_fits("tmp", img)
     rm("tmp")
 end
 

@@ -17,9 +17,9 @@ function load_image(fname; polarization=false)
 
     if ext == ".fits"
         if polarization
-            return ComradeBase.load(fname, StokesIntensityMap)
+            return load_fits(fname, IntensityMap{StokesParams{Float64}})
         else
-            return ComradeBase.load(fname, IntensityMap)
+            return load_fits(fname, IntensityMap)
         end
     elseif ext == ".h5" || ext == ".hdf5"
         return load_im_h5(fname; polarization)
