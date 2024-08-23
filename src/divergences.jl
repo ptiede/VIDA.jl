@@ -24,6 +24,17 @@ Therefore a user must implement the following methods
 """
 abstract type AbstractDivergence end
 
+struct InplaceDivergence{D<:AbstractDivergence, T} <: AbstractDivergence
+    div::D
+    img::T
+    mimg::T
+    function InplaceDivergence(div::D, img::IntensityMap) where {D<:AbstractDivergence}
+        nimg = img./flux(img)
+        T = typeof(nimg)
+        return new{D,T}(div, nimg, zero(nimg))
+    end
+end
+
 """
     divergence_point(div::AbstractDivergence, p, q)
 
@@ -79,24 +90,25 @@ end
 #     return normalize_div(d, div, fm)
 # end
 
-function _divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
+function _divergence(d::InplaceDivergence, m::ComradeBase.AbstractModel)
     (;img, mimg) = d
     CB.intensitymap!(mimg, m)
     fm = sum(x->max(x, 0), mimg)
-    return __divergence(d, img, mimg, fm)
+    return __divergence(d.div, img, mimg, fm)
 end
 
-function _divergence(d::AbstractDivergence, mimg::IntensityMap{<:Real})
+function _divergence(d::InplaceDivergence, mimg::IntensityMap{<:Real})
     (;img) = d
-    fm = flux(mimg)
-    return __divergence(d, img, mimg, fm)
+    fm = sum(x->max(x, 0), mimg)
+    return __divergence(d.div, img, mimg, fm)
 end
 
 
 function __divergence(d, img, mimg, fm)
-    div  = sum(zip(img, mimg)) do (ii, im)
+    div  = mapreduce(+, parent(img), parent(mimg)) do ii, im
         return divergence_point(d, ii, max(im/fm, 0))
     end
+    # div = sum(divergence_point(d, ii, max(im/fm, 0))))
     return normalize_div(d, div)
 end
 
@@ -119,12 +131,10 @@ Bh(f_\\theta||\\hat{I}) = -\\log\\int \\sqrt{f_\\theta(x,y)\\hat{I}(x,y)}dxdy,
 where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 """
-struct Bhattacharyya{T<:IntensityMap} <: AbstractDivergence
-    img::T
-    mimg::T
-end
+struct Bhattacharyya <: AbstractDivergence end
+
 function Bhattacharyya(img::T) where {T<:IntensityMap}
-    Bhattacharyya(img./flux(img), zero(img))
+    InplaceDivergence(Bhattacharyya(), img)
 end
 
 
@@ -152,22 +162,17 @@ where ``\\hat{I}`` is defined as the image normalized to unit flux.
 
 This struct is also a functor.
 """
-struct KullbackLeibler{T<:IntensityMap} <: AbstractDivergence
-    img::T
-    mimg::T
-end
-function KullbackLeibler(img::T) where {T<:IntensityMap}
-    KullbackLeibler(img./flux(img), zero(img))
+struct KullbackLeibler <: AbstractDivergence end
+function KullbackLeibler(img::IntensityMap)
+    return InplaceDivergence(KullbackLeibler(), img)
 end
 
 @inline divergence_point(::KullbackLeibler, p, q) = q*log(q/(p+eps(typeof(p))))
 @inline normalize_div(::KullbackLeibler, div) = div
 
 
-struct Renyi{T,S} <: AbstractDivergence
-    img::T
+struct Renyi{S} <: AbstractDivergence
     α::S
-    mimg::T
 end
 
 """
@@ -195,8 +200,7 @@ akin the to sup norm and fails to match the image structure.
 """
 function Renyi(img::T, α) where {T<:IntensityMap}
     @assert !(α-1 ≈ 0) "α=1 is the KL divergence use that instead"
-    f = flux(img)
-    Renyi{T,typeof(f)}(img./flux(img), α, zero(img))
+    InplaceDivergence(Renyi(α), img)
 end
 
 @inline divergence_point(d::Renyi, p, q) = q*(q/(p + eps()))^(d.α-1)
@@ -225,13 +229,10 @@ julia> ls = LeastSquares(img::IntensityMap)
 We have a template internal matrix the prevents internal allocations during computation
 This is a internal feature that the user does not need to worry about.
 """
-struct LeastSquares{T} <: AbstractDivergence
-    img::T
-    mimg::T
-end
+struct LeastSquares <: AbstractDivergence end
 
 function LeastSquares(img::SpatialIntensityMap)
-    LeastSquares(img./flux(img), zero(img))
+    return InplaceDivergence(LeastSquares(), img)
 end
 
 function divergence_point(::LeastSquares, p, q)
@@ -240,10 +241,7 @@ end
 
 @inline normalize_div(::LeastSquares, div) = div
 
-struct NxCorr{T} <: AbstractDivergence
-    img::T
-    mimg::T
-end
+struct NxCorr <: AbstractDivergence end
 
 """
     NxCorr(img::IntensityMap)
@@ -256,7 +254,7 @@ NxCorr is defined as:
 where `n` and `m` are the two images `μ` is the mean and `σ` is the pixelwise standard deviation
 """
 function NxCorr(img::T) where {T<:IntensityMap}
-    NxCorr(img./flux(img), zero(img))
+    InplaceDivergence(NxCorr(), img)
 end
 
 function __divergence(d::NxCorr, img, mimg, fm)
@@ -274,10 +272,13 @@ NXCORR is defined as
 where `n` and `m` are the two images `μ` is the mean and `σ` is the pixelwise standard deviation
 """
 function nxcorr(img1::IntensityMap{T}, img2::IntensityMap{T}) where {T<:Real}
-    m1, s1 = mean_and_std(img1)
-    m2, s2 = mean_and_std(img2)
-    xcorr =  sum(zip(img1, img2)) do (I, J)
+    m1, s1 = mean_and_std(parent(img1))
+    m2, s2 = mean_and_std(parent(img2))
+    xcorr =  mapreduce(+, parent(img1), parent(img2); init=zero(T)) do I, J
         (I - m1)*(J - m2)
     end
+    # dm1 = img1 .- m1
+    # dm2 = img2 .- m2
+    # return sum(dm1.*dm2)/(length(img1)*s1*s2)
     return xcorr/(length(img1)*s1*s2)
 end
