@@ -17,15 +17,21 @@ function load_image(fname; polarization=false)
 
     if ext == ".fits"
         if polarization
-            return load_fits(fname, IntensityMap{StokesParams{Float64}})
+            return _load_fits(fname, IntensityMap{StokesParams{Float64}})
         else
-            return load_fits(fname, IntensityMap)
+            return _load_fits(fname, IntensityMap)
         end
     elseif ext == ".h5" || ext == ".hdf5"
         return load_im_h5(fname; polarization)
     else
         throw("$(ext) is not a valid file extension.")
     end
+end
+
+@static if :load_fits in names(VLBISkyModels; all=true)
+    _load_fits(fname, T) = VLBISkyModels.load_fits(fname, T)
+else
+    _load_fits(fname, T) = ComradeBase.load(fname, T)
 end
 
 
