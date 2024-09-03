@@ -30,7 +30,7 @@ using OptimizationBBO
 xopt, opt_temp, divmin = vida(prob, BBO_adaptive_de_rand_1_bin(); maxiters=50_000)
 
 #plot the results
-fig, ax = triptic(image, opt_temp)
+fig = triptic(image, opt_temp)
 fig
 ```
 
