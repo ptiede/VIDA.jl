@@ -35,7 +35,7 @@ VIDAMakieExt = "Makie"
 
 [compat]
 ChainRulesCore = "1"
-ComradeBase = "0.8"
+ComradeBase = "0.7, 0.8"
 DimensionalData = "0.25,0.26,0.27"
 Distributions = "0.24, 0.25"
 DocStringExtensions = "0.8, 0.9"
@@ -53,7 +53,7 @@ Requires = "1.1"
 StructArrays = "0.6"
 SpecialFunctions = "0.10, 1.0, 2"
 StatsBase = "0.33, 0.34"
-VLBISkyModels = "0.6"
+VLBISkyModels = "0.5, 0.6"
 julia = "1.6"
 
 [extras]
