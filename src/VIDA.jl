@@ -56,20 +56,6 @@ include("io.jl")
 #Load the divergence functions
 include("divergences.jl")
 #Visualization tools
-function __init__()
-#    @require BlackBoxOptim="a134a8b2-14d6-55f6-9291-3336d3ab0209"
-end
-
-if !isdefined(Base, :get_extension)
-    using Requires
-end
-
-@static if !isdefined(Base, :get_extension)
-    function __init__()
-        @require Plots="91a5bcdd-55d7-5caf-9e0b-520d859cae80" include(joinpath(@__DIR__, "../ext/VIDAPlotsExt.jl"))
-        @require Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a" include(joinpath(@__DIR__, "../ext/VIDAMakieExt.jl"))
-    end
-end
 
 
 include("extractor.jl")
