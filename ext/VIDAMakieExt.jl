@@ -3,7 +3,7 @@ module VIDAMakieExt
 using VIDA
 using Makie
 using DimensionalData
-using ComradeBase: basedimage
+using ComradeBase: baseimage
 
 function add_scalebar!(ax, img, scale_length, color)
     fovx, fovy = fieldofview(img)
