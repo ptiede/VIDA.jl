@@ -1,15 +1,9 @@
 module VIDAMakieExt
 
 using VIDA
-if isdefined(Base, :get_extension)
-    using Makie
-    using DimensionalData
-    using ComradeBase: basedim
-else
-    using ..Makie
-    using ..DimensionalData
-    using ..ComradeBase: basedim
-end
+using Makie
+using DimensionalData
+using ComradeBase: basedimage
 
 function add_scalebar!(ax, img, scale_length, color)
     fovx, fovy = fieldofview(img)
