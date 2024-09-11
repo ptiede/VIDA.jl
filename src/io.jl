@@ -56,14 +56,19 @@ function load_im_h5(fname::String; polarization=false)
         dx = read(header["camera"]["dx"])
         nx = Int(read(header["camera"]["nx"]))
         time = read(header["t"])*tunit/3600
-        if polarization
-            stokesI = collect(fid["pol"][1,:,:]')[end:-1:1,:]
-            stokesQ = collect(fid["pol"][2,:,:]')[end:-1:1,:]
-            stokesU = collect(fid["pol"][3,:,:]')[end:-1:1,:]
-            stokesV = collect(fid["pol"][4,:,:]')[end:-1:1,:]
-            image = StructArray{StokesParams{eltype(stokesI)}}((I=stokesI, Q=stokesQ, U=stokesU, V=stokesV))
+
+        if haskey(fid, "pol")
+            if polarization
+                stokesI = collect(fid["pol"][1,:,:]')[end:-1:1,:]
+                stokesQ = collect(fid["pol"][2,:,:]')[end:-1:1,:]
+                stokesU = collect(fid["pol"][3,:,:]')[end:-1:1,:]
+                stokesV = collect(fid["pol"][4,:,:]')[end:-1:1,:]
+                image = StructArray{StokesParams{eltype(stokesI)}}((I=stokesI, Q=stokesQ, U=stokesU, V=stokesV))
+            else
+                image = collect(fid["pol"][1,:,:]')[end:-1:1,:]
+            end
         else
-            image = collect(fid["pol"][1,:,:]')[end:-1:1,:]
+            image = fid["unpol"][:,:]'[end:-1:begin, :]
         end
 
 
