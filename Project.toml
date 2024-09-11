@@ -1,7 +1,7 @@
 name = "VIDA"
 uuid = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
 authors = ["Paul Tiede <ptiede91@gmail.com>"]
-version = "0.12.3"
+version = "0.12.4"
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
