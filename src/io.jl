@@ -94,17 +94,17 @@ end
 @doc """
     $(SIGNATURES)
 
-Loads an hdf5 file where `filename` should be a HDF5 file.
+Loads an hdf5 movie file where `filename` should be a HDF5 file.
 # Details
-This reads in a hdf5 file and outputs and EHTMovie object.
+This reads in a hdf5 movie file and outputs and EHTMovie object.
 
 # Notes
 Currently this only works with movies created by *ehtim*. SMILI uses a different
 format, as does Illinois, and every other group...
 """
-function load_hdf5(filename; style=:ehtim)
+function load_hdf5(filename; polarization=false, style=:ehtim)
     if style == :ehtim
-        return _load_ehtimhdf5(filename)
+        return _load_ehtimhdf5(filename; polarization)
     else
         throw("hdf5 files not from ehtim aren't implemented")
     end
@@ -151,12 +151,16 @@ function save_hdf5(filename, mov; style=:ehtim)
     return nothing
 end
 
-function _load_ehtimhdf5(filename)
+function _load_ehtimhdf5(filename; polarization=false)
     #Open the hdf5 file
     img = h5open(filename, "r") do fid
         header = fid["header"]
         # Read the images TODO: Make this lazy to not nuke my memory
-        images = read(fid["I"])
+        if !polarization
+            images = read(fid["I"])
+        else
+            images = StructArray{StokesParams{Float64}}((I=read(fid["I"]), Q=read(fid["Q"]), U=read(fid["U"]), V=read(fid["V"])))
+        end
         images = images[end:-1:1,end:-1:1,:]
         psize = parse(Float64, read(header["psize"]))
         fov = psize*size(images,1)
