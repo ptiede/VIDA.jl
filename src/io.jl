@@ -118,10 +118,16 @@ that only work with ehtim.
 """
 function save_hdf5(filename, mov; style=:ehtim)
     # Copy this so I don't manipulate the movie itself
-    I = copy(mov.frames)
     # Now because HDF5 uses row major I need to permute the dims around
     # so that ehtim reads this in correctly.
-    I = ComradeBase.baseimage(I)[end:-1:1,end:-1:1,:]
+    if eltype(mov.frames) <: StokesParams
+        I = ComradeBase.baseimage(stokes(mov.frames, :I))[end:-1:1,end:-1:1,:]
+        Q = ComradeBase.baseimage(stokes(mov.frames, :Q))[end:-1:1,end:-1:1,:]
+        U = ComradeBase.baseimage(stokes(mov.frames, :U))[end:-1:1,end:-1:1,:]
+        V = ComradeBase.baseimage(stokes(mov.frames, :V))[end:-1:1,end:-1:1,:]
+    else
+        I = ComradeBase.baseimage(I)[end:-1:1,end:-1:1,:]
+    end
     times = mov.frames.T
     head = header(mov.frames)
 
@@ -133,6 +139,12 @@ function save_hdf5(filename, mov; style=:ehtim)
     h5open(filename, "w") do file
         #Write the Intensity
         @write file I
+        if eltype(mov.frames) <: StokesParams
+            @write file Q
+            @write file U
+            @write file V
+        end
+
         #Create the header dataset and write it
         file["header"] = ""
         header = file["header"]

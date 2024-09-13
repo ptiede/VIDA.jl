@@ -72,11 +72,11 @@ function VIDAMovie(
     return VIDAMovie(mov, (I=sitpI, Q=sitpQ, U=sitpU, V=sitpV))
 end
 
-VIDAMovie(times, images::Vector{<:SpatialIntensityMap}) = VIDAMovie(_join_frames(times, images))
+VIDAMovie(times, images::AbstractVector{<:SpatialIntensityMap}) = VIDAMovie(_join_frames(times, images))
 
 function _join_frames(times, images)
     g = axisdims(first(images))
-    arr = zeros(size(g)..., length(times))
+    arr = zeros(eltype(first(images)), size(g)..., length(times))
     for i in eachindex(times)
         arr[:, :, i] .= images[i]
     end
@@ -96,7 +96,7 @@ Joins an array of `IntensityMap` at specified times to form an VIDAMovie object.
 ## Outputs
 VIDAMovie object
 """
-function join_frames(times, images::Vector{T}) where {T<:SpatialIntensityMap}
+function join_frames(times, images::AbstractVector{T}) where {T<:SpatialIntensityMap}
     return VIDAMovie(_join_frames(times, images))
 end
 
@@ -147,7 +147,7 @@ end
     $(SIGNATURES)
 Returns the flux of the `mov` at the times `time` in fractional hours
 """
-function CB.flux(mov, t)
+function CB.flux(mov::VIDAMovie, t)
     img = get_image(mov, t)
     return flux(img)
 end
@@ -179,11 +179,11 @@ end
 function VLBISkyModels.regrid(mov::VIDAMovie, g::RectiGrid{<:ComradeBase.SpatialDims})
     # Get the times and frames and apply the image method to each
     frames = get_frames(mov)
-    # Isn't broadcasting the best?
     rframes = map(eachslice(frames; dims=(:T))) do I
         fimg = VLBISkyModels.InterpolatedImage(I)
         img = intensitymap(fimg, g)
         return img
     end
-    return rframes
+    # map(eachslice) makes a struct vector so we need to cast it to an array
+    return join_frames(mov.frames.T, (parent(baseimage(rframes))))
 end
