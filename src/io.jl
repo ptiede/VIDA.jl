@@ -126,7 +126,7 @@ function save_hdf5(filename, mov; style=:ehtim)
         U = ComradeBase.baseimage(stokes(mov.frames, :U))[end:-1:1,end:-1:1,:]
         V = ComradeBase.baseimage(stokes(mov.frames, :V))[end:-1:1,end:-1:1,:]
     else
-        I = ComradeBase.baseimage(mov)[end:-1:1,end:-1:1,:]
+        I = ComradeBase.baseimage(mov.frames)[end:-1:1,end:-1:1,:]
     end
     times = mov.frames.T
     head = header(mov.frames)
