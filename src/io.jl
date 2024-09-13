@@ -97,10 +97,10 @@ end
 Loads an hdf5 movie file where `filename` should be a HDF5 file.
 # Details
 This reads in a hdf5 movie file and outputs and VIDAMovie object.
+If `polarization=true` we will read in all stokes parameters.
 
 # Notes
-Currently this only works with movies created by *ehtim*. SMILI uses a different
-format, as does Illinois, and every other group...
+Currently this only works with movies created by *ehtim*. 
 """
 function load_hdf5(filename; polarization=false, style=:ehtim)
     if style == :ehtim
