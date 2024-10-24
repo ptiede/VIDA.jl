@@ -29,6 +29,7 @@ struct InplaceDivergence{D<:AbstractDivergence, T} <: AbstractDivergence
     img::T
     mimg::T
     function InplaceDivergence(div::D, img::IntensityMap) where {D<:AbstractDivergence}
+        all(>(0), img) || throw(ArgumentError("All intensities must be positive.")) 
         nimg = img./flux(img)
         T = typeof(nimg)
         return new{D,T}(div, nimg, zero(nimg))
@@ -280,5 +281,5 @@ function nxcorr(img1::IntensityMap{T}, img2::IntensityMap{T}) where {T<:Real}
     # dm1 = img1 .- m1
     # dm2 = img2 .- m2
     # return sum(dm1.*dm2)/(length(img1)*s1*s2)
-    return xcorr/(length(img1)*s1*s2)
+    return xcorr/((length(img1)-1)*s1*s2)
 end
