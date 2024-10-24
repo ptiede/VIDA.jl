@@ -47,6 +47,6 @@ end
     g = imagepixels(fovx, fovy, npix, npix)
     img = intensitymap(θ, g)
     div = NxCorr(img)
-    @test divergence(div, θ) < 1e-5
+    @test divergence(div, θ) < 1e-10
     @inferred divergence(div, θ)
 end
