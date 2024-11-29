@@ -29,7 +29,7 @@ struct InplaceDivergence{D<:AbstractDivergence, T} <: AbstractDivergence
     img::T
     mimg::T
     function InplaceDivergence(div::D, img::IntensityMap) where {D<:AbstractDivergence}
-        all(>(0), img) || throw(ArgumentError("All intensities must be positive.")) 
+        all(>=(0), img) || throw(ArgumentError("All intensities must be positive.")) 
         nimg = img./flux(img)
         T = typeof(nimg)
         return new{D,T}(div, nimg, zero(nimg))
