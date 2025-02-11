@@ -13,6 +13,7 @@ using CSV
 using DataFrames
 using Random
 @everywhere begin
+    using Optimization
     using OptimizationBBO
     using OptimizationMetaheuristics
 end

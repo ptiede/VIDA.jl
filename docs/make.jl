@@ -7,6 +7,7 @@ using Documenter
 
 using VIDA
 using CairoMakie
+using Optimization
 using Literate
 
 EXAMPLE1 = joinpath(@__DIR__, "..", "example", "introduction.jl")
