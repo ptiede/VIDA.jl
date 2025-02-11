@@ -24,7 +24,7 @@ Base.@kwdef struct VIDAProblem{D<:AbstractDivergence, F, N, B}
     """
     Type of autodiff to use when optimizing if any
     """
-    autodiff::N = SciMLBase.NoAD()
+    autodiff::N = nothing
     """
     The lower bounds of the parameter ranges to search over
     """
@@ -59,7 +59,7 @@ julia> prob = VIDAProblem(div, f, lb, ub)
 ```
 """
 function VIDAProblem(div, f, lb, ub)
-    return VIDAProblem(div, f, SciMLBase.NoAD(), lb, ub)
+    return VIDAProblem(div, f, nothing, lb, ub)
 end
 
 _distize(x::Real, y::Real) = Uniform(x, y)
