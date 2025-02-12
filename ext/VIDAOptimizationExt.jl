@@ -18,7 +18,7 @@ end
 
 function _vida(fopt, t, optprob, optimizer; kwargs...)
     sol = solve(optprob, optimizer; kwargs...)
-    xopt = transform(t, sol.u)
+    xopt = VIDA.HypercubeTransform.transform(t, sol.u)
     return xopt, sol.objective
 end
 
