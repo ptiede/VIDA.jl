@@ -1,8 +1,7 @@
 using HypercubeTransform, Random
 using Distributions: Uniform, product_distribution
-using Optimization
 
-export VIDAProblem, vida, threaded_vida
+export VIDAProblem, vida
 
 """
     $(TYPEDEF)
@@ -25,7 +24,7 @@ Base.@kwdef struct VIDAProblem{D<:AbstractDivergence, F, N, B}
     """
     Type of autodiff to use when optimizing if any
     """
-    autodiff::N = SciMLBase.NoAD()
+    autodiff::N = nothing
     """
     The lower bounds of the parameter ranges to search over
     """
@@ -60,7 +59,7 @@ julia> prob = VIDAProblem(div, f, lb, ub)
 ```
 """
 function VIDAProblem(div, f, lb, ub)
-    return VIDAProblem(div, f, SciMLBase.NoAD(), lb, ub)
+    return VIDAProblem(div, f, nothing, lb, ub)
 end
 
 _distize(x::Real, y::Real) = Uniform(x, y)
@@ -119,6 +118,9 @@ set `unit_cube = false`.
 
 The remaining `kwargs...` are forwarded to the `Optimization.solve` function.
 
+!!! warn
+    To use this function a user must first load Optimization, i.e. `using Optimization`
+
 ## Arguments
    - `prob`: Defines the problem you wish to solve.
    - `optimizer`: Specifies the optimizer you want to use. Any optimizer from `Optimization.jl` works.
@@ -132,19 +134,5 @@ The remaining `kwargs...` are forwarded to the `Optimization.solve` function.
                   they are transformed to ℝⁿ using `TransformVariables`
    - `kwargs...`: Additional options to be passed to the `solve` function from `Optimization.jl`
 """
-function vida(prob::VIDAProblem, optimizer; rng=Random.default_rng(), init_params=nothing, unit_cube=true, kwargs...)
-    T = eltype(prob.div.img)
-    f, t, (lb, ub) = build_opt(prob, unit_cube)
-    x0 = initial_point(rng, T, t, init_params)
-    fopt = OptimizationFunction((x,p)->f(x), prob.autodiff)
-    optprob = OptimizationProblem(fopt, x0, nothing; lb=lb, ub=ub)
-    xopt, min =  _vida(fopt, t, optprob, optimizer; kwargs...)
-    return xopt, prob.f(xopt), min
-end
+function vida end
 
-
-function _vida(fopt, t, optprob, optimizer; kwargs...)
-    sol = solve(optprob, optimizer; kwargs...)
-    xopt = transform(t, sol.u)
-    return xopt, sol.objective
-end

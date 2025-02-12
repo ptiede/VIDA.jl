@@ -1,6 +1,7 @@
 using Plots
 using CairoMakie
 using VIDA
+using Optimization
 using Test
 
 @testset "VIDA.jl" begin

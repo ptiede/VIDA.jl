@@ -17,8 +17,6 @@ using Interpolations: extrapolate, interpolate, NoInterp, Gridded, Linear,
                       AbstractExtrapolation, Flat
 using NamedTupleTools
 using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
-using Measures
-using RecipesBase
 using SpecialFunctions: erf
 using StatsBase
 using StructArrays: StructArray
