@@ -32,7 +32,7 @@ VIDAOptimizationExt = "Optimization"
 
 [compat]
 ChainRulesCore = "1"
-ComradeBase = "0.7, 0.8"
+ComradeBase = "0.7, 0.8, 0.9"
 DimensionalData = "0.27, 0.28, 0.29"
 Distributions = "0.24, 0.25"
 DocStringExtensions = "0.8, 0.9"
