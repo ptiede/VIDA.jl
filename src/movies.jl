@@ -10,7 +10,7 @@ $(TYPEDEF)
 # Details
 Holds a X,Y,T `IntensityMap` plus an interpolator that lets you make a continuous movie
 """
-struct VIDAMovie{T, F<:IntensityMap{T, 3}, I} <: AbstractMovie
+struct VIDAMovie{T, F <: IntensityMap{T, 3}, I} <: AbstractMovie
     frames::F
     itp::I
 end
@@ -19,7 +19,7 @@ function Base.show(io::IO, mov::VIDAMovie{T, F}) where {T, F}
     println(io, "VIDAMovie{$T}:")
     println(io, "\tFrame dimension : $(size(mov.frames)[1:2])")
     println(io, "\tNumber of frames: $(size(mov.frames, 3))")
-    println(io, "\tTime range      : $((first(mov.frames.T), last(mov.frames.T)))")
+    return println(io, "\tTime range      : $((first(mov.frames.T), last(mov.frames.T)))")
 end
 
 
@@ -27,11 +27,15 @@ function _make_interpolator(mov)
     nx = size(mov, :X)
     ny = size(mov, :Y)
     nt = size(mov, :T)
-    fimages = reshape(mov, nx*ny, nt)
-    return extrapolate(interpolate((collect(1.0:(nx*ny)), mov.T),
-                        fimages,
-                        (NoInterp(), Gridded(Linear()))),
-                        (Flat(), Flat()))
+    fimages = reshape(mov, nx * ny, nt)
+    return extrapolate(
+        interpolate(
+            (collect(1.0:(nx * ny)), mov.T),
+            fimages,
+            (NoInterp(), Gridded(Linear()))
+        ),
+        (Flat(), Flat())
+    )
 end
 
 
@@ -50,8 +54,8 @@ An `VIDAMovie` object that behaves like `IntensityMap` but lets you interpolate 
 with [`get_image(vida_movie, time)`](@ref).
 """
 function VIDAMovie(
-    mov::IntensityMap{T, 3}
-    ) where {T<:Real}
+        mov::IntensityMap{T, 3}
+    ) where {T <: Real}
     #Create the interpolation object for the movie
     #This does not need equal times
     @assert propertynames(mov) == (:X, :Y, :T) "Array must have dimension X, Y, T"
@@ -61,15 +65,15 @@ end
 
 
 function VIDAMovie(
-    mov::IntensityMap{T, 3},
-    ) where {T<:StokesParams}
+        mov::IntensityMap{T, 3},
+    ) where {T <: StokesParams}
 
     @assert propertynames(mov) == (:X, :Y, :T) "Array must have dimension X, Y, T"
     sitpI = _make_interpolator(stokes(mov, :I))
     sitpQ = _make_interpolator(stokes(mov, :Q))
     sitpU = _make_interpolator(stokes(mov, :U))
     sitpV = _make_interpolator(stokes(mov, :V))
-    return VIDAMovie(mov, (I=sitpI, Q=sitpQ, U=sitpU, V=sitpV))
+    return VIDAMovie(mov, (I = sitpI, Q = sitpQ, U = sitpU, V = sitpV))
 end
 
 VIDAMovie(times, images::AbstractVector{<:SpatialIntensityMap}) = VIDAMovie(_join_frames(times, images))
@@ -80,7 +84,7 @@ function _join_frames(times, images)
     for i in eachindex(times)
         arr[:, :, i] .= images[i]
     end
-    gt = RectiGrid((X=g.X, Y=g.Y, T=times))
+    gt = RectiGrid((X = g.X, Y = g.Y, T = times))
     return IntensityMap(arr, gt)
 end
 
@@ -96,7 +100,7 @@ Joins an array of `IntensityMap` at specified times to form an VIDAMovie object.
 ## Outputs
 VIDAMovie object
 """
-function join_frames(times, images::AbstractVector{T}) where {T<:SpatialIntensityMap}
+function join_frames(times, images::AbstractVector{T}) where {T <: SpatialIntensityMap}
     return VIDAMovie(_join_frames(times, images))
 end
 
@@ -115,22 +119,22 @@ end
 Gets the frame of the movie object `mov` at the time t. This returns an `IntensityMap`
 object at the requested time. The returned object is found by linear interpolation.
 """
-function get_image(mov::VIDAMovie{<:Real}, t; keeptime=false)
+function get_image(mov::VIDAMovie{<:Real}, t; keeptime = false)
     img = mov.itp.(1:prod(size(mov.frames)[1:2]), Ref(t))
-    (;X, Y) = mov.frames
-    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((;X, Y, T=t:t)))
-    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X=mov.frames.X, Y=mov.frames.Y)))
+    (; X, Y) = mov.frames
+    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((; X, Y, T = t:t)))
+    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X = mov.frames.X, Y = mov.frames.Y)))
 end
 
-function get_image(mov::VIDAMovie{<:StokesParams}, t; keeptime=false)
+function get_image(mov::VIDAMovie{<:StokesParams}, t; keeptime = false)
     imgI = (mov.itp.I).(1:prod(size(mov.frames)[1:2]), Ref(t))
     imgQ = (mov.itp.Q).(1:prod(size(mov.frames)[1:2]), Ref(t))
     imgU = (mov.itp.U).(1:prod(size(mov.frames)[1:2]), Ref(t))
     imgV = (mov.itp.V).(1:prod(size(mov.frames)[1:2]), Ref(t))
-    img = StructArray{StokesParams{eltype(imgI)}}((I=imgI, Q=imgQ, U=imgU, V=imgV))
-    (;X, Y) = mov.frames
-    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((;X, Y, T=t:t)))
-    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X=mov.frames.X, Y=mov.frames.Y)))
+    img = StructArray{StokesParams{eltype(imgI)}}((I = imgI, Q = imgQ, U = imgU, V = imgV))
+    (; X, Y) = mov.frames
+    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((; X, Y, T = t:t)))
+    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X = mov.frames.X, Y = mov.frames.Y)))
 end
 
 
@@ -164,7 +168,7 @@ Returns the blurred movie.
 """
 function blur(mov::VIDAMovie, fwhm)
     frames = get_frames(mov)
-    bframes = map(x->blur(x, fwhm), eachslice(frames, dims=(:T)))
+    bframes = map(x -> blur(x, fwhm), eachslice(frames, dims = (:T)))
     return join_frames(mov.frames.T, bframes |> parent |> parent)
 end
 
@@ -179,7 +183,7 @@ end
 function VLBISkyModels.regrid(mov::VIDAMovie, g::RectiGrid{<:ComradeBase.SpatialDims})
     # Get the times and frames and apply the image method to each
     frames = get_frames(mov)
-    rframes = map(eachslice(frames; dims=(:T))) do I
+    rframes = map(eachslice(frames; dims = (:T))) do I
         fimg = VLBISkyModels.InterpolatedImage(I)
         img = intensitymap(fimg, g)
         return img

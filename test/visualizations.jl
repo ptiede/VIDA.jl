@@ -1,4 +1,4 @@
-using Test,VIDA,CairoMakie
+using Test, VIDA, CairoMakie
 include("common.jl")
 
 @testset "VisualizationsTest" begin

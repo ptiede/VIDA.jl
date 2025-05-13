@@ -12,7 +12,7 @@ to extract the optimal filter.
 ## Fields
 $(FIELDS)
 """
-Base.@kwdef struct VIDAProblem{D<:AbstractDivergence, F, N, B}
+Base.@kwdef struct VIDAProblem{D <: AbstractDivergence, F, N, B}
     """
     Divergence you will fit
     """
@@ -63,18 +63,18 @@ function VIDAProblem(div, f, lb, ub)
 end
 
 _distize(x::Real, y::Real) = Uniform(x, y)
-_distize(x::Tuple, y::Tuple) = ntuple(i->_distize(x[i], y[i]), length(x))
+_distize(x::Tuple, y::Tuple) = ntuple(i -> _distize(x[i], y[i]), length(x))
 _distize(x::NamedTuple{N}, y::NamedTuple{N}) where {N} = NamedTuple{N}(_distize(values(x), values(y)))
 
 function _distize(x::AbstractArray, y::AbstractArray)
-    dists = map((x,y)->Uniform(x, y), x, y)
+    dists = map((x, y) -> Uniform(x, y), x, y)
     return product_distribution(dists)
 end
 
 
 function build_opt(prob, unit_cube)
     T = eltype(prob.div.img)
-    dist = map((x,y)->_distize(x, y), prob.lb, prob.ub)
+    dist = map((x, y) -> _distize(x, y), prob.lb, prob.ub)
     if unit_cube
         t = ascube(dist)
         bounds_lower = fill(zero(T), dimension(t))
@@ -85,8 +85,8 @@ function build_opt(prob, unit_cube)
         bounds_upper = fill(convert(T, 20), dimension(t))
 
     end
-    f = let t=t, div = prob.div, mod = prob.f, lb=bounds_lower, ub=bounds_upper
-        x->begin
+    f = let t = t, div = prob.div, mod = prob.f, lb = bounds_lower, ub = bounds_upper
+        x -> begin
             for i in eachindex(x)
                 (lb[i] > x[i] || ub[i] < x[i]) && return convert(T, Inf)
             end
@@ -103,7 +103,7 @@ end
 
 function initial_point(rng, T::Type, t::HypercubeTransform.TransformVariables.AbstractTransform, init_params)
     !isnothing(init_params) && return inverse(t, init_params)
-    return randn(rng, T,  dimension(t))
+    return randn(rng, T, dimension(t))
 end
 
 """
@@ -135,4 +135,3 @@ The remaining `kwargs...` are forwarded to the `Optimization.solve` function.
    - `kwargs...`: Additional options to be passed to the `solve` function from `Optimization.jl`
 """
 function vida end
-

@@ -5,6 +5,8 @@
 [![Build Status](https://github.com/ptiede/VIDA.jl/workflows/CI/badge.svg)](https://github.com/ptiede/VIDA.jl/actions)
 [![Coverage](https://codecov.io/gh/ptiede/VIDA.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/ptiede/VIDA.jl)
 [![DOI](https://zenodo.org/badge/271097921.svg)](https://zenodo.org/badge/latestdoi/271097921)
+[![code style: runic](https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black)](https://github.com/fredrikekre/Runic.jl)
+
 
 
 `VIDA.jl` or the *Variational Image Domain Analysis* provides a interface to extracting features from fits images created for the EHT, using the notion of probability divergences similar to variational inference. This package has been used extensively in the most recent EHT publications of [Sgr A*](https://iopscience.iop.org/journal/2041-8205/page/Focus_on_First_Sgr_A_Results).
