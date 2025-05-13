@@ -1,10 +1,5 @@
 using Documenter
 
-# if haskey(ENV, "GITHUB_ACTIONS")
-#     ENV["JULIA_DEBUG"] = "Documenter"
-# end
-
-
 using VIDA
 using CairoMakie
 using Optimization
@@ -14,17 +9,16 @@ EXAMPLE1 = joinpath(@__DIR__, "..", "example", "introduction.jl")
 EXAMPLE2 = joinpath(@__DIR__, "..", "example", "custom_template.jl")
 OUTPUT = joinpath(@__DIR__, "src/generated")
 
-Literate.markdown(EXAMPLE1, OUTPUT, documenter=true)
-Literate.markdown(EXAMPLE2, OUTPUT, documenter=true)
+Literate.markdown(EXAMPLE1, OUTPUT, documenter = true)
+Literate.markdown(EXAMPLE2, OUTPUT, documenter = true)
 
 makedocs(;
-    modules=[VIDA],
-    authors="Paul <ptiede91@gmail.com> and contributors",
-    repo="https://github.com/ptiede/VIDA.jl/blob/{commit}{path}#L{line}",
-    sitename="VIDA.jl",
-    format=Documenter.HTML(;
-    ),
-    pages=[
+    modules = [VIDA],
+    authors = "Paul <ptiede91@gmail.com> and contributors",
+    repo = "https://github.com/ptiede/VIDA.jl/blob/{commit}{path}#L{line}",
+    sitename = "VIDA.jl",
+    format = Documenter.HTML(),
+    pages = [
         "Home" => "index.md",
         "getting_started.md",
         "interface.md",
@@ -32,11 +26,11 @@ makedocs(;
         "generated/custom_template.md",
         "api/function_index.md",
     ],
-    warnonly=true
+    warnonly = true
 )
 
 deploydocs(;
-    repo="github.com/ptiede/VIDA.jl",
-    push_preview=true,
+    repo = "github.com/ptiede/VIDA.jl",
+    push_preview = true,
     devbranch = "master"
 )

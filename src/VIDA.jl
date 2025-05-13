@@ -14,9 +14,9 @@ using DocStringExtensions
 using FITSIO
 using HDF5
 using Interpolations: extrapolate, interpolate, NoInterp, Gridded, Linear,
-                      AbstractExtrapolation, Flat
+    AbstractExtrapolation, Flat
 using NamedTupleTools
-using Random: seed!,rand, GLOBAL_RNG, AbstractRNG
+using Random: seed!, rand, GLOBAL_RNG, AbstractRNG
 using SpecialFunctions: erf
 using StatsBase
 using StructArrays: StructArray
@@ -32,7 +32,7 @@ export
     #make the divergences to use for optimization
     Bhattacharyya, KullbackLeibler, LeastSquares, Renyi, NxCorr,
     #Templates
-    GaussianRing, SlashedGaussianRing,EllipticalGaussianRing,
+    GaussianRing, SlashedGaussianRing, EllipticalGaussianRing,
     EllipticalSlashedGaussianRing, EllipticalCosineRing, Constant,
     CosineRing, CosineRingwFloor, CosineRingwGFloor, CosineRing,
     GaussianDisk, LogSpiral,
@@ -59,7 +59,6 @@ include("divergences.jl")
 include("extractor.jl")
 include("visualizations.jl")
 # include("utils.jl")
-
 
 
 end #end the module

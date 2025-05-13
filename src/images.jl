@@ -1,4 +1,4 @@
-clipvalue(c,x) = x < c ? zero(eltype(x)) : x
+clipvalue(c, x) = x < c ? zero(eltype(x)) : x
 
 @doc """
     $(SIGNATURES)
@@ -7,23 +7,22 @@ There are two modes for image clipping:
     - `:relative` which zeros the pixels whose intensity are below `clip` relative to the max.
     - `:absolute` which zeros the pixels whose intensity is below `clip` in Jy/pixel
 """
-function clipimage(clip, image::SpatialIntensityMap, mode=:relative)
+function clipimage(clip, image::SpatialIntensityMap, mode = :relative)
     cimg = copy(image)
     return clipimage!(clip, cimg, mode)
 end
 
-function clipimage!(clip, image::SpatialIntensityMap, mode=:relative)
+function clipimage!(clip, image::SpatialIntensityMap, mode = :relative)
     if mode == :absolute
         image .= clipvalue.(clip, image)
     elseif mode == :relative
         maxim = maximum(image)
-        image .= clipvalue.(clip*maxim, image)
+        image .= clipvalue.(clip * maxim, image)
     else
         @assert false "clipimage: Mode must be one of :absolute or :relative where :absolute cuts on value and :relative on fraction of maximum intensity"
     end
     return image
 end
-
 
 
 @doc """
@@ -36,6 +35,6 @@ the NS direction.
 Returns the blurred image.
 """
 function blur(img::SpatialIntensityMap, fwhm)
-    σ = fwhm./(2*sqrt(2*log(2)))
+    σ = fwhm ./ (2 * sqrt(2 * log(2)))
     return VLBISkyModels.convolve(img, modify(Gaussian(), Stretch(σ)))
 end

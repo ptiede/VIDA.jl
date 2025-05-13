@@ -11,12 +11,12 @@ using Test
         "movies",
         "divergences",
         "visualizations",
-        "extractor"
+        "extractor",
     ]
 
     res = map(tests) do t
         @eval module $(Symbol("Test_", t))
-            include($t*".jl")
+        include($t * ".jl")
         end
         return
     end
