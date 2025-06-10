@@ -19,19 +19,23 @@ function Base.show(io::IO, mov::VIDAMovie{T, F}) where {T, F}
     println(io, "VIDAMovie{$T}:")
     println(io, "\tFrame dimension : $(size(mov.frames)[1:2])")
     println(io, "\tNumber of frames: $(size(mov.frames, 3))")
-    println(io, "\tTime range      : $((first(mov.frames.T), last(mov.frames.T)))")
+    return println(io, "\tTime range      : $((first(mov.frames.Ti), last(mov.frames.Ti)))")
 end
 
 
 function _make_interpolator(mov)
     nx = size(mov, :X)
     ny = size(mov, :Y)
-    nt = size(mov, :T)
-    fimages = reshape(mov, nx*ny, nt)
-    return extrapolate(interpolate((collect(1.0:(nx*ny)), mov.T),
-                        fimages,
-                        (NoInterp(), Gridded(Linear()))),
-                        (Flat(), Flat()))
+    nt = size(mov, :Ti)
+    fimages = reshape(mov, nx * ny, nt)
+    return extrapolate(
+        interpolate(
+            (collect(1.0:(nx * ny)), mov.Ti),
+            fimages,
+            (NoInterp(), Gridded(Linear()))
+        ),
+        (Flat(), Flat())
+    )
 end
 
 
@@ -54,7 +58,7 @@ function VIDAMovie(
     ) where {T<:Real}
     #Create the interpolation object for the movie
     #This does not need equal times
-    @assert propertynames(mov) == (:X, :Y, :T) "Array must have dimension X, Y, T"
+    @assert propertynames(mov) == (:X, :Y, :Ti) "Array must have dimension X, Y, Ti"
     sitp = _make_interpolator(mov)
     return VIDAMovie(mov, sitp)
 end
@@ -64,7 +68,7 @@ function VIDAMovie(
     mov::IntensityMap{T, 3},
     ) where {T<:StokesParams}
 
-    @assert propertynames(mov) == (:X, :Y, :T) "Array must have dimension X, Y, T"
+    @assert propertynames(mov) == (:X, :Y, :Ti) "Array must have dimension X, Y, Ti"
     sitpI = _make_interpolator(stokes(mov, :I))
     sitpQ = _make_interpolator(stokes(mov, :Q))
     sitpU = _make_interpolator(stokes(mov, :U))
@@ -80,7 +84,7 @@ function _join_frames(times, images)
     for i in eachindex(times)
         arr[:, :, i] .= images[i]
     end
-    gt = RectiGrid((X=g.X, Y=g.Y, T=times))
+    gt = RectiGrid((X = g.X, Y = g.Y, Ti = times))
     return IntensityMap(arr, gt)
 end
 
@@ -106,7 +110,7 @@ Returns the times that the movie object `mov` was created at. This does not
 have to be uniform in time.
 """
 function get_times(mov::VIDAMovie)
-    return mov.frames.T
+    return mov.frames.Ti
 end
 
 
@@ -117,9 +121,9 @@ object at the requested time. The returned object is found by linear interpolati
 """
 function get_image(mov::VIDAMovie{<:Real}, t; keeptime=false)
     img = mov.itp.(1:prod(size(mov.frames)[1:2]), Ref(t))
-    (;X, Y) = mov.frames
-    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((;X, Y, T=t:t)))
-    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X=mov.frames.X, Y=mov.frames.Y)))
+    (; X, Y) = mov.frames
+    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((; X, Y, Ti = t:t)))
+    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X = mov.frames.X, Y = mov.frames.Y)))
 end
 
 function get_image(mov::VIDAMovie{<:StokesParams}, t; keeptime=false)
@@ -127,10 +131,10 @@ function get_image(mov::VIDAMovie{<:StokesParams}, t; keeptime=false)
     imgQ = (mov.itp.Q).(1:prod(size(mov.frames)[1:2]), Ref(t))
     imgU = (mov.itp.U).(1:prod(size(mov.frames)[1:2]), Ref(t))
     imgV = (mov.itp.V).(1:prod(size(mov.frames)[1:2]), Ref(t))
-    img = StructArray{StokesParams{eltype(imgI)}}((I=imgI, Q=imgQ, U=imgU, V=imgV))
-    (;X, Y) = mov.frames
-    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((;X, Y, T=t:t)))
-    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X=mov.frames.X, Y=mov.frames.Y)))
+    img = StructArray{StokesParams{eltype(imgI)}}((I = imgI, Q = imgQ, U = imgU, V = imgV))
+    (; X, Y) = mov.frames
+    keeptime && return IntensityMap(reshape(img, size(mov.frames)[1:2]..., 1), RectiGrid((; X, Y, Ti = t:t)))
+    return IntensityMap(reshape(img, size(mov.frames)[1:2]), RectiGrid((X = mov.frames.X, Y = mov.frames.Y)))
 end
 
 
@@ -179,11 +183,11 @@ end
 function VLBISkyModels.regrid(mov::VIDAMovie, g::RectiGrid{<:ComradeBase.SpatialDims})
     # Get the times and frames and apply the image method to each
     frames = get_frames(mov)
-    rframes = map(eachslice(frames; dims=(:T))) do I
+    rframes = map(eachslice(frames; dims = (:Ti))) do I
         fimg = VLBISkyModels.InterpolatedImage(I)
         img = intensitymap(fimg, g)
         return img
     end
     # map(eachslice) makes a struct vector so we need to cast it to an array
-    return join_frames(mov.frames.T, (parent(baseimage(rframes))))
+    return join_frames(mov.frames.Ti, (parent(baseimage(rframes))))
 end

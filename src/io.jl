@@ -128,7 +128,7 @@ function save_hdf5(filename, mov; style=:ehtim)
     else
         I = ComradeBase.baseimage(mov.frames)[end:-1:1,end:-1:1,:]
     end
-    times = mov.frames.T
+    times = mov.frames.Ti
     head = header(mov.frames)
 
     if head isa ComradeBase.NoHeader
@@ -185,7 +185,7 @@ function _load_ehtimhdf5(filename; polarization=false)
         psize = parse(Float64, read(header["psize"]))*3600*1e6*180.0/π
         header = ComradeBase.MinimalHeader(source, ra, dec, mjd, rf)
         g = imagepixels(fov, fov, size(images, 1), size(images, 2); header)
-        gt = RectiGrid((X=g.X, Y=g.Y, T = times))
+        gt = RectiGrid((X = g.X, Y = g.Y, Ti = times))
         img = IntensityMap(images, gt)
         return img
     end
