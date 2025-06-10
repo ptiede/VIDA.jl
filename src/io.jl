@@ -1,4 +1,3 @@
-
 """
 $(SIGNATURES)
 
@@ -12,7 +11,7 @@ The function returns an `IntensityMap` object that contains the relevant image a
 extracted from the fits file. It also ensures that we are astronomers and that the image
 using sky-left coordinates.
 """
-function load_image(fname; polarization=false)
+function load_image(fname; polarization = false)
     _, ext = splitext(fname)
 
     if ext == ".fits"
@@ -28,7 +27,7 @@ function load_image(fname; polarization=false)
     end
 end
 
-@static if :load_fits in names(VLBISkyModels; all=true)
+@static if :load_fits in names(VLBISkyModels; all = true)
     _load_fits(fname, T) = VLBISkyModels.load_fits(fname, T)
 else
     _load_fits(fname, T) = ComradeBase.load(fname, T)
@@ -45,7 +44,7 @@ The function returns an IntensityMap object that contains the relevant image and
 extracted from the fits file. It also ensures that we are astronomers and that the image
 using sky-left coordinates.
 """
-function load_im_h5(fname::String; polarization=false)
+function load_im_h5(fname::String; polarization = false)
     img = h5open(fname, "r") do fid
         header = fid["header"]
         dsource = read(header["dsource"])
@@ -55,31 +54,31 @@ function load_im_h5(fname::String; polarization=false)
         lunit = read(header["units"]["L_unit"])
         dx = read(header["camera"]["dx"])
         nx = Int(read(header["camera"]["nx"]))
-        time = read(header["t"])*tunit/3600
+        time = read(header["t"]) * tunit / 3600
 
         if haskey(fid, "pol")
             if polarization
-                stokesI = collect(fid["pol"][1,:,:]')[end:-1:1,:]
-                stokesQ = collect(fid["pol"][2,:,:]')[end:-1:1,:]
-                stokesU = collect(fid["pol"][3,:,:]')[end:-1:1,:]
-                stokesV = collect(fid["pol"][4,:,:]')[end:-1:1,:]
-                image = StructArray{StokesParams{eltype(stokesI)}}((I=stokesI, Q=stokesQ, U=stokesU, V=stokesV))
+                stokesI = collect(fid["pol"][1, :, :]')[end:-1:1, :]
+                stokesQ = collect(fid["pol"][2, :, :]')[end:-1:1, :]
+                stokesU = collect(fid["pol"][3, :, :]')[end:-1:1, :]
+                stokesV = collect(fid["pol"][4, :, :]')[end:-1:1, :]
+                image = StructArray{StokesParams{eltype(stokesI)}}((I = stokesI, Q = stokesQ, U = stokesU, V = stokesV))
             else
-                image = collect(fid["pol"][1,:,:]')[end:-1:1,:]
+                image = collect(fid["pol"][1, :, :]')[end:-1:1, :]
             end
         else
-            image = fid["unpol"][:,:]'[end:-1:begin, :]
+            image = fid["unpol"][:, :]'[end:-1:begin, :]
         end
 
 
         # Now convert everything to IntensityMap
-        image = image.*jyscale
+        image = image .* jyscale
         src = "Unknown"
         ra = 0.0
         dec = 0.0
 
         # convert to μas
-        fov = μas2rad(dx/dsource*lunit*2.06265e11)
+        fov = μas2rad(dx / dsource * lunit * 2.06265e11)
 
         mjd = 53005
         ComradeBase.MinimalHeader(src, ra, dec, mjd, rf)
@@ -102,7 +101,7 @@ If `polarization=true` we will read in all stokes parameters.
 # Notes
 Currently this only works with movies created by *ehtim*. 
 """
-function load_hdf5(filename; polarization=false, style=:ehtim)
+function load_hdf5(filename; polarization = false, style = :ehtim)
     if style == :ehtim
         return _load_ehtimhdf5(filename; polarization)
     else
@@ -116,23 +115,23 @@ Saves and hdf5 file where `filename` is the write out location.
 Currently style only works with ehtim, namely we save HDF5 files
 that only work with ehtim.
 """
-function save_hdf5(filename, mov; style=:ehtim)
+function save_hdf5(filename, mov; style = :ehtim)
     # Copy this so I don't manipulate the movie itself
     # Now because HDF5 uses row major I need to permute the dims around
     # so that ehtim reads this in correctly.
     if eltype(mov.frames) <: StokesParams
-        I = ComradeBase.baseimage(stokes(mov.frames, :I))[end:-1:1,end:-1:1,:]
-        Q = ComradeBase.baseimage(stokes(mov.frames, :Q))[end:-1:1,end:-1:1,:]
-        U = ComradeBase.baseimage(stokes(mov.frames, :U))[end:-1:1,end:-1:1,:]
-        V = ComradeBase.baseimage(stokes(mov.frames, :V))[end:-1:1,end:-1:1,:]
+        I = ComradeBase.baseimage(stokes(mov.frames, :I))[end:-1:1, end:-1:1, :]
+        Q = ComradeBase.baseimage(stokes(mov.frames, :Q))[end:-1:1, end:-1:1, :]
+        U = ComradeBase.baseimage(stokes(mov.frames, :U))[end:-1:1, end:-1:1, :]
+        V = ComradeBase.baseimage(stokes(mov.frames, :V))[end:-1:1, end:-1:1, :]
     else
-        I = ComradeBase.baseimage(mov.frames)[end:-1:1,end:-1:1,:]
+        I = ComradeBase.baseimage(mov.frames)[end:-1:1, end:-1:1, :]
     end
     times = mov.frames.Ti
     head = header(mov.frames)
 
     if head isa ComradeBase.NoHeader
-        head = (ra = 180.0, dec = 0.0, mjd = 5000, frequency = 230e9, source="M87")
+        head = (ra = 180.0, dec = 0.0, mjd = 5000, frequency = 230.0e9, source = "M87")
     end
 
     #Open and output in a safe manner
@@ -163,7 +162,7 @@ function save_hdf5(filename, mov; style=:ehtim)
     return nothing
 end
 
-function _load_ehtimhdf5(filename; polarization=false)
+function _load_ehtimhdf5(filename; polarization = false)
     #Open the hdf5 file
     img = h5open(filename, "r") do fid
         header = fid["header"]
@@ -171,18 +170,18 @@ function _load_ehtimhdf5(filename; polarization=false)
         if !polarization
             images = read(fid["I"])
         else
-            images = StructArray{StokesParams{Float64}}((I=read(fid["I"]), Q=read(fid["Q"]), U=read(fid["U"]), V=read(fid["V"])))
+            images = StructArray{StokesParams{Float64}}((I = read(fid["I"]), Q = read(fid["Q"]), U = read(fid["U"]), V = read(fid["V"])))
         end
-        images = images[end:-1:1,end:-1:1,:]
+        images = images[end:-1:1, end:-1:1, :]
         psize = parse(Float64, read(header["psize"]))
-        fov = psize*size(images,1)
+        fov = psize * size(images, 1)
         times = read(fid["times"])
         source = String(read(header["source"]))
         ra = parse(Float64, read(header["ra"]))
         dec = parse(Float64, read(header["dec"]))
         mjd = parse(Float64, read(header["mjd"]))
         rf = parse(Float64, read(header["rf"]))
-        psize = parse(Float64, read(header["psize"]))*3600*1e6*180.0/π
+        psize = parse(Float64, read(header["psize"])) * 3600 * 1.0e6 * 180.0 / π
         header = ComradeBase.MinimalHeader(source, ra, dec, mjd, rf)
         g = imagepixels(fov, fov, size(images, 1), size(images, 2); header)
         gt = RectiGrid((X = g.X, Y = g.Y, Ti = times))

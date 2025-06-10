@@ -29,7 +29,7 @@ using InteractiveUtils
 # To read in an image we just use the [`VIDA.load_image`](@ref) function
 # which should work with any fits image from ehtim and clean
 
-img = load_image(joinpath(dirname(pathof(VIDA)),"../example/data/example_image.fits"));
+img = load_image(joinpath(dirname(pathof(VIDA)), "../example/data/example_image.fits"));
 
 # To see what this img is lets print the type
 println(typeof(img))
@@ -58,7 +58,6 @@ imageviz(img)
 methodswith(IntensityMap)
 
 
-
 ## Creating a divergence
 # In order to find the optimal template you need to first decide on your objective or
 # cost function. In VIDA we use probaility divergences to measure differences between the
@@ -71,23 +70,23 @@ kl = KullbackLeibler(img);
 # For instance lets create a few different templates
 gr = GaussianRing(μas2rad(20.0), μas2rad(5.0), 0.0, 0.0)
 ggr = EllipticalSlashedGaussianRing(
-                          μas2rad(20.0), # r0
-                          μas2rad(5.0), # σ
-                          0.2, # τ
-                          0.78, # ξτ
-                          0.5, # s
-                          0.78, # ξs
-                          μas2rad(-10.0), # x0
-                          0.0 # y0
-                        )
+    μas2rad(20.0), # r0
+    μas2rad(5.0), # σ
+    0.2, # τ
+    0.78, # ξτ
+    0.5, # s
+    0.78, # ξs
+    μas2rad(-10.0), # x0
+    0.0 # y0
+)
 
 
 # We can also plot both templates
 g = imagepixels(μas2rad(128.0), μas2rad(128.0), 128, 128)
-fig = Figure(;size=(600, 300))
-axis = axis=(aspect=1, xticklabelsvisible=false, yticklabelsvisible=false)
-image(fig[1, 1], intensitymap(gr, g), colormap=:afmhot,  axis=merge(axis, (title="GaussianRing",)))
-image(fig[1, 2], intensitymap(ggr,g), colormap=:afmhot,  axis=merge(axis, (title="GeneralGaussianRing",)))
+fig = Figure(; size = (600, 300))
+axis = axis = (aspect = 1, xticklabelsvisible = false, yticklabelsvisible = false)
+image(fig[1, 1], intensitymap(gr, g), colormap = :afmhot, axis = merge(axis, (title = "GaussianRing",)))
+image(fig[1, 2], intensitymap(ggr, g), colormap = :afmhot, axis = merge(axis, (title = "GeneralGaussianRing",)))
 fig
 
 
@@ -99,7 +98,7 @@ subtypes(VLBISkyModels.AbstractImageTemplate)
 # any model that satisfies the interface described [here](https://ehtjulia.github.io/VLBISkyModels.jl/dev/interface/#Model-Interface).
 
 # Using VLBISkyModels interface we can also combine templates together
-add = gr + 2.0*shifted(gr, μas2rad(-10.0), μas2rad(10.0))
+add = gr + 2.0 * shifted(gr, μas2rad(-10.0), μas2rad(10.0))
 
 # To evaluate the divergence between our template and image we then just evaluate the
 # [`VIDA.divergence`](@ref) on the template
@@ -110,13 +109,13 @@ add = gr + 2.0*shifted(gr, μas2rad(-10.0), μas2rad(10.0))
 # Now neither template is really a great approximation to the true image. For instance
 # visually they look quite different, which can be checked with the [`VIDA.triptic`](@ref) function
 
-figa,ax = triptic(img, gr)
+figa, ax = triptic(img, gr)
 figa
 #-
-figb,ax = triptic(img, ggr)
+figb, ax = triptic(img, ggr)
 figb
 #-
-figc,ax = triptic(img, add)
+figc, ax = triptic(img, add)
 figc
 
 # ## Extracting the Optimal Template
@@ -127,7 +126,7 @@ function gr_temp(θ)
 end
 
 # We also want to select the domain that we want to search over
-lower = map(μas2rad, (r0 = 5.0,  σ = 0.01, x0 = -60.0, y0 = -60.0))
+lower = map(μas2rad, (r0 = 5.0, σ = 0.01, x0 = -60.0, y0 = -60.0))
 upper = map(μas2rad, (r0 = 60.0, σ = 20.0, x0 = 60.0, y0 = 60.0))
 
 # Given that we can form the [`VIDA.VIDAProblem`](@ref) type.
@@ -146,7 +145,7 @@ using OptimizationBBO
 
 # To optimize all you need to do is run the [`VIDA.vida`](@ref) function.
 
-xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=100_000)
+xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters = 100_000)
 fig, ax = triptic(img, optfilt)
 fig
 
@@ -155,11 +154,11 @@ fig
 # To account for this the template tends to get very big to absorb some of
 # this flux. To combat this you can add a constant background template to
 # the problem.
-gr_temp_cont(θ) = GaussianRing(θ.r0, θ.σ, θ.x0, θ.y0) + θ.f*VLBISkyModels.Constant((μas2rad(100.0)))
-lower = (r0 = μas2rad(5.0),  σ = μas2rad(0.01), x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
-upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
+gr_temp_cont(θ) = GaussianRing(θ.r0, θ.σ, θ.x0, θ.y0) + θ.f * VLBISkyModels.Constant((μas2rad(100.0)))
+lower = (r0 = μas2rad(5.0), σ = μas2rad(0.01), x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f = 1.0e-6)
+upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), x0 = μas2rad(60.0), y0 = μas2rad(60.0), f = 10.0)
 prob = VIDAProblem(bh, gr_temp_cont, lower, upper);
-xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000)
+xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters = 50_000)
 #-
 fig, ax = triptic(img, optfilt)
 fig
@@ -167,11 +166,11 @@ fig
 # That's much better! Now if you wanted to capture the asymmetry in the ring you can use
 # other templates, for example the CosineRing template. Note that this template tends to be
 # a little harder to fit.
-cos_temp(θ) = EllipticalSlashedGaussianRing(θ.r0, θ.σ, θ.τ, θ.ξτ, θ.s, θ.ξs, θ.x0, θ.y0) + θ.f*θ.f*VLBISkyModels.Constant(μas2rad(100.0))
-lower = (r0 = μas2rad(1.0),  σ = μas2rad(0.01), τ=0.0, ξτ=-π/2, s=0.001, ξs=-1π, x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f=1e-6)
-upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), τ=0.5, ξτ=π/2, s=0.999, ξs=1π, x0 = μas2rad(60.0), y0 = μas2rad(60.0), f=10.0)
+cos_temp(θ) = EllipticalSlashedGaussianRing(θ.r0, θ.σ, θ.τ, θ.ξτ, θ.s, θ.ξs, θ.x0, θ.y0) + θ.f * θ.f * VLBISkyModels.Constant(μas2rad(100.0))
+lower = (r0 = μas2rad(1.0), σ = μas2rad(0.01), τ = 0.0, ξτ = -π / 2, s = 0.001, ξs = -1π, x0 = μas2rad(-60.0), y0 = μas2rad(-60.0), f = 1.0e-6)
+upper = (r0 = μas2rad(60.0), σ = μas2rad(20.0), τ = 0.5, ξτ = π / 2, s = 0.999, ξs = 1π, x0 = μas2rad(60.0), y0 = μas2rad(60.0), f = 10.0)
 prob = VIDAProblem(bh, cos_temp, lower, upper);
-xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters=50_000);
+xopt, optfilt, divmin = vida(prob, BBO_de_rand_1_bin_radiuslimited(); maxiters = 50_000);
 #-
 fig, ax = triptic(img, optfilt)
 fig

@@ -24,15 +24,15 @@ Therefore a user must implement the following methods
 """
 abstract type AbstractDivergence end
 
-struct InplaceDivergence{D<:AbstractDivergence, T} <: AbstractDivergence
+struct InplaceDivergence{D <: AbstractDivergence, T} <: AbstractDivergence
     div::D
     img::T
     mimg::T
-    function InplaceDivergence(div::D, img::IntensityMap) where {D<:AbstractDivergence}
-        all(>=(0), img) || throw(ArgumentError("All intensities must be positive.")) 
-        nimg = img./flux(img)
+    function InplaceDivergence(div::D, img::IntensityMap) where {D <: AbstractDivergence}
+        all(>=(0), img) || throw(ArgumentError("All intensities must be positive."))
+        nimg = img ./ flux(img)
         T = typeof(nimg)
-        return new{D,T}(div, nimg, zero(nimg))
+        return new{D, T}(div, nimg, zero(nimg))
     end
 end
 
@@ -65,11 +65,11 @@ the divergence with respect to the image stored in `d` is compared to the templa
          a [`VIDA.AbstractImageTemplate`](@ref)
 """
 @inline function divergence(d::AbstractDivergence, m::ComradeBase.AbstractModel)
-    _divergence(d, m)
+    return _divergence(d, m)
 end
 
 function divergence(d::AbstractDivergence, m::IntensityMap{<:Real})
-    _divergence(d, m)
+    return _divergence(d, m)
 end
 
 # @inline function _divergence(::IsAnalytic, d::AbstractDivergence, m::AbstractModel)
@@ -92,28 +92,26 @@ end
 # end
 
 function _divergence(d::InplaceDivergence, m::ComradeBase.AbstractModel)
-    (;img, mimg) = d
+    (; img, mimg) = d
     CB.intensitymap!(mimg, m)
-    fm = sum(x->max(x, 0), mimg)
+    fm = sum(x -> max(x, 0), mimg)
     return __divergence(d.div, img, mimg, fm)
 end
 
 function _divergence(d::InplaceDivergence, mimg::IntensityMap{<:Real})
-    (;img) = d
-    fm = sum(x->max(x, 0), mimg)
+    (; img) = d
+    fm = sum(x -> max(x, 0), mimg)
     return __divergence(d.div, img, mimg, fm)
 end
 
 
 function __divergence(d, img, mimg, fm)
-    div  = mapreduce(+, parent(img), parent(mimg)) do ii, im
-        return divergence_point(d, ii, max(im/fm, 0))
+    div = mapreduce(+, parent(img), parent(mimg)) do ii, im
+        return divergence_point(d, ii, max(im / fm, 0))
     end
     # div = sum(divergence_point(d, ii, max(im/fm, 0))))
     return normalize_div(d, div)
 end
-
-
 
 
 """
@@ -134,13 +132,13 @@ where ``\\hat{I}`` is defined as the image normalized to unit flux.
 """
 struct Bhattacharyya <: AbstractDivergence end
 
-function Bhattacharyya(img::T) where {T<:IntensityMap}
-    InplaceDivergence(Bhattacharyya(), img)
+function Bhattacharyya(img::T) where {T <: IntensityMap}
+    return InplaceDivergence(Bhattacharyya(), img)
 end
 
 
 @inline function divergence_point(::Bhattacharyya, p, q)
-    return sqrt(p*q)
+    return sqrt(p * q)
 end
 @inline normalize_div(::Bhattacharyya, div) = -log(div)
 
@@ -168,7 +166,7 @@ function KullbackLeibler(img::IntensityMap)
     return InplaceDivergence(KullbackLeibler(), img)
 end
 
-@inline divergence_point(::KullbackLeibler, p, q) = q*log(q/(p+eps(typeof(p))))
+@inline divergence_point(::KullbackLeibler, p, q) = q * log(q / (p + eps(typeof(p))))
 @inline normalize_div(::KullbackLeibler, div) = div
 
 
@@ -199,17 +197,16 @@ Typically we find that `α=1.5` works well, as it focusses on the bright regions
 moreso than the Bh and KL divergence. For `α>2` the measure tends to devolve in something
 akin the to sup norm and fails to match the image structure.
 """
-function Renyi(img::T, α) where {T<:IntensityMap}
-    @assert !(α-1 ≈ 0) "α=1 is the KL divergence use that instead"
-    InplaceDivergence(Renyi(α), img)
+function Renyi(img::T, α) where {T <: IntensityMap}
+    @assert !(α - 1 ≈ 0) "α=1 is the KL divergence use that instead"
+    return InplaceDivergence(Renyi(α), img)
 end
 
-@inline divergence_point(d::Renyi, p, q) = q*(q/(p + eps()))^(d.α-1)
+@inline divergence_point(d::Renyi, p, q) = q * (q / (p + eps()))^(d.α - 1)
 @inline function normalize_div(d::Renyi, div)
     α = d.α
-    return inv(α-1)*log(div)/2
+    return inv(α - 1) * log(div) / 2
 end
-
 
 
 """
@@ -254,8 +251,8 @@ NxCorr is defined as:
     NXCORR(n, m) = (Nσₙσₘ) Σᵢ (nᵢ - μₙ)(mᵢ - μₘ)
 where `n` and `m` are the two images `μ` is the mean and `σ` is the pixelwise standard deviation
 """
-function NxCorr(img::T) where {T<:IntensityMap}
-    InplaceDivergence(NxCorr(), img)
+function NxCorr(img::T) where {T <: IntensityMap}
+    return InplaceDivergence(NxCorr(), img)
 end
 
 function __divergence(d::NxCorr, img, mimg, fm)
@@ -272,14 +269,14 @@ NXCORR is defined as
 
 where `n` and `m` are the two images `μ` is the mean and `σ` is the pixelwise standard deviation
 """
-function nxcorr(img1::IntensityMap{T}, img2::IntensityMap{T}) where {T<:Real}
+function nxcorr(img1::IntensityMap{T}, img2::IntensityMap{T}) where {T <: Real}
     m1, s1 = mean_and_std(parent(img1))
     m2, s2 = mean_and_std(parent(img2))
-    xcorr =  mapreduce(+, parent(img1), parent(img2); init=zero(T)) do I, J
-        (I - m1)*(J - m2)
+    xcorr = mapreduce(+, parent(img1), parent(img2); init = zero(T)) do I, J
+        (I - m1) * (J - m2)
     end
     # dm1 = img1 .- m1
     # dm2 = img2 .- m2
     # return sum(dm1.*dm2)/(length(img1)*s1*s2)
-    return xcorr/((length(img1)-1)*s1*s2)
+    return xcorr / ((length(img1) - 1) * s1 * s2)
 end
