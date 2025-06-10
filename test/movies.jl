@@ -25,9 +25,8 @@ include("common.jl")
     images = get_frames(mov)
     #@inferred get_frames(mov)
     @inferred getindex(frames, 1)
-    # @test typeof(images[T=1]) === typeof(frames[1])
-    @test frames[1] == images[T=1]
-    @test img == images[T=1]
+    @test frames[1] == images[Ti=1]
+    @test img == images[Ti=1]
 
     flux(mov, 10.0)
 
@@ -63,9 +62,8 @@ end
     images = get_frames(mov)
     #@inferred get_frames(mov)
     @inferred getindex(frames, 1)
-    # @test typeof(images[T=1]) === typeof(frames[1])
-    @test frames[1] == images[T=1]
-    @test img == images[T=1]
+    @test frames[1] == images[Ti=1]
+    @test img == images[Ti=1]
 
     flux(mov, 10.0)
 
