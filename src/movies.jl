@@ -46,7 +46,7 @@ Create an VIDAMovie class for easy interpolation between frames.
 
 # Arguments
 
- - `mov`: An IntensityMap with axes (:X, :Y, :T) that represent the frames of a movie.
+ - `mov`: An IntensityMap with axes (:X, :Y, :Ti) that represent the frames of a movie.
     Note that the time dimension does not have to be equi-spaced.
 
 # Returns
@@ -168,8 +168,8 @@ Returns the blurred movie.
 """
 function blur(mov::VIDAMovie, fwhm)
     frames = get_frames(mov)
-    bframes = map(x -> blur(x, fwhm), eachslice(frames, dims = (:T)))
-    return join_frames(mov.frames.T, bframes |> parent |> parent)
+    bframes = map(x -> blur(x, fwhm), eachslice(frames, dims = (:Ti)))
+    return join_frames(mov.frames.Ti, bframes |> parent |> parent)
 end
 
 @doc """
