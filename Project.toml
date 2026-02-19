@@ -1,7 +1,7 @@
 name = "VIDA"
 uuid = "4096cdfb-f084-40a3-b02d-1a2a54920cb8"
-authors = ["Paul Tiede <ptiede91@gmail.com>"]
 version = "0.13.4"
+authors = ["Paul Tiede <ptiede91@gmail.com>"]
 
 [deps]
 ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
@@ -33,7 +33,7 @@ VIDAOptimizationExt = "Optimization"
 [compat]
 ChainRulesCore = "1"
 ComradeBase = "0.9"
-DimensionalData = "0.27, 0.28, 0.29"
+DimensionalData = "0.27, 0.28, 0.29, 0.30"
 Distributions = "0.24, 0.25"
 DocStringExtensions = "0.8, 0.9"
 FITSIO = "0.14, 0.15, 0.16, 0.17"
